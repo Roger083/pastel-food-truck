@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>管理 - Food Truck</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/admin.css">
+</head>
+<body>
+  <div id="admin-app">
+    <div id="admin-login" class="admin-panel">
+      <h1>管理画面</h1>
+      <p>合言葉を入力してください</p>
+      <input type="password" id="admin-secret" placeholder="合言葉" autocomplete="off">
+      <button type="button" id="btn-admin-login">入る</button>
+      <p id="admin-login-error" class="error" hidden></p>
+    </div>
+
+    <div id="admin-dashboard" class="admin-panel" hidden>
+      <header class="admin-header">
+        <h1>注文一覧</h1>
+        <p id="event-name"></p>
+        <button type="button" id="btn-admin-logout">ログアウト</button>
+      </header>
+      <div id="orders-loading">読み込み中...</div>
+      <ul id="orders-list"></ul>
+    </div>
+  </div>
+
+  <script src="js/config.js"></script>
+  <script src="js/admin.js"></script>
+</body>
+</html>

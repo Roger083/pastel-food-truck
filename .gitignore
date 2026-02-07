@@ -1,0 +1,15 @@
+# Dependencies
+node_modules/
+
+# Local config with secrets (optional: copy config.js to config.local.js and ignore)
+config.local.js
+.env
+.env.local
+*.local.js
+
+# Supabase
+.supabase/
+
+# OS
+.DS_Store
+Thumbs.db
