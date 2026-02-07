@@ -160,7 +160,9 @@
       .single();
 
     if (errPedido || !pedido) {
-      showError('注文の送信に失敗しました。もう一度お試しください。');
+      const msg = errPedido?.message || '';
+      showError('注文の送信に失敗しました。もう一度お試しください。' + (msg ? ' (' + msg + ')' : ''));
+      console.error('Pedido insert error:', errPedido);
       $btnConfirm.disabled = false;
       $btnConfirm.textContent = '注文する';
       return;
