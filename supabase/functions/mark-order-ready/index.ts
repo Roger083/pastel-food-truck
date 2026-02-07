@@ -17,9 +17,16 @@ Deno.serve(async (req) => {
     return new Response(null, { headers: cors });
   }
 
-  const secret = req.headers.get("x-admin-secret");
-  const adminSecret = Deno.env.get("ADMIN_SECRET");
-  if (!adminSecret || secret !== adminSecret) {
+  // Auth: aceita JWT do Supabase Auth (admin logado com email/senha)
+  const authHeader = req.headers.get("Authorization") || "";
+  if (!authHeader.startsWith("Bearer ")) {
+    return jsonResponse({ error: "Unauthorized" }, 401);
+  }
+  const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+  const authRes = await fetch(supabaseUrl + "/auth/v1/user", {
+    headers: { Authorization: authHeader },
+  });
+  if (!authRes.ok) {
     return jsonResponse({ error: "Unauthorized" }, 401);
   }
 
@@ -35,7 +42,6 @@ Deno.serve(async (req) => {
     return jsonResponse({ error: "pedido_id required" }, 400);
   }
 
-  const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
   const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
   const channelToken = Deno.env.get("CHANNEL_ACCESS_TOKEN");
 

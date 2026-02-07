@@ -11,30 +11,28 @@ Sistema de pedidos para food truck: cliente pede via LINE (LIFF), dono vê lista
 3. No SQL Editor do Supabase **cole** o conteúdo e clique em **Run**.  
    ⚠️ Não digite o nome do arquivo no editor — só o conteúdo SQL.
 4. (Opcional) Repita o processo com **`supabase/migrations/002_seed_exemplo.sql`** para ter um evento e cardápio de teste.
+5. **Admin (login por email/senha):** rode também **`supabase/migrations/003_admin_authenticated_rls.sql`** no SQL Editor (copie/cole e Run). Depois, no Supabase → **Authentication** → **Users** → **Add user** → crie um usuário com **email** e **senha**. Use esse email e senha para acessar o painel admin (`admin.html`).
 
 ### 2. Supabase – variáveis das Edge Functions
 
 No projeto Supabase: **Settings** → **Edge Functions** → **Secrets** (ou **Project Settings** → **Edge Functions**):
 
-- `ADMIN_SECRET`: uma senha que só o dono do truck conhece (usada no painel admin no iPad).
 - `CHANNEL_ACCESS_TOKEN`: token do canal LINE (Messaging API), para enviar a notificação “pedido pronto”.
 
-`SUPABASE_URL` e `SUPABASE_SERVICE_ROLE_KEY` já são preenchidos automaticamente pelo Supabase.
+`SUPABASE_URL` e `SUPABASE_SERVICE_ROLE_KEY` já são preenchidos automaticamente. O admin não usa mais `ADMIN_SECRET`; o acesso é via **Supabase Auth** (email/senha do usuário criado no passo 1.5).
 
 ### 3. Publicar as Edge Functions
 
-Na pasta do projeto, com [Supabase CLI](https://supabase.com/docs/guides/cli) instalado e logado:
+Só é necessária a função **mark-order-ready**. Na pasta do projeto, com [Supabase CLI](https://supabase.com/docs/guides/cli) instalado e logado:
 
 ```bash
 supabase link --project-ref SEU_PROJECT_REF
-supabase functions deploy list-orders
 supabase functions deploy mark-order-ready
 ```
 
-Defina os secrets antes (passo 2) ou via CLI:
+Defina o secret do LINE via CLI:
 
 ```bash
-supabase secrets set ADMIN_SECRET=sua_senha_secreta
 supabase secrets set CHANNEL_ACCESS_TOKEN=seu_channel_access_token
 ```
 
@@ -60,7 +58,7 @@ window.FOOD_TRUCK_CONFIG = {
 ### 6. Uso
 
 - **Cliente:** abre o LIFF pelo LINE (QR code ou link), vê o cardápio, monta o pedido e confirma; recebe o **número do pedido** e, quando o dono marcar como pronto, uma **notificação no LINE**.
-- **Dono (iPad):** acessa `https://sua-url/admin.html`, digita a **合言葉** (o valor de `ADMIN_SECRET`), vê a lista de pedidos e clica em **できあがり** para marcar como pronto (e disparar a notificação no LINE).
+- **Dono (iPad):** acessa `https://sua-url/admin.html`, faz login com **email e senha** (usuário criado no Supabase Auth), vê a lista de pedidos e clica em **できあがり** para marcar como pronto (e disparar a notificação no LINE).
 
 ## Estrutura do projeto
 
@@ -70,7 +68,7 @@ window.FOOD_TRUCK_CONFIG = {
 - `js/app.js` – Lógica do LIFF.
 - `js/admin.js` – Lógica do admin.
 - `supabase/migrations/` – SQL do schema e seed.
-- `supabase/functions/` – Edge Functions: `list-orders`, `mark-order-ready`.
+- `supabase/functions/` – Edge Function: `mark-order-ready` (notificação LINE; lista de pedidos vem direto do Supabase com o usuário logado).
 
 ## Relatório e eventos (Fase 2+)
 
