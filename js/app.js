@@ -144,40 +144,22 @@
 
     const itensToInsert = cart.filter((i) => i.quantidade > 0).map((i) => ({
       cardapio_item_id: i.id,
-      nome: i.nome,
-      preco: i.preco,
-      quantidade: i.quantidade
+      nome: String(i.nome),
+      preco: Number(i.preco),
+      quantidade: Number(i.quantidade)
     }));
 
-    const { data: pedido, error: errPedido } = await supabase
-      .from('pedidos')
-      .insert({
-        evento_id: eventoAtivo.id,
-        line_user_id: lineUserId || null,
-        status: 'pendente'
-      })
-      .select('id, numero')
-      .single();
+    const { data: pedido, error: errPedido } = await supabase.rpc('criar_pedido', {
+      p_evento_id: eventoAtivo.id,
+      p_line_user_id: lineUserId || null,
+      p_itens: itensToInsert
+    });
 
     if (errPedido || !pedido) {
-      showError('注文の送信に失敗しました。もう一度お試しください。');
-      $btnConfirm.disabled = false;
-      $btnConfirm.textContent = '注文する';
-      return;
-    }
-
-    const { error: errItens } = await supabase.from('pedido_itens').insert(
-      itensToInsert.map((item) => ({
-        pedido_id: pedido.id,
-        cardapio_item_id: item.cardapio_item_id,
-        nome: item.nome,
-        preco: item.preco,
-        quantidade: item.quantidade
-      }))
-    );
-
-    if (errItens) {
-      showError('注文内容の保存に失敗しました。番号: ' + (pedido.numero || '?'));
+      const msg = errPedido?.message || errPedido?.error_description || '';
+      const code = errPedido?.code || '';
+      showError('注文の送信に失敗しました。もう一度お試しください。' + (msg ? ' ' + msg : '') + (code ? ' [' + code + ']' : ''));
+      console.error('Pedido RPC error:', errPedido);
       $btnConfirm.disabled = false;
       $btnConfirm.textContent = '注文する';
       return;
@@ -185,7 +167,7 @@
 
     $main.hidden = true;
     $successSection.hidden = false;
-    $orderNumber.textContent = String(pedido.numero);
+    $orderNumber.textContent = String(pedido.numero ?? pedido?.numero ?? '-');
     $btnConfirm.textContent = '注文する';
     $btnConfirm.disabled = false;
     cart.length = 0;
@@ -193,8 +175,23 @@
 
   $btnConfirm.addEventListener('click', submitOrder);
 
+  window.showCardapio = async function () {
+    const landing = document.getElementById('landing');
+    if (landing) landing.hidden = true;
+    $loading.style.display = '';
+    $loading.hidden = false;
+    await fetchMenu();
+  };
+
   async function init() {
     initSupabase();
+
+    const landing = document.getElementById('landing');
+    if (landing) {
+      $loading.hidden = true;
+      $main.hidden = true;
+      landing.hidden = false;
+    }
 
     if (!window.liff) {
       showError('LINE の LIFF で開いてください。');
@@ -214,7 +211,11 @@
       lineUserId = profile?.userId || null;
     }
 
-    await fetchMenu();
+    if (!landing) {
+      await fetchMenu();
+    } else {
+      hideLoading();
+    }
   }
 
   init();

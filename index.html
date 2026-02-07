@@ -7,42 +7,169 @@
   <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <link rel="stylesheet" href="css/style.css">
+  <style>
+    /* Landing como referência */
+    .landing { max-width: 600px; margin: 0 auto; padding: 0 1rem 2rem; }
+    .landing .header-landing {
+      background: linear-gradient(135deg, #0d7541 0%, #27ae60 100%);
+      padding: 16px 20px;
+      box-shadow: 0 4px 12px rgba(13,117,65,0.2);
+      position: sticky; top: 0; z-index: 100;
+      margin: 0 -1rem 24px; padding-left: 1rem; padding-right: 1rem;
+    }
+    .landing .header-content { display: flex; justify-content: space-between; align-items: center; max-width: 600px; margin: 0 auto; }
+    .landing .logo { font-size: 24px; font-weight: 800; color: white; }
+    .landing .btn-idioma {
+      background: rgba(255,255,255,0.2); border: 2px solid rgba(255,255,255,0.5);
+      color: white; padding: 8px 16px; border-radius: 20px; font-size: 13px; font-weight: 600;
+      cursor: pointer; transition: all 0.3s;
+    }
+    .landing .btn-idioma:hover { background: rgba(255,255,255,0.3); }
+    .landing .hero-image {
+      width: 100%; height: 200px; border-radius: 20px; overflow: hidden; margin-bottom: 24px;
+      background: linear-gradient(135deg, #0d7541 0%, #27ae60 100%);
+      display: flex; align-items: center; justify-content: center; color: white; font-size: 64px;
+    }
+    .landing .hero-overlay {
+      background: linear-gradient(to top, rgba(0,0,0,0.6) 0%, transparent 100%);
+      padding: 20px; color: white; margin-top: auto;
+    }
+    .landing .hero-title { font-size: 28px; font-weight: 900; }
+    .landing .hero-subtitle { font-size: 14px; font-weight: 600; }
+    .landing .btn-principal {
+      width: 100%; background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%);
+      color: white; border: none; padding: 24px; border-radius: 20px;
+      font-size: 22px; font-weight: 900; cursor: pointer;
+      box-shadow: 0 8px 20px rgba(46,204,113,0.4); transition: all 0.3s; margin-bottom: 24px;
+    }
+    .landing .btn-principal:hover { transform: scale(1.02); }
+    .landing .botoes-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 20px; }
+    .landing .btn-secundario {
+      background: white; border: 3px solid #a8e6cf; padding: 20px 16px; border-radius: 16px;
+      font-size: 14px; font-weight: 700; color: #0d7541; cursor: pointer; transition: all 0.3s;
+      text-align: center; text-decoration: none; display: flex; flex-direction: column; align-items: center; gap: 8px;
+      box-shadow: 0 4px 12px rgba(13,117,65,0.1);
+    }
+    .landing .btn-secundario:hover { border-color: #2ecc71; transform: translateY(-2px); }
+    .landing .btn-icone { font-size: 28px; }
+    .landing .footer-info {
+      background: white; border-radius: 16px; padding: 20px; text-align: center;
+      box-shadow: 0 2px 8px rgba(13,117,65,0.1); border: 2px solid #a8e6cf;
+    }
+    .landing .footer-texto { color: #666; font-size: 14px; line-height: 1.6; }
+    .landing .footer-destaque { color: #0d7541; font-weight: 700; }
+  </style>
 </head>
 <body>
   <div id="app">
-    <header class="header">
-      <h1>🥟 Pastel</h1>
-      <p id="subtitle">Food Truck</p>
-    </header>
+    <!-- Landing (como referência) -->
+    <div id="landing" class="landing">
+      <div class="header-landing">
+        <div class="header-content">
+          <div class="logo" id="logo">🥟 PASTEL</div>
+          <button type="button" class="btn-idioma" id="btnIdioma">🇧🇷 PT</button>
+        </div>
+      </div>
+      <div class="hero-image">
+        <div style="display:flex;flex-direction:column;width:100%;height:100%;">
+          <div style="flex:1"></div>
+          <div class="hero-overlay">
+            <div class="hero-title" id="heroTitle">パステル</div>
+            <div class="hero-subtitle" id="heroSubtitle">ブラジルの伝統料理</div>
+          </div>
+        </div>
+      </div>
+      <button type="button" class="btn-principal" id="btnPrincipal">🛒 注文する</button>
+      <div class="botoes-grid">
+        <a href="liff-o-que-e-pastel.html" class="btn-secundario">
+          <span class="btn-icone">🥟</span>
+          <span id="btn1">パステルとは？</span>
+        </a>
+        <a href="liff-alergenicos.html" class="btn-secundario">
+          <span class="btn-icone">⚠️</span>
+          <span id="btn2">アレルギー情報</span>
+        </a>
+        <a href="liff-galeria.html" class="btn-secundario">
+          <span class="btn-icone">📸</span>
+          <span id="btn3">写真ギャラリー</span>
+        </a>
+        <a href="liff-faq.html" class="btn-secundario">
+          <span class="btn-icone">❓</span>
+          <span id="btn4">よくある質問</span>
+        </a>
+      </div>
+      <div class="footer-info">
+        <div class="footer-texto" id="footerTexto">
+          ご注文後、LINEで通知が届きます！<br>
+          <span class="footer-destaque" id="footerDestaque">出来立てをお召し上がりください 🔥</span>
+        </div>
+      </div>
+    </div>
 
-    <div id="loading">読み込み中...</div>
+    <div id="loading" style="display:none;">読み込み中...</div>
     <div id="error" class="error" hidden></div>
 
     <main id="main" hidden>
-      <!-- Cardápio -->
+      <header class="header">
+        <p class="header-flag">🇧🇷 PT</p>
+        <h1>🥟 PASTEL</h1>
+        <p class="header-sub">Pastel Brasileiro</p>
+        <p class="header-ja">パステル — ブラジルの伝統料理</p>
+      </header>
       <section id="menu-section">
         <h2>メニュー</h2>
         <ul id="menu-list"></ul>
       </section>
-
-      <!-- Carrinho -->
       <section id="cart-section">
         <h2>注文内容 <span id="cart-count">0</span> 品</h2>
         <ul id="cart-list"></ul>
         <p id="cart-total">合計: ¥0</p>
-        <button type="button" id="btn-confirm" disabled>注文する</button>
+        <button type="button" id="btn-confirm" disabled>🛒 注文する</button>
       </section>
+      <p class="footer-msg">ご注文後、LINEで通知が届きます！<br>出来立てをお召し上がりください 🔥</p>
     </main>
 
-    <!-- Tela de sucesso (número do pedido) -->
     <section id="success-section" hidden>
       <h2>注文を受け付けました</h2>
       <p class="order-number">番号: <strong id="order-number">-</strong></p>
       <p class="order-msg">この番号をお伝えください。準備ができたらLINEでお知らせします。</p>
+      <p class="footer-msg">出来立てをお召し上がりください 🔥</p>
     </section>
   </div>
 
   <script src="js/config.js"></script>
   <script src="js/app.js"></script>
+  <script>
+    (function() {
+      var textos = {
+        ja: { logo: '🥟 PASTEL', btnIdioma: '🇧🇷 PT', heroTitle: 'パステル', heroSubtitle: 'ブラジルの伝統料理', btnPrincipal: '🛒 注文する', btn1: 'パステルとは？', btn2: 'アレルギー情報', btn3: '写真ギャラリー', btn4: 'よくある質問', footerTexto: 'ご注文後、LINEで通知が届きます！', footerDestaque: '出来立てをお召し上がりください 🔥' },
+        pt: { logo: '🥟 PASTEL', btnIdioma: '🇯🇵 日本語', heroTitle: 'PASTEL', heroSubtitle: 'Comida Tradicional Brasileira', btnPrincipal: '🛒 FAZER PEDIDO', btn1: 'O que é Pastel?', btn2: 'Alergênicos', btn3: 'Galeria', btn4: 'Perguntas Frequentes', footerTexto: 'Após o pedido, você receberá notificação no LINE!', footerDestaque: 'Coma quentinho! 🔥' }
+      };
+      var idioma = localStorage.getItem('idioma') || 'ja';
+      function atualizar() {
+        var t = textos[idioma];
+        document.getElementById('logo').textContent = t.logo;
+        document.getElementById('btnIdioma').textContent = t.btnIdioma;
+        document.getElementById('heroTitle').textContent = t.heroTitle;
+        document.getElementById('heroSubtitle').textContent = t.heroSubtitle;
+        document.getElementById('btnPrincipal').textContent = t.btnPrincipal;
+        document.getElementById('btn1').textContent = t.btn1;
+        document.getElementById('btn2').textContent = t.btn2;
+        document.getElementById('btn3').textContent = t.btn3;
+        document.getElementById('btn4').textContent = t.btn4;
+        document.getElementById('footerTexto').innerHTML = t.footerTexto + '<br>';
+        document.getElementById('footerDestaque').textContent = t.footerDestaque;
+      }
+      document.getElementById('btnIdioma').onclick = function() {
+        idioma = idioma === 'ja' ? 'pt' : 'ja';
+        localStorage.setItem('idioma', idioma);
+        atualizar();
+      };
+      document.getElementById('btnPrincipal').onclick = function() {
+        if (window.showCardapio) window.showCardapio();
+      };
+      atualizar();
+    })();
+  </script>
 </body>
 </html>
