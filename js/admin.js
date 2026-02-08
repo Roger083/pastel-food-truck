@@ -150,11 +150,15 @@ async function loadOrders() {
 
 async function markReady(pedidoId) {
   const sb = getSupabase();
-  const { data: { session } } = await sb.auth.getSession();
-  if (!session) {
+  // Atualiza a sessão para ter um token válido (evita 401 por token expirado)
+  const { data: { session }, error: sessionError } = await sb.auth.getSession();
+  if (sessionError || !session) {
     showLogin("Sessão expirada. Faça login novamente.");
     return;
   }
+  // Garante token fresco antes de chamar a Edge Function
+  const { data: { session: freshSession } } = await sb.auth.refreshSession();
+  const token = (freshSession && freshSession.access_token) || session.access_token;
 
   const prontoEm = new Date().toISOString();
   const { error: updateError } = await sb
@@ -171,7 +175,8 @@ async function markReady(pedidoId) {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      Authorization: "Bearer " + session.access_token,
+      Authorization: "Bearer " + token,
+      apikey: CONFIG?.supabaseAnonKey || "",
     },
     body: JSON.stringify({ pedido_id: pedidoId }),
   });
