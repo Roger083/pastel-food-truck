@@ -1,19 +1,463 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>よくある質問 - Pastel Food Truck</title>
-  <style>
-    body { font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background: #f0f9f4; }
-    h1 { color: #0d7541; }
-    p { line-height: 1.6; color: #333; }
-    a { color: #27ae60; font-weight: bold; }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FAQ - Dúvidas</title>
+        <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Noto Sans JP', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #f0f9f4 0%, #e8f5e9 100%);
+            color: #2d2d2d;
+            padding-bottom: 40px;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #0d7541 0%, #27ae60 100%);
+            padding: 20px;
+            box-shadow: 0 4px 12px rgba(13,117,65,0.2);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+                                .header-content {
+            max-width: 600px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 8px;
+            padding: 0 10px;
+        }
+
+        .btn-voltar {
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: white;
+            padding: 6px 10px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+
+        .btn-voltar:hover {
+            background: rgba(255,255,255,0.3);
+            transform: translateX(-2px);
+        }
+
+        .titulo {
+            font-size: 16px;
+            font-weight: 700;
+            color: white;
+            text-align: center;
+            flex: 1;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .btn-idioma {
+            background: rgba(255,255,255,0.2);
+            border: 2px solid rgba(255,255,255,0.5);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 20px auto;
+            padding: 0 20px;
+        }
+
+        .subtitulo {
+            text-align: center;
+            color: #0d7541;
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 24px;
+        }
+
+        .faq-item {
+            background: white;
+            border-radius: 16px;
+            margin-bottom: 12px;
+            box-shadow: 0 2px 8px rgba(13,117,65,0.1);
+            border: 2px solid #a8e6cf;
+            overflow: hidden;
+            transition: all 0.3s;
+        }
+
+        .faq-pergunta {
+            padding: 20px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: 600;
+            color: #0d7541;
+            font-size: 16px;
+            transition: all 0.3s;
+        }
+
+        .faq-pergunta:hover {
+            background: #f0f9f4;
+        }
+
+        .faq-icone {
+            font-size: 20px;
+            transition: transform 0.3s;
+        }
+
+        .faq-item.ativo .faq-icone {
+            transform: rotate(180deg);
+        }
+
+        .faq-resposta {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+        }
+
+        .faq-resposta-conteudo {
+            padding: 0 20px 20px 20px;
+            color: #555;
+            line-height: 1.8;
+            font-size: 15px;
+        }
+
+        .faq-item.ativo .faq-resposta {
+            max-height: 500px;
+        }
+
+        .categoria {
+            background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%);
+            color: white;
+            padding: 12px 20px;
+            border-radius: 12px;
+            font-weight: 700;
+            font-size: 16px;
+            margin: 24px 0 16px 0;
+            box-shadow: 0 2px 8px rgba(46,204,113,0.3);
+        }
+
+        .destaque {
+            background: #fff3e0;
+            border-left: 4px solid #ff9800;
+            padding: 16px;
+            border-radius: 8px;
+            margin: 8px 0;
+            color: #e65100;
+            font-weight: 600;
+        }
+
+        .contato-card {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            margin-top: 24px;
+            box-shadow: 0 4px 12px rgba(13,117,65,0.1);
+            border: 2px solid #a8e6cf;
+            text-align: center;
+        }
+
+        .contato-titulo {
+            font-size: 20px;
+            font-weight: 700;
+            color: #0d7541;
+            margin-bottom: 12px;
+        }
+
+        .contato-texto {
+            color: #666;
+            line-height: 1.6;
+            margin-bottom: 16px;
+        }
+
+        .btn-contato {
+            background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%);
+            color: white;
+            border: none;
+            padding: 14px 28px;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(46,204,113,0.3);
+        }
+    </style>
 </head>
 <body>
-  <h1>❓ よくある質問</h1>
-  <p>準備ができたらLINEでお知らせします。番号をお伝えいただければお渡しします。</p>
-  <p><a href="index.html">← 戻る</a></p>
+    <div class="header">
+        <div class="header-content">
+            
+                <button class="btn-voltar" onclick="voltarHome()" id="btnVoltar">← ホーム</button>
+                <div class="titulo" id="titulo">よくある質問</div>
+            <button class="btn-idioma" onclick="trocarIdioma()" id="btnIdioma">🇧🇷 PT</button>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="subtitulo" id="subtitulo">お気軽にご質問ください</div>
+
+        <!-- Categoria: Pedidos -->
+        <div class="categoria" id="cat1">📱 注文について</div>
+
+        <div class="faq-item" onclick="toggleFaq(this)">
+            <div class="faq-pergunta">
+                <span id="q1">どうやって注文しますか？</span>
+                <span class="faq-icone">▼</span>
+            </div>
+            <div class="faq-resposta">
+                <div class="faq-resposta-conteudo" id="a1">
+                    LINEメニューの「注文する」ボタンをタップしてください。メニューから商品を選び、数量を指定して注文を確定してください。
+                </div>
+            </div>
+        </div>
+
+        <div class="faq-item" onclick="toggleFaq(this)">
+            <div class="faq-pergunta">
+                <span id="q2">注文のキャンセルはできますか？</span>
+                <span class="faq-icone">▼</span>
+            </div>
+            <div class="faq-resposta">
+                <div class="faq-resposta-conteudo" id="a2">
+                    調理開始前であればキャンセル可能です。LINEでスタッフにメッセージを送ってください。
+                </div>
+            </div>
+        </div>
+
+        <div class="faq-item" onclick="toggleFaq(this)">
+            <div class="faq-pergunta">
+                <span id="q3">注文番号はどこで確認できますか？</span>
+                <span class="faq-icone">▼</span>
+            </div>
+            <div class="faq-resposta">
+                <div class="faq-resposta-conteudo" id="a3">
+                    注文確定後、LINEメッセージで注文番号（例：A-001）が届きます。「注文履歴」からも確認できます。
+                </div>
+            </div>
+        </div>
+
+        <!-- Categoria: Pagamento -->
+        <div class="categoria" id="cat2">💳 お支払いについて</div>
+
+        <div class="faq-item" onclick="toggleFaq(this)">
+            <div class="faq-pergunta">
+                <span id="q4">どんな支払い方法がありますか？</span>
+                <span class="faq-icone">▼</span>
+            </div>
+            <div class="faq-resposta">
+                <div class="faq-resposta-conteudo" id="a4">
+                    現金、クレジットカード、電子マネー（PayPay、LINE Pay、交通系IC）が使えます。
+                </div>
+            </div>
+        </div>
+
+        <div class="faq-item" onclick="toggleFaq(this)">
+            <div class="faq-pergunta">
+                <span id="q5">いつ支払いますか？</span>
+                <span class="faq-icone">▼</span>
+            </div>
+            <div class="faq-resposta">
+                <div class="faq-resposta-conteudo" id="a5">
+                    商品受け取り時にお支払いください。事前決済には対応していません。
+                </div>
+            </div>
+        </div>
+
+        <!-- Categoria: Produto -->
+        <div class="categoria" id="cat3">🥟 商品について</div>
+
+        <div class="faq-item" onclick="toggleFaq(this)">
+            <div class="faq-pergunta">
+                <span id="q6">アレルギー情報はありますか？</span>
+                <span class="faq-icone">▼</span>
+            </div>
+            <div class="faq-resposta">
+                <div class="faq-resposta-conteudo" id="a6">
+                    LINEメニューの「アレルギー情報」をご覧ください。すべてのパステルには小麦（グルテン）が含まれています。
+                </div>
+            </div>
+        </div>
+
+        <div class="faq-item" onclick="toggleFaq(this)">
+            <div class="faq-pergunta">
+                <span id="q7">温め直しはできますか？</span>
+                <span class="faq-icone">▼</span>
+            </div>
+            <div class="faq-resposta">
+                <div class="faq-resposta-conteudo" id="a7">
+                    オーブントースターで3-5分温めると美味しく召し上がれます。電子レンジは生地がベタつくのでお勧めしません。
+                </div>
+            </div>
+        </div>
+
+        <div class="faq-item" onclick="toggleFaq(this)">
+            <div class="faq-pergunta">
+                <span id="q8">賞味期限はどのくらいですか？</span>
+                <span class="faq-icone">▼</span>
+            </div>
+            <div class="faq-resposta">
+                <div class="faq-resposta-conteudo" id="a8">
+                    当日中にお召し上がりください。冷蔵庫で保存し、翌日までには食べきることをお勧めします。
+                </div>
+            </div>
+        </div>
+
+        <!-- Categoria: Outros -->
+        <div class="categoria" id="cat4">ℹ️ その他</div>
+
+        <div class="faq-item" onclick="toggleFaq(this)">
+            <div class="faq-pergunta">
+                <span id="q9">予約注文はできますか？</span>
+                <span class="faq-icone">▼</span>
+            </div>
+            <div class="faq-resposta">
+                <div class="faq-resposta-conteudo" id="a9">
+                    はい、できます！注文時に「予約する」を選び、希望時間を指定してください。
+                </div>
+            </div>
+        </div>
+
+        <div class="faq-item" onclick="toggleFaq(this)">
+            <div class="faq-pergunta">
+                <span id="q10">待ち時間はどのくらいですか？</span>
+                <span class="faq-icone">▼</span>
+            </div>
+            <div class="faq-resposta">
+                <div class="faq-resposta-conteudo" id="a10">
+                    通常10-15分です。混雑時は20-30分かかる場合があります。注文が完了したらLINEで通知します。
+                </div>
+            </div>
+        </div>
+
+        <!-- Contato -->
+        <div class="contato-card">
+            <div class="contato-titulo" id="contatoTitulo">他に質問がありますか？</div>
+            <div class="contato-texto" id="contatoTexto">
+                お気軽にLINEでメッセージを送ってください！スタッフが迅速に対応いたします。
+            </div>
+            <button class="btn-contato" onclick="enviarMensagem()" id="btnContato">
+                💬 メッセージを送る
+            </button>
+        </div>
+    </div>
+
+    <script>
+        const textos = {
+            ja: {
+                btnVoltar: '← ホーム',
+                btnIdioma: '🇧🇷 PT',
+                titulo: 'お気軽にご質問ください',
+                cat1: '📱 注文について',
+                cat2: '💳 お支払いについて',
+                cat3: '🥟 商品について',
+                cat4: 'ℹ️ その他',
+                q1: 'どうやって注文しますか？',
+                a1: 'LINEメニューの「注文する」ボタンをタップしてください。メニューから商品を選び、数量を指定して注文を確定してください。',
+                q2: '注文のキャンセルはできますか？',
+                a2: '調理開始前であればキャンセル可能です。LINEでスタッフにメッセージを送ってください。',
+                q3: '注文番号はどこで確認できますか？',
+                a3: '注文確定後、LINEメッセージで注文番号（例：A-001）が届きます。「注文履歴」からも確認できます。',
+                q4: 'どんな支払い方法がありますか？',
+                a4: '現金、クレジットカード、電子マネー（PayPay、LINE Pay、交通系IC）が使えます。',
+                q5: 'いつ支払いますか？',
+                a5: '商品受け取り時にお支払いください。事前決済には対応していません。',
+                q6: 'アレルギー情報はありますか？',
+                a6: 'LINEメニューの「アレルギー情報」をご覧ください。すべてのパステルには小麦（グルテン）が含まれています。',
+                q7: '温め直しはできますか？',
+                a7: 'オーブントースターで3-5分温めると美味しく召し上がれます。電子レンジは生地がベタつくのでお勧めしません。',
+                q8: '賞味期限はどのくらいですか？',
+                a8: '当日中にお召し上がりください。冷蔵庫で保存し、翌日までには食べきることをお勧めします。',
+                q9: '予約注文はできますか？',
+                a9: 'はい、できます！注文時に「予約する」を選び、希望時間を指定してください。',
+                q10: '待ち時間はどのくらいですか？',
+                a10: '通常10-15分です。混雑時は20-30分かかる場合があります。注文が完了したらLINEで通知します。',
+                contatoTitulo: '他に質問がありますか？',
+                contatoTexto: 'お気軽にLINEでメッセージを送ってください！スタッフが迅速に対応いたします。',
+                btnContato: '💬 メッセージを送る'
+            },
+            pt: {
+                btnVoltar: '← Início',
+                btnIdioma: '🇯🇵 日本語',
+                titulo: 'Tire suas dúvidas aqui',
+                cat1: '📱 Sobre Pedidos',
+                cat2: '💳 Sobre Pagamento',
+                cat3: '🥟 Sobre o Produto',
+                cat4: 'ℹ️ Outros',
+                q1: 'Como faço um pedido?',
+                a1: 'Toque no botão "Fazer Pedido" no menu LINE. Escolha os produtos, quantidade e confirme seu pedido.',
+                q2: 'Posso cancelar meu pedido?',
+                a2: 'Sim, antes de começarmos a preparar. Envie uma mensagem pelo LINE para nossa equipe.',
+                q3: 'Onde vejo meu número do pedido?',
+                a3: 'Após confirmar, você receberá o número (ex: A-001) por mensagem LINE. Também pode ver em "Meus Pedidos".',
+                q4: 'Quais formas de pagamento aceitam?',
+                a4: 'Aceitamos dinheiro, cartão de crédito e e-wallets (PayPay, LINE Pay, IC cards).',
+                q5: 'Quando pago?',
+                a5: 'No momento da retirada do pedido. Não trabalhamos com pagamento antecipado.',
+                q6: 'Tem informações sobre alérgenos?',
+                a6: 'Sim! Veja em "Alergênicos" no menu LINE. Todos os pastéis contêm glúten (farinha de trigo).',
+                q7: 'Posso requentar depois?',
+                a7: 'Sim! Use forno/air fryer por 3-5min. Evite micro-ondas (deixa a massa mole).',
+                q8: 'Qual a validade?',
+                a8: 'Consuma no mesmo dia. Se refrigerar, coma até o dia seguinte.',
+                q9: 'Posso agendar pedido?',
+                a9: 'Sim! Ao fazer o pedido, escolha "Agendar" e selecione o horário desejado.',
+                q10: 'Quanto tempo demora?',
+                a10: 'Normalmente 10-15min. Em horários de pico, pode levar 20-30min. Avisamos pelo LINE quando estiver pronto.',
+                contatoTitulo: 'Não encontrou sua dúvida?',
+                contatoTexto: 'Mande uma mensagem pelo LINE! Nossa equipe responde rapidinho.',
+                btnContato: '💬 Enviar Mensagem'
+            }
+        };
+
+        let idiomaAtual = localStorage.getItem('idioma') || 'ja';
+
+        function toggleFaq(element) {
+            element.classList.toggle('ativo');
+        }
+
+        function trocarIdioma() {
+            idiomaAtual = idiomaAtual === 'ja' ? 'pt' : 'ja';
+            localStorage.setItem('idioma', idiomaAtual);
+            atualizarInterface();
+        }
+
+        function atualizarInterface() {
+            const t = textos[idiomaAtual];
+            
+            Object.keys(t).forEach(key => {
+                const el = document.getElementById(key);
+                if (el) el.textContent = t[key];
+            });
+        }
+
+        function enviarMensagem() {
+            alert(idiomaAtual === 'ja' ? 'LINEメッセージを開きます' : 'Abrindo chat LINE');
+        }
+
+        atualizarInterface();
+        
+        function voltarHome() {
+            window.location.href = "index.html";
+        }
+    </script>
 </body>
 </html>

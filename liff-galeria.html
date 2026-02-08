@@ -1,19 +1,531 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>写真ギャラリー - Pastel Food Truck</title>
-  <style>
-    body { font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background: #f0f9f4; }
-    h1 { color: #0d7541; }
-    p { line-height: 1.6; color: #333; }
-    a { color: #27ae60; font-weight: bold; }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Galeria - Pastéis</title>
+        <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Noto Sans JP', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #f0f9f4 0%, #e8f5e9 100%);
+            color: #2d2d2d;
+            padding-bottom: 40px;
+        }
+
+        /* Header */
+        .header {
+            background: linear-gradient(135deg, #0d7541 0%, #27ae60 100%);
+            padding: 20px;
+            box-shadow: 0 4px 12px rgba(13,117,65,0.2);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+                                .header-content {
+            max-width: 600px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 8px;
+            padding: 0 10px;
+        }
+
+        .btn-voltar {
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: white;
+            padding: 6px 10px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+
+        .btn-voltar:hover {
+            background: rgba(255,255,255,0.3);
+            transform: translateX(-2px);
+        }
+
+        .titulo {
+            font-size: 16px;
+            font-weight: 700;
+            color: white;
+            text-align: center;
+            flex: 1;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .btn-idioma {
+            background: rgba(255,255,255,0.2);
+            border: 2px solid rgba(255,255,255,0.5);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        /* Container */
+        .container {
+            max-width: 600px;
+            margin: 20px auto;
+            padding: 0 20px;
+        }
+
+        .subtitulo {
+            text-align: center;
+            color: #0d7541;
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 24px;
+        }
+
+        /* Slider */
+        .slider-container {
+            position: relative;
+            margin-bottom: 24px;
+        }
+
+        .slider {
+            position: relative;
+            width: 100%;
+            height: 400px;
+            overflow: hidden;
+            border-radius: 20px;
+            box-shadow: 0 8px 24px rgba(13,117,65,0.2);
+        }
+
+        .slider-track {
+            display: flex;
+            transition: transform 0.4s ease;
+            height: 100%;
+        }
+
+        .slide {
+            min-width: 100%;
+            height: 100%;
+            position: relative;
+        }
+
+        .slide img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .slide-overlay {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(to top, rgba(13,117,65,0.9) 0%, transparent 100%);
+            padding: 24px;
+            color: white;
+        }
+
+        .slide-nome {
+            font-size: 24px;
+            font-weight: 800;
+            margin-bottom: 8px;
+        }
+
+        .slide-desc {
+            font-size: 15px;
+            line-height: 1.5;
+        }
+
+        /* Controles */
+        .slider-btn {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(255,255,255,0.9);
+            border: none;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            font-size: 24px;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            z-index: 10;
+        }
+
+        .slider-btn:hover {
+            background: white;
+            transform: translateY(-50%) scale(1.1);
+        }
+
+        .slider-btn-prev {
+            left: 10px;
+        }
+
+        .slider-btn-next {
+            right: 10px;
+        }
+
+        /* Indicadores */
+        .slider-dots {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            margin-top: 16px;
+        }
+
+        .dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #a8e6cf;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .dot.active {
+            background: #2ecc71;
+            width: 32px;
+            border-radius: 6px;
+        }
+
+        /* Lista de Pastéis */
+        .pasteis-lista {
+            margin-top: 32px;
+        }
+
+        .lista-titulo {
+            font-size: 20px;
+            font-weight: 700;
+            color: #0d7541;
+            margin-bottom: 16px;
+        }
+
+        .pastel-mini {
+            background: white;
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 12px;
+            display: flex;
+            gap: 16px;
+            align-items: center;
+            box-shadow: 0 2px 8px rgba(13,117,65,0.1);
+            border: 2px solid #a8e6cf;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .pastel-mini:hover {
+            transform: translateX(4px);
+            border-color: #2ecc71;
+        }
+
+        .pastel-mini img {
+            width: 80px;
+            height: 80px;
+            border-radius: 10px;
+            object-fit: cover;
+        }
+
+        .pastel-mini-info {
+            flex: 1;
+        }
+
+        .pastel-mini-nome {
+            font-size: 18px;
+            font-weight: 700;
+            color: #0d7541;
+            margin-bottom: 4px;
+        }
+
+        .pastel-mini-desc {
+            font-size: 14px;
+            color: #666;
+        }
+
+        .pastel-mini-preco {
+            font-size: 20px;
+            font-weight: 800;
+            color: #2ecc71;
+        }
+
+        /* Botão CTA */
+        .btn-cta {
+            width: 100%;
+            background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%);
+            color: white;
+            border: none;
+            padding: 18px;
+            border-radius: 14px;
+            font-size: 18px;
+            font-weight: 700;
+            cursor: pointer;
+            margin-top: 24px;
+            box-shadow: 0 4px 12px rgba(46,204,113,0.3);
+        }
+
+        /* Swipe Hint */
+        .swipe-hint {
+            text-align: center;
+            color: #0d7541;
+            font-size: 14px;
+            margin-top: 8px;
+            font-weight: 600;
+        }
+    </style>
 </head>
 <body>
-  <h1>📸 写真ギャラリー</h1>
-  <p>準備中です。またお越しください。</p>
-  <p><a href="index.html">← 戻る</a></p>
+    <!-- Header -->
+    <div class="header">
+        <div class="header-content">
+            
+                <button class="btn-voltar" onclick="voltarHome()" id="btnVoltar">← ホーム</button>
+                <div class="titulo" id="titulo">📸 写真ギャラリー</div>
+            <button class="btn-idioma" onclick="trocarIdioma()" id="btnIdioma">🇧🇷 PT</button>
+        </div>
+    </div>
+
+    <!-- Container -->
+    <div class="container">
+        <div class="subtitulo" id="subtitulo">美味しそうなパステルをご覧ください</div>
+
+        <!-- Slider -->
+        <div class="slider-container">
+            <div class="slider" id="slider">
+                <div class="slider-track" id="sliderTrack">
+                    <!-- Slides serão inseridos aqui -->
+                </div>
+                <button class="slider-btn slider-btn-prev" onclick="prevSlide()">‹</button>
+                <button class="slider-btn slider-btn-next" onclick="nextSlide()">›</button>
+            </div>
+            <div class="slider-dots" id="sliderDots"></div>
+            <div class="swipe-hint" id="swipeHint">← スワイプして他の写真を見る →</div>
+        </div>
+
+        <!-- Lista de Pastéis -->
+        <div class="pasteis-lista">
+            <div class="lista-titulo" id="listaTitulo">全ての味</div>
+            <div id="pasteisLista"></div>
+        </div>
+
+        <!-- CTA -->
+        <button class="btn-cta" onclick="fecharLiff()" id="btnCTA">🛒 注文する</button>
+    </div>
+
+    <script>
+        // Dados dos pastéis
+        const pasteis = [
+            {
+                nome_ja: '🥩 牛肉パステル',
+                nome_pt: '🥩 Pastel de Carne',
+                desc_ja: 'スパイスで味付けした牛ひき肉',
+                desc_pt: 'Carne moída temperada',
+                foto: 'img/pastel-carne.png',
+                preco: 350
+            },
+            {
+                nome_ja: '🧀🥩 牛肉＆チーズパステル',
+                nome_pt: '🧀🥩 Pastel Carne c/ Queijo',
+                desc_ja: '牛肉とたっぷりチーズ',
+                desc_pt: 'Carne moída com muito queijo',
+                foto: 'img/pastel-carne-queijo.png',
+                preco: 400
+            },
+            {
+                nome_ja: '🍕 ピザパステル',
+                nome_pt: '🍕 Pastel de Pizza',
+                desc_ja: 'トマト、チーズ、オレガノ',
+                desc_pt: 'Tomate, queijo e orégano',
+                foto: 'img/pastel-pizza.png',
+                preco: 400
+            },
+            {
+                nome_ja: '🧀 チーズパステル',
+                nome_pt: '🧀 Pastel de Queijo',
+                desc_ja: 'たっぷりチーズ',
+                desc_pt: 'Muito queijo derretido',
+                foto: 'img/pastel-queijo.png',
+                preco: 350
+            },
+            {
+                nome_ja: '🐔 チキンパステル',
+                nome_pt: '🐔 Pastel de Frango',
+                desc_ja: 'チキンとトマトソース',
+                desc_pt: 'Frango com molho de tomate',
+                foto: 'img/pastel-frango.png',
+                preco: 350
+            }
+        ];
+
+        // Textos
+        const textos = {
+            ja: {
+                btnVoltar: '← ホーム',
+                btnIdioma: '🇧🇷 PT',
+                titulo: '美味しそうなパステルをご覧ください',
+                swipeHint: '← スワイプして他の写真を見る →',
+                listaTitulo: '全ての味',
+                btnCTA: '🛒 注文する'
+            },
+            pt: {
+                btnVoltar: '← Início',
+                btnIdioma: '🇯🇵 日本語',
+                titulo: 'Veja nossos deliciosos pastéis',
+                swipeHint: '← Arraste para ver mais fotos →',
+                listaTitulo: 'Todos os Sabores',
+                btnCTA: '🛒 Fazer Pedido'
+            }
+        };
+
+        // Estado
+        let idiomaAtual = localStorage.getItem('idioma') || 'ja';
+        let slideAtual = 0;
+
+        // Funções do Slider
+        function renderSlider() {
+            const track = document.getElementById('sliderTrack');
+            const dots = document.getElementById('sliderDots');
+            
+            track.innerHTML = '';
+            dots.innerHTML = '';
+
+            pasteis.forEach((pastel, index) => {
+                const nome = idiomaAtual === 'ja' ? pastel.nome_ja : pastel.nome_pt;
+                const desc = idiomaAtual === 'ja' ? pastel.desc_ja : pastel.desc_pt;
+
+                // Slide
+                const slide = document.createElement('div');
+                slide.className = 'slide';
+                slide.innerHTML = `
+                    <img src="${pastel.foto}" alt="${nome}">
+                    <div class="slide-overlay">
+                        <div class="slide-nome">${nome}</div>
+                        <div class="slide-desc">${desc} · ¥${pastel.preco}</div>
+                    </div>
+                `;
+                track.appendChild(slide);
+
+                // Dot
+                const dot = document.createElement('div');
+                dot.className = `dot ${index === 0 ? 'active' : ''}`;
+                dot.onclick = () => goToSlide(index);
+                dots.appendChild(dot);
+            });
+        }
+
+        function goToSlide(index) {
+            slideAtual = index;
+            const track = document.getElementById('sliderTrack');
+            track.style.transform = `translateX(-${slideAtual * 100}%)`;
+            
+            // Atualizar dots
+            document.querySelectorAll('.dot').forEach((dot, i) => {
+                dot.classList.toggle('active', i === slideAtual);
+            });
+        }
+
+        function nextSlide() {
+            slideAtual = (slideAtual + 1) % pasteis.length;
+            goToSlide(slideAtual);
+        }
+
+        function prevSlide() {
+            slideAtual = (slideAtual - 1 + pasteis.length) % pasteis.length;
+            goToSlide(slideAtual);
+        }
+
+        // Touch events para swipe
+        let touchStartX = 0;
+        let touchEndX = 0;
+
+        document.getElementById('slider').addEventListener('touchstart', e => {
+            touchStartX = e.changedTouches[0].screenX;
+        });
+
+        document.getElementById('slider').addEventListener('touchend', e => {
+            touchEndX = e.changedTouches[0].screenX;
+            handleSwipe();
+        });
+
+        function handleSwipe() {
+            if (touchEndX < touchStartX - 50) nextSlide();
+            if (touchEndX > touchStartX + 50) prevSlide();
+        }
+
+        // Lista de pastéis
+        function renderLista() {
+            const container = document.getElementById('pasteisLista');
+            container.innerHTML = '';
+
+            pasteis.forEach((pastel, index) => {
+                const nome = idiomaAtual === 'ja' ? pastel.nome_ja : pastel.nome_pt;
+                const desc = idiomaAtual === 'ja' ? pastel.desc_ja : pastel.desc_pt;
+
+                const div = document.createElement('div');
+                div.className = 'pastel-mini';
+                div.onclick = () => goToSlide(index);
+                div.innerHTML = `
+                    <img src="${pastel.foto}" alt="${nome}">
+                    <div class="pastel-mini-info">
+                        <div class="pastel-mini-nome">${nome}</div>
+                        <div class="pastel-mini-desc">${desc}</div>
+                    </div>
+                    <div class="pastel-mini-preco">¥${pastel.preco}</div>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        // Idioma
+        function trocarIdioma() {
+            idiomaAtual = idiomaAtual === 'ja' ? 'pt' : 'ja';
+            localStorage.setItem('idioma', idiomaAtual);
+            atualizarInterface();
+        }
+
+        function atualizarInterface() {
+            const t = textos[idiomaAtual];
+            
+            document.getElementById('titulo').textContent = t.titulo;
+            document.getElementById('btnVoltar').textContent = t.btnVoltar;
+            document.getElementById('btnVoltar').textContent = t.btnVoltar;
+            document.getElementById('btnIdioma').textContent = t.btnIdioma;
+            document.getElementById('subtitulo').textContent = t.subtitulo;
+            document.getElementById('swipeHint').textContent = t.swipeHint;
+            document.getElementById('listaTitulo').textContent = t.listaTitulo;
+            document.getElementById('btnCTA').textContent = t.btnCTA;
+
+            renderSlider();
+            renderLista();
+        }
+
+        function fecharLiff() {
+            window.location.href = 'index.html';
+        }
+
+        // Init
+        atualizarInterface();
+
+        // Auto-play (opcional)
+        // setInterval(nextSlide, 5000);
+        
+        function voltarHome() {
+            window.location.href = "index.html";
+        }
+    </script>
 </body>
 </html>

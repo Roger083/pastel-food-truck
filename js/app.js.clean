@@ -1,5 +1,10 @@
 (function () {
   const CONFIG = window.FOOD_TRUCK_CONFIG;
+  if (!CONFIG?.liffId || !CONFIG?.supabaseUrl || !CONFIG?.supabaseAnonKey) {
+    showError('config.js に LIFF ID と Supabase の設定を入れてください。');
+    hideLoading();
+    return;
+  }
 
   let supabase;
   let eventoAtivo = null;
@@ -179,11 +184,6 @@
   };
 
   async function init() {
-    if (!CONFIG?.liffId || !CONFIG?.supabaseUrl || !CONFIG?.supabaseAnonKey) {
-      showError('config.js に LIFF ID と Supabase の設定を入れてください。');
-      hideLoading();
-      return;
-    }
     initSupabase();
 
     const landing = document.getElementById('landing');

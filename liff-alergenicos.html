@@ -1,19 +1,501 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>アレルギー情報 - Pastel Food Truck</title>
-  <style>
-    body { font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background: #f0f9f4; }
-    h1 { color: #0d7541; }
-    p { line-height: 1.6; color: #333; }
-    a { color: #27ae60; font-weight: bold; }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Alergênicos - Pastel Info</title>
+        <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Noto Sans JP', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #f0f9f4 0%, #e8f5e9 100%);
+            color: #2d2d2d;
+            padding-bottom: 40px;
+        }
+
+        /* Header */
+        .header {
+            background: linear-gradient(135deg, #0d7541 0%, #27ae60 100%);
+            padding: 20px;
+            box-shadow: 0 4px 12px rgba(13,117,65,0.2);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+                                .header-content {
+            max-width: 600px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 8px;
+            padding: 0 10px;
+        }
+
+        .btn-voltar {
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: white;
+            padding: 6px 10px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+
+        .btn-voltar:hover {
+            background: rgba(255,255,255,0.3);
+            transform: translateX(-2px);
+        }
+
+        .titulo {
+            font-size: 16px;
+            font-weight: 700;
+            color: white;
+            text-align: center;
+            flex: 1;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .btn-idioma {
+            background: rgba(255,255,255,0.2);
+            border: 2px solid rgba(255,255,255,0.5);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        /* Container */
+        .container {
+            max-width: 600px;
+            margin: 20px auto;
+            padding: 0 20px;
+        }
+
+        /* Aviso Importante */
+        .aviso-importante {
+            background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 16px;
+            margin-bottom: 24px;
+            box-shadow: 0 4px 12px rgba(255,152,0,0.3);
+        }
+
+        .aviso-icone {
+            font-size: 48px;
+            text-align: center;
+            margin-bottom: 12px;
+        }
+
+        .aviso-titulo {
+            font-size: 20px;
+            font-weight: 700;
+            text-align: center;
+            margin-bottom: 12px;
+        }
+
+        .aviso-texto {
+            text-align: center;
+            line-height: 1.6;
+            font-size: 15px;
+        }
+
+        /* Card Pastel */
+        .pastel-card {
+            background: white;
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 16px;
+            box-shadow: 0 4px 12px rgba(13,117,65,0.1);
+            border: 2px solid #a8e6cf;
+        }
+
+        .pastel-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 16px;
+            padding-bottom: 12px;
+            border-bottom: 2px solid #f0f9f4;
+        }
+
+        .pastel-emoji {
+            font-size: 36px;
+        }
+
+        .pastel-nome {
+            font-size: 20px;
+            font-weight: 700;
+            color: #0d7541;
+        }
+
+        /* Lista de Alergênicos */
+        .alergenicos-lista {
+            list-style: none;
+            padding: 0;
+        }
+
+        .alergenico-item {
+            background: #fff3e0;
+            padding: 12px;
+            margin-bottom: 8px;
+            border-radius: 10px;
+            border-left: 4px solid #ff9800;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .alergenico-icone {
+            font-size: 20px;
+        }
+
+        .alergenico-texto {
+            color: #e65100;
+            font-weight: 600;
+            font-size: 15px;
+        }
+
+        /* Sem Alergênicos */
+        .sem-alergenicos {
+            background: #e8f5e9;
+            padding: 16px;
+            border-radius: 12px;
+            border-left: 4px solid #2ecc71;
+            color: #1b5e20;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* Info Card */
+        .info-card {
+            background: #e3f2fd;
+            border: 2px solid #2196f3;
+            border-radius: 16px;
+            padding: 20px;
+            margin-top: 24px;
+        }
+
+        .info-titulo {
+            font-size: 18px;
+            font-weight: 700;
+            color: #1565c0;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .info-texto {
+            color: #0d47a1;
+            line-height: 1.7;
+            font-size: 15px;
+        }
+
+        /* Botão */
+        .btn-contato {
+            width: 100%;
+            background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%);
+            color: white;
+            border: none;
+            padding: 16px;
+            border-radius: 14px;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            margin-top: 24px;
+            box-shadow: 0 4px 12px rgba(46,204,113,0.3);
+        }
+
+        .legenda {
+            background: white;
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 24px;
+            box-shadow: 0 2px 8px rgba(13,117,65,0.1);
+        }
+
+        .legenda-titulo {
+            font-weight: 700;
+            color: #0d7541;
+            margin-bottom: 12px;
+        }
+
+        .legenda-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        .legenda-cor {
+            width: 20px;
+            height: 20px;
+            border-radius: 4px;
+        }
+    </style>
 </head>
 <body>
-  <h1>⚠️ アレルギー情報</h1>
-  <p>アレルギーや dietary のご要望がある場合は、注文時にお申し付けください。</p>
-  <p><a href="index.html">← 戻る</a></p>
+    <!-- Header -->
+    <div class="header">
+        <div class="header-content">
+            
+                <button class="btn-voltar" onclick="voltarHome()" id="btnVoltar">← ホーム</button>
+                <div class="titulo" id="titulo">⚠️ アレルギー情報</div>
+            <button class="btn-idioma" onclick="trocarIdioma()" id="btnIdioma">🇧🇷 PT</button>
+        </div>
+    </div>
+
+    <!-- Container -->
+    <div class="container">
+        <!-- Aviso Importante -->
+        <div class="aviso-importante">
+            <div class="aviso-icone">⚠️</div>
+            <div class="aviso-titulo" id="avisoTitulo">重要なお知らせ</div>
+            <div class="aviso-texto" id="avisoTexto">アレルギーをお持ちの方は、ご注文前に必ずご確認ください。重度のアレルギーがある場合は、スタッフにお申し出ください。</div>
+        </div>
+
+        <!-- Legenda -->
+        <div class="legenda">
+            <div class="legenda-titulo" id="legendaTitulo">凡例</div>
+            <div class="legenda-item">
+                <div class="legenda-cor" style="background: #ff9800;"></div>
+                <span id="legenda1">アレルギー物質を含む</span>
+            </div>
+            <div class="legenda-item">
+                <div class="legenda-cor" style="background: #2ecc71;"></div>
+                <span id="legenda2">主要アレルゲンなし</span>
+            </div>
+        </div>
+
+        <!-- Pastel de Carne -->
+        <div class="pastel-card">
+            <div class="pastel-header">
+                <div class="pastel-emoji">🥩</div>
+                <div>
+                    <div class="pastel-nome" id="nome1">牛肉パステル</div>
+                </div>
+            </div>
+            <ul class="alergenicos-lista">
+                <li class="alergenico-item">
+                    <span class="alergenico-icone">🌾</span>
+                    <span class="alergenico-texto" id="alerg1_1">小麦（グルテン）</span>
+                </li>
+                <li class="alergenico-item">
+                    <span class="alergenico-icone">⚠️</span>
+                    <span class="alergenico-texto" id="alerg1_2">大豆由来の調味料を含む可能性あり</span>
+                </li>
+            </ul>
+        </div>
+
+        <!-- Pastel Carne c/ Queijo -->
+        <div class="pastel-card">
+            <div class="pastel-header">
+                <div class="pastel-emoji">🧀🥩</div>
+                <div>
+                    <div class="pastel-nome" id="nome2">牛肉＆チーズパステル</div>
+                </div>
+            </div>
+            <ul class="alergenicos-lista">
+                <li class="alergenico-item">
+                    <span class="alergenico-icone">🌾</span>
+                    <span class="alergenico-texto" id="alerg2_1">小麦（グルテン）</span>
+                </li>
+                <li class="alergenico-item">
+                    <span class="alergenico-icone">🥛</span>
+                    <span class="alergenico-texto" id="alerg2_2">乳製品（チーズ）</span>
+                </li>
+                <li class="alergenico-item">
+                    <span class="alergenico-icone">⚠️</span>
+                    <span class="alergenico-texto" id="alerg2_3">大豆由来の調味料を含む可能性あり</span>
+                </li>
+            </ul>
+        </div>
+
+        <!-- Pastel de Pizza -->
+        <div class="pastel-card">
+            <div class="pastel-header">
+                <div class="pastel-emoji">🍕</div>
+                <div>
+                    <div class="pastel-nome" id="nome3">ピザパステル</div>
+                </div>
+            </div>
+            <ul class="alergenicos-lista">
+                <li class="alergenico-item">
+                    <span class="alergenico-icone">🌾</span>
+                    <span class="alergenico-texto" id="alerg3_1">小麦（グルテン）</span>
+                </li>
+                <li class="alergenico-item">
+                    <span class="alergenico-icone">🥛</span>
+                    <span class="alergenico-texto" id="alerg3_2">乳製品（チーズ）</span>
+                </li>
+                <li class="alergenico-item">
+                    <span class="alergenico-icone">🍅</span>
+                    <span class="alergenico-texto" id="alerg3_3">トマトを含む</span>
+                </li>
+            </ul>
+        </div>
+
+        <!-- Pastel de Queijo -->
+        <div class="pastel-card">
+            <div class="pastel-header">
+                <div class="pastel-emoji">🧀</div>
+                <div>
+                    <div class="pastel-nome" id="nome4">チーズパステル</div>
+                </div>
+            </div>
+            <ul class="alergenicos-lista">
+                <li class="alergenico-item">
+                    <span class="alergenico-icone">🌾</span>
+                    <span class="alergenico-texto" id="alerg4_1">小麦（グルテン）</span>
+                </li>
+                <li class="alergenico-item">
+                    <span class="alergenico-icone">🥛</span>
+                    <span class="alergenico-texto" id="alerg4_2">乳製品（チーズ）</span>
+                </li>
+            </ul>
+        </div>
+
+        <!-- Pastel de Frango -->
+        <div class="pastel-card">
+            <div class="pastel-header">
+                <div class="pastel-emoji">🐔</div>
+                <div>
+                    <div class="pastel-nome" id="nome5">チキンパステル</div>
+                </div>
+            </div>
+            <ul class="alergenicos-lista">
+                <li class="alergenico-item">
+                    <span class="alergenico-icone">🌾</span>
+                    <span class="alergenico-texto" id="alerg5_1">小麦（グルテン）</span>
+                </li>
+                <li class="alergenico-item">
+                    <span class="alergenico-icone">⚠️</span>
+                    <span class="alergenico-texto" id="alerg5_2">大豆由来の調味料を含む可能性あり</span>
+                </li>
+            </ul>
+        </div>
+
+        <!-- Info Card -->
+        <div class="info-card">
+            <div class="info-titulo" id="infoTitulo">ℹ️ 追加情報</div>
+            <p class="info-texto" id="infoTexto">すべてのパステルは同じ調理油で揚げられます。コンタミネーション（微量混入）の可能性があります。重度のアレルギーをお持ちの方は、ご注文前にスタッフまでお申し出ください。</p>
+        </div>
+
+        <!-- Botão Contato -->
+        <button class="btn-contato" onclick="fecharLiff()" id="btnContato">✅ 了解しました</button>
+    </div>
+
+    <script>
+        const textos = {
+            ja: {
+                btnVoltar: '← ホーム',
+                titulo: '⚠️ アレルギー情報',
+                btnIdioma: '🇧🇷 PT',
+                avisoTitulo: '重要なお知らせ',
+                avisoTexto: 'アレルギーをお持ちの方は、ご注文前に必ずご確認ください。重度のアレルギーがある場合は、スタッフにお申し出ください。',
+                legendaTitulo: '凡例',
+                legenda1: 'アレルギー物質を含む',
+                legenda2: '主要アレルゲンなし',
+                nome1: '牛肉パステル',
+                alerg1_1: '小麦（グルテン）',
+                alerg1_2: '大豆由来の調味料を含む可能性あり',
+                nome2: '牛肉＆チーズパステル',
+                alerg2_1: '小麦（グルテン）',
+                alerg2_2: '乳製品（チーズ）',
+                alerg2_3: '大豆由来の調味料を含む可能性あり',
+                nome3: 'ピザパステル',
+                alerg3_1: '小麦（グルテン）',
+                alerg3_2: '乳製品（チーズ）',
+                alerg3_3: 'トマトを含む',
+                nome4: 'チーズパステル',
+                alerg4_1: '小麦（グルテン）',
+                alerg4_2: '乳製品（チーズ）',
+                nome5: 'チキンパステル',
+                alerg5_1: '小麦（グルテン）',
+                alerg5_2: '大豆由来の調味料を含む可能性あり',
+                infoTitulo: 'ℹ️ 追加情報',
+                infoTexto: 'すべてのパステルは同じ調理油で揚げられます。コンタミネーション（微量混入）の可能性があります。重度のアレルギーをお持ちの方は、ご注文前にスタッフまでお申し出ください。',
+                btnContato: '✅ 了解しました'
+            },
+            pt: {
+                btnVoltar: '← Início',
+                titulo: '⚠️ Informações Alérgicas',
+                btnIdioma: '🇯🇵 日本語',
+                avisoTitulo: 'Aviso Importante',
+                avisoTexto: 'Se você tem alergias alimentares, por favor verifique estas informações antes de fazer seu pedido. Em caso de alergia severa, informe nossa equipe.',
+                legendaTitulo: 'Legenda',
+                legenda1: 'Contém alérgenos',
+                legenda2: 'Sem alérgenos principais',
+                nome1: 'Pastel de Carne',
+                alerg1_1: 'Glúten (farinha de trigo)',
+                alerg1_2: 'Pode conter temperos à base de soja',
+                nome2: 'Pastel Carne c/ Queijo',
+                alerg2_1: 'Glúten (farinha de trigo)',
+                alerg2_2: 'Laticínios (queijo)',
+                alerg2_3: 'Pode conter temperos à base de soja',
+                nome3: 'Pastel de Pizza',
+                alerg3_1: 'Glúten (farinha de trigo)',
+                alerg3_2: 'Laticínios (queijo)',
+                alerg3_3: 'Contém tomate',
+                nome4: 'Pastel de Queijo',
+                alerg4_1: 'Glúten (farinha de trigo)',
+                alerg4_2: 'Laticínios (queijo)',
+                nome5: 'Pastel de Frango',
+                alerg5_1: 'Glúten (farinha de trigo)',
+                alerg5_2: 'Pode conter temperos à base de soja',
+                infoTitulo: 'ℹ️ Informações Adicionais',
+                infoTexto: 'Todos os pastéis são fritos no mesmo óleo. Pode haver contaminação cruzada. Se você tem alergia severa, por favor informe nossa equipe antes de fazer o pedido.',
+                btnContato: '✅ Entendi'
+            }
+        };
+
+        let idiomaAtual = localStorage.getItem('idioma') || 'ja';
+
+        function trocarIdioma() {
+            idiomaAtual = idiomaAtual === 'ja' ? 'pt' : 'ja';
+            localStorage.setItem('idioma', idiomaAtual);
+            atualizarInterface();
+        }
+
+        function atualizarInterface() {
+            const t = textos[idiomaAtual];
+            
+            Object.keys(t).forEach(key => {
+                const el = document.getElementById(key);
+                if (el) el.textContent = t[key];
+            });
+        }
+
+        function fecharLiff() {
+            window.location.href = 'index.html';
+        }
+
+        atualizarInterface();
+        
+        function voltarHome() {
+            window.location.href = "index.html";
+        }
+    </script>
 </body>
 </html>

@@ -1,19 +1,480 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>パステルとは？ - Pastel Food Truck</title>
-  <style>
-    body { font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background: #f0f9f4; }
-    h1 { color: #0d7541; }
-    p { line-height: 1.6; color: #333; }
-    a { color: #27ae60; font-weight: bold; }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>O que é Pastel? - Pastel Info</title>
+        <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Noto Sans JP', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #f0f9f4 0%, #e8f5e9 100%);
+            color: #2d2d2d;
+            padding-bottom: 40px;
+        }
+
+        /* Header */
+        .header {
+            background: linear-gradient(135deg, #0d7541 0%, #27ae60 100%);
+            padding: 20px;
+            box-shadow: 0 4px 12px rgba(13,117,65,0.2);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+                                .header-content {
+            max-width: 600px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 8px;
+            padding: 0 10px;
+        }
+
+        .btn-voltar {
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: white;
+            padding: 6px 10px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+
+        .btn-voltar:hover {
+            background: rgba(255,255,255,0.3);
+            transform: translateX(-2px);
+        }
+
+        .titulo {
+            font-size: 16px;
+            font-weight: 700;
+            color: white;
+            text-align: center;
+            flex: 1;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .btn-idioma {
+            background: rgba(255,255,255,0.2);
+            border: 2px solid rgba(255,255,255,0.5);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            backdrop-filter: blur(10px);
+        }
+
+        .btn-idioma:hover {
+            background: rgba(255,255,255,0.3);
+        }
+
+        /* Container */
+        .container {
+            max-width: 600px;
+            margin: 20px auto;
+            padding: 0 20px;
+        }
+
+        /* Hero Image */
+        .hero {
+            width: 100%;
+            height: 250px;
+            background: linear-gradient(135deg, #0d7541 0%, #27ae60 100%);
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 120px;
+            margin-bottom: 24px;
+            box-shadow: 0 8px 20px rgba(13,117,65,0.2);
+        }
+
+        /* Card */
+        .card {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 16px;
+            box-shadow: 0 4px 12px rgba(13,117,65,0.1);
+            border: 2px solid #a8e6cf;
+        }
+
+        .card-titulo {
+            font-size: 20px;
+            font-weight: 700;
+            color: #0d7541;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .card-texto {
+            color: #555;
+            font-size: 16px;
+            line-height: 1.8;
+            margin-bottom: 12px;
+        }
+
+        .card-destaque {
+            background: linear-gradient(135deg, #f0f9f4 0%, #e8f5e9 100%);
+            padding: 16px;
+            border-radius: 12px;
+            border-left: 4px solid #2ecc71;
+            margin: 16px 0;
+        }
+
+        .card-destaque-titulo {
+            font-weight: 700;
+            color: #0d7541;
+            margin-bottom: 8px;
+        }
+
+        /* Lista de Passos */
+        .passos {
+            list-style: none;
+            padding: 0;
+        }
+
+        .passo {
+            background: #f0f9f4;
+            padding: 16px;
+            margin-bottom: 12px;
+            border-radius: 12px;
+            border-left: 4px solid #2ecc71;
+            display: flex;
+            gap: 12px;
+        }
+
+        .passo-numero {
+            background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%);
+            color: white;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            flex-shrink: 0;
+        }
+
+        .passo-texto {
+            color: #555;
+            font-size: 15px;
+            line-height: 1.6;
+        }
+
+        /* Ingredientes */
+        .ingredientes-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            margin-top: 12px;
+        }
+
+        .ingrediente-item {
+            background: #f0f9f4;
+            padding: 12px;
+            border-radius: 10px;
+            text-align: center;
+            font-weight: 600;
+            color: #0d7541;
+            border: 2px solid #a8e6cf;
+        }
+
+        /* Botão CTA */
+        .btn-cta {
+            width: 100%;
+            background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%);
+            color: white;
+            border: none;
+            padding: 18px;
+            border-radius: 14px;
+            font-size: 18px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 4px 12px rgba(46,204,113,0.3);
+            margin-top: 24px;
+        }
+
+        .btn-cta:hover {
+            transform: scale(1.02);
+            box-shadow: 0 6px 16px rgba(46,204,113,0.5);
+        }
+
+        /* Timeline */
+        .timeline {
+            position: relative;
+            padding-left: 40px;
+        }
+
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 15px;
+            top: 0;
+            bottom: 0;
+            width: 3px;
+            background: linear-gradient(180deg, #2ecc71 0%, #27ae60 100%);
+        }
+
+        .timeline-item {
+            position: relative;
+            margin-bottom: 24px;
+        }
+
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: -32px;
+            top: 0;
+            width: 16px;
+            height: 16px;
+            background: #2ecc71;
+            border-radius: 50%;
+            border: 3px solid white;
+            box-shadow: 0 0 0 3px #2ecc71;
+        }
+
+        .timeline-ano {
+            font-size: 18px;
+            font-weight: 700;
+            color: #2ecc71;
+            margin-bottom: 8px;
+        }
+
+        .timeline-texto {
+            color: #555;
+            line-height: 1.6;
+        }
+
+        /* Bandeiras */
+        .flags {
+            display: flex;
+            justify-content: center;
+            gap: 16px;
+            font-size: 48px;
+            margin: 20px 0;
+        }
+    </style>
 </head>
 <body>
-  <h1>🥟 パステルとは？</h1>
-  <p>パステルはブラジルの伝統的な揚げ物料理です。具材を薄い生地で包み、油で揚げた軽食で、屋台やフードトラックで人気です。</p>
-  <p><a href="index.html">← 戻る</a></p>
+    <!-- Header -->
+    <div class="header">
+        <div class="header-content">
+                <button class="btn-voltar" onclick="voltarHome()" id="btnVoltar">← ホーム</button>
+                <div class="titulo" id="titulo">🥟 パステルとは？</div>
+                <button class="btn-idioma" onclick="trocarIdioma()" id="btnIdioma">🇧🇷 PT</button>
+        </div>
+    </div>
+
+    <!-- Container -->
+    <div class="container">
+        <!-- Hero -->
+        <div class="hero">🥟</div>
+
+        <!-- Introdução -->
+        <div class="card">
+            <div class="card-titulo" id="introTitulo">🇧🇷 ブラジルの伝統料理</div>
+            <p class="card-texto" id="introTexto">パステルは、ブラジルで最も人気のある軽食の一つです。サクサクの生地の中に様々な具材が入っています。揚げたてを食べると、外はカリカリ、中はジューシー！</p>
+        </div>
+
+        <!-- História -->
+        <div class="card">
+            <div class="card-titulo" id="historiaTitulo">📖 歴史</div>
+            
+            <div class="flags">🇯🇵 × 🇧🇷</div>
+
+            <div class="card-destaque">
+                <div class="card-destaque-titulo" id="conexaoTitulo">日本とのつながり</div>
+                <p id="conexaoTexto">パステルは1940年代に日系ブラジル人によって作られました。日本の餃子とブラジルの食文化が融合した料理です！</p>
+            </div>
+
+            <div class="timeline">
+                <div class="timeline-item">
+                    <div class="timeline-ano">1940年代</div>
+                    <div class="timeline-texto" id="timeline1">サンパウロの日系移民が中華料理の春巻きにヒントを得て、ブラジル風にアレンジ</div>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-ano">1950-60年代</div>
+                    <div class="timeline-texto" id="timeline2">ブラジル全土で大人気に！フェイラ（市場）の定番グルメになる</div>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-ano" id="timelineHoje">今日</div>
+                    <div class="timeline-texto" id="timeline3">世界中のブラジル人が愛する国民食。日本でも楽しめるようになりました！</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Como Comer -->
+        <div class="card">
+            <div class="card-titulo" id="comoTitulo">🍴 食べ方</div>
+            
+            <ul class="passos">
+                <li class="passo">
+                    <div class="passo-numero">1</div>
+                    <div class="passo-texto" id="passo1">手で持って食べます（フォークとナイフは不要！）</div>
+                </li>
+                <li class="passo">
+                    <div class="passo-numero">2</div>
+                    <div class="passo-texto" id="passo2">注意：中身が熱いので火傷に気をつけてください！🔥</div>
+                </li>
+                <li class="passo">
+                    <div class="passo-numero">3</div>
+                    <div class="passo-texto" id="passo3">レモンを絞るとさらに美味しい！🍋</div>
+                </li>
+                <li class="passo">
+                    <div class="passo-numero">4</div>
+                    <div class="passo-texto" id="passo4">出来たてアツアツが一番！</div>
+                </li>
+            </ul>
+        </div>
+
+        <!-- Ingredientes -->
+        <div class="card">
+            <div class="card-titulo" id="ingredientesTitulo">🥘 基本の材料</div>
+            
+            <div class="ingredientes-grid">
+                <div class="ingrediente-item" id="ing1">小麦粉</div>
+                <div class="ingrediente-item" id="ing2">水</div>
+                <div class="ingrediente-item" id="ing3">塩</div>
+                <div class="ingrediente-item" id="ing4">お好みの具材</div>
+            </div>
+
+            <p class="card-texto" style="margin-top: 16px;" id="ingredientesTexto">生地はシンプルですが、具材は無限大！伝統的な具材から創作まで、様々な味が楽しめます。</p>
+        </div>
+
+        <!-- CTA -->
+        <button class="btn-cta" onclick="fecharLiff()" id="btnCTA">🛒 パステルを注文する</button>
+    </div>
+
+    <script>
+        // Textos
+        const textos = {
+            ja: {
+                btnVoltar: '← ホーム',
+                titulo: '🥟 パステルとは？',
+                btnIdioma: '🇧🇷 PT',
+                introTitulo: '🇧🇷 ブラジルの伝統料理',
+                introTexto: 'パステルは、ブラジルで最も人気のある軽食の一つです。サクサクの生地の中に様々な具材が入っています。揚げたてを食べると、外はカリカリ、中はジューシー！',
+                historiaTitulo: '📖 歴史',
+                conexaoTitulo: '日本とのつながり',
+                conexaoTexto: 'パステルは1940年代に日系ブラジル人によって作られました。日本の餃子とブラジルの食文化が融合した料理です！',
+                timeline1: 'サンパウロの日系移民が中華料理の春巻きにヒントを得て、ブラジル風にアレンジ',
+                timeline2: 'ブラジル全土で大人気に！フェイラ（市場）の定番グルメになる',
+                timelineHoje: '今日',
+                timeline3: '世界中のブラジル人が愛する国民食。日本でも楽しめるようになりました！',
+                comoTitulo: '🍴 食べ方',
+                passo1: '手で持って食べます（フォークとナイフは不要！）',
+                passo2: '注意：中身が熱いので火傷に気をつけてください！🔥',
+                passo3: 'レモンを絞るとさらに美味しい！🍋',
+                passo4: '出来たてアツアツが一番！',
+                ingredientesTitulo: '🥘 基本の材料',
+                ing1: '小麦粉',
+                ing2: '水',
+                ing3: '塩',
+                ing4: 'お好みの具材',
+                ingredientesTexto: '生地はシンプルですが、具材は無限大！伝統的な具材から創作まで、様々な味が楽しめます。',
+                btnCTA: '🛒 パステルを注文する'
+            },
+            pt: {
+                btnVoltar: '← Início',
+                titulo: '🥟 O que é Pastel?',
+                btnIdioma: '🇯🇵 日本語',
+                introTitulo: '🇧🇷 Comida Tradicional Brasileira',
+                introTexto: 'O pastel é um dos lanches mais populares do Brasil. Massa crocante recheada com diversos sabores. Quando frito na hora, fica crocante por fora e suculento por dentro!',
+                historiaTitulo: '📖 História',
+                conexaoTitulo: 'Conexão com o Japão',
+                conexaoTexto: 'O pastel foi criado na década de 1940 por imigrantes japoneses no Brasil. É uma fusão da culinária japonesa (gyoza) com a brasileira!',
+                timeline1: 'Imigrantes japoneses em São Paulo se inspiram no rolinho primavera chinês e criam a versão brasileira',
+                timeline2: 'Se torna fenômeno nacional! Vira presença obrigatória nas feiras livres de todo o Brasil',
+                timelineHoje: 'Hoje',
+                timeline3: 'Amado por brasileiros no mundo todo. Agora disponível no Japão!',
+                comoTitulo: '🍴 Como Comer',
+                passo1: 'Pegue com a mão (sem garfo e faca!)',
+                passo2: 'Cuidado: o recheio está muito quente! 🔥',
+                passo3: 'Esprema limão para ficar ainda melhor! 🍋',
+                passo4: 'Coma quentinho, recém-frito!',
+                ingredientesTitulo: '🥘 Ingredientes Básicos',
+                ing1: 'Farinha de trigo',
+                ing2: 'Água',
+                ing3: 'Sal',
+                ing4: 'Recheio a gosto',
+                ingredientesTexto: 'A massa é simples, mas os recheios são infinitos! Dos tradicionais aos criativos, há sabores para todos os gostos.',
+                btnCTA: '🛒 Fazer Pedido'
+            }
+        };
+
+        // Estado
+        let idiomaAtual = localStorage.getItem('idioma') || 'ja';
+
+        // Funções
+        function trocarIdioma() {
+            idiomaAtual = idiomaAtual === 'ja' ? 'pt' : 'ja';
+            localStorage.setItem('idioma', idiomaAtual);
+            atualizarInterface();
+        }
+
+        function atualizarInterface() {
+            const t = textos[idiomaAtual];
+            
+            document.getElementById('titulo').textContent = t.titulo;
+            document.getElementById('btnVoltar').textContent = t.btnVoltar;
+            document.getElementById('btnVoltar').textContent = t.btnVoltar;
+            document.getElementById('btnIdioma').textContent = t.btnIdioma;
+            document.getElementById('introTitulo').textContent = t.introTitulo;
+            document.getElementById('introTexto').textContent = t.introTexto;
+            document.getElementById('historiaTitulo').textContent = t.historiaTitulo;
+            document.getElementById('conexaoTitulo').textContent = t.conexaoTitulo;
+            document.getElementById('conexaoTexto').textContent = t.conexaoTexto;
+            document.getElementById('timeline1').textContent = t.timeline1;
+            document.getElementById('timeline2').textContent = t.timeline2;
+            document.getElementById('timelineHoje').textContent = t.timelineHoje;
+            document.getElementById('timeline3').textContent = t.timeline3;
+            document.getElementById('comoTitulo').textContent = t.comoTitulo;
+            document.getElementById('passo1').textContent = t.passo1;
+            document.getElementById('passo2').textContent = t.passo2;
+            document.getElementById('passo3').textContent = t.passo3;
+            document.getElementById('passo4').textContent = t.passo4;
+            document.getElementById('ingredientesTitulo').textContent = t.ingredientesTitulo;
+            document.getElementById('ing1').textContent = t.ing1;
+            document.getElementById('ing2').textContent = t.ing2;
+            document.getElementById('ing3').textContent = t.ing3;
+            document.getElementById('ing4').textContent = t.ing4;
+            document.getElementById('ingredientesTexto').textContent = t.ingredientesTexto;
+            document.getElementById('btnCTA').textContent = t.btnCTA;
+        }
+
+        function fecharLiff() {
+            window.location.href = 'index.html';
+        }
+
+        // Init
+        atualizarInterface();
+        
+        function voltarHome() {
+            window.location.href = "index.html";
+        }
+    </script>
 </body>
 </html>
