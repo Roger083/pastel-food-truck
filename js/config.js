@@ -8,7 +8,7 @@
  */
 // Atenção: é "qee" no meio, NÃO "gee" → ejzaaoyqeeqyuoiozfxn
 window.FOOD_TRUCK_CONFIG = {
-  liffId: '2009012918-Wa33Wbud',
+  liffId: '2009073867-mQNTAnqH',
   supabaseUrl: 'https://ejzaaoyqeeqyuoiozfxn.supabase.co',
   supabaseAnonKey: 'sb_publishable_r18ogAShfeiOmhF4SOHupg_Hyw-tHGR'
 };
