@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Pastel - Food Truck</title>
+  <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/cardapio-verde.css">
+  <style>
+    .cardapio-verde .header-verde { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+    .cardapio-verde .header-verde .titulo-centro { flex: 1; text-align: center; font-size: 1rem; margin: 0; }
+    .cardapio-verde .header-verde .btn-voltar, .cardapio-verde .header-verde .btn-idioma { flex-shrink: 0; background: rgba(255,255,255,0.25); border: 2px solid rgba(255,255,255,0.5); color: white; padding: 8px 14px; border-radius: 12px; font-size: 13px; font-weight: 700; cursor: pointer; text-decoration: none; }
+    .detalhe-card { background: white; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 14px rgba(13,117,65,0.15); border: 2px solid #a8e6cf; margin: 1rem 0; }
+    .detalhe-card img { width: 100%; height: 220px; object-fit: cover; display: block; }
+    .detalhe-card .detalhe-body { padding: 1rem 1.25rem; }
+    .detalhe-card .detalhe-nome { font-size: 1.25rem; font-weight: 800; color: #0d7541; margin-bottom: 0.5rem; }
+    .detalhe-card .detalhe-desc { color: #555; font-size: 0.95rem; margin-bottom: 1rem; }
+    .detalhe-card .detalhe-ing { font-size: 0.85rem; font-weight: 600; color: #333; margin-bottom: 0.5rem; }
+    .detalhe-card .detalhe-tags { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 1rem; }
+    .detalhe-card .detalhe-tag { background: #e8f5e9; color: #0d7541; padding: 6px 12px; border-radius: 20px; font-size: 0.85rem; font-weight: 600; }
+    .detalhe-card .detalhe-preco { font-size: 1.5rem; font-weight: 800; color: #0d7541; margin-bottom: 1rem; }
+    .detalhe-card .qty-row { display: flex; align-items: center; gap: 12px; margin-bottom: 1rem; }
+    .detalhe-card .qty-row label { font-weight: 600; color: #333; min-width: 90px; }
+    .detalhe-card .qty-row .qty-controls { display: flex; align-items: center; gap: 8px; }
+    .detalhe-card .qty-row .qty-controls button { width: 44px; height: 44px; border: none; border-radius: 12px; background: #27ae60; color: white; font-size: 1.25rem; cursor: pointer; font-weight: 700; }
+    .detalhe-card .qty-row .qty-controls span { min-width: 2rem; text-align: center; font-weight: 700; font-size: 1.1rem; }
+    .detalhe-card .tipo-pedido-row { margin-bottom: 1rem; }
+    .detalhe-card .tipo-pedido-row label { display: block; font-weight: 600; color: #333; margin-bottom: 8px; }
+    .detalhe-card .tipo-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .detalhe-card .tipo-btn { padding: 12px; border: 3px solid #a8e6cf; border-radius: 12px; background: white; color: #0d7541; font-weight: 700; cursor: pointer; transition: all 0.2s; }
+    .detalhe-card .tipo-btn.ativo { background: #27ae60; color: white; border-color: #0d7541; }
+    .detalhe-card .agendar-campos { margin-top: 10px; }
+    .detalhe-card .agendar-campos input { width: 100%; padding: 8px; border: 2px solid #c8e6c9; border-radius: 8px; margin-bottom: 8px; }
+    .detalhe-card .btn-add { width: 100%; padding: 16px; border: none; border-radius: 16px; background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%); color: white; font-size: 1.1rem; font-weight: 800; cursor: pointer; margin-top: 0.5rem; }
+    .detalhe-card .btn-add:hover { opacity: 0.95; }
+    .link-carrinho { display: block; text-align: center; margin-top: 1rem; color: #27ae60; font-weight: 700; text-decoration: none; }
+  </style>
+</head>
+<body class="cardapio-verde">
+  <div id="app">
+    <div id="loading">Carregando...</div>
+    <div id="error" class="error" hidden></div>
+
+    <div id="main" hidden>
+      <header class="header-verde">
+        <a href="cardapio-completo-verde.html" class="btn-voltar" id="btnVoltar">← Início</a>
+        <h1 class="titulo-centro" id="titulo">Cardápio do Dia</h1>
+        <button type="button" class="btn-idioma" id="btnIdioma">JP 日本語</button>
+      </header>
+
+      <div class="detalhe-card" id="detalheCard">
+        <img id="itemImg" src="" alt="">
+        <div class="detalhe-body">
+          <div class="detalhe-nome" id="itemNome"></div>
+          <div class="detalhe-desc" id="itemDesc"></div>
+          <div class="detalhe-ing" id="labelIng">Ingredientes</div>
+          <div class="detalhe-tags" id="itemIng"></div>
+          <div class="detalhe-preco" id="itemPreco"></div>
+          <div class="qty-row">
+            <label id="labelQty">Quantidade</label>
+            <div class="qty-controls">
+              <button type="button" id="btnMinus">−</button>
+              <span id="qtyVal">1</span>
+              <button type="button" id="btnPlus">+</button>
+            </div>
+          </div>
+          <div class="tipo-pedido-row">
+            <label id="labelTipo">Tipo de Pedido</label>
+            <div class="tipo-btns">
+              <button type="button" class="tipo-btn ativo" data-tipo="agora" id="btnParaAgora">Para Agora</button>
+              <button type="button" class="tipo-btn" data-tipo="agendar" id="btnAgendar">Agendar</button>
+            </div>
+            <div class="agendar-campos" id="agendarCampos" hidden>
+              <input type="date" id="agendarData">
+              <input type="time" id="agendarHora">
+            </div>
+          </div>
+          <button type="button" class="btn-add" id="btnAddCart">🛒 Adicionar ao Carrinho</button>
+          <a href="cardapio-carrinho.html" class="link-carrinho" id="linkCarrinho" hidden>Ver carrinho →</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/config.js"></script>
+  <script src="js/cardapio-dados.js"></script>
+  <script>
+(function () {
+  const CONFIG = window.FOOD_TRUCK_CONFIG;
+  const CART_KEY = "foodtruck_cart";
+  let supabase;
+  let item = null;
+  let qty = 1;
+  let tipoRetirada = "agora";
+  let idioma = localStorage.getItem("idioma") || "pt";
+
+  const $loading = document.getElementById("loading");
+  const $error = document.getElementById("error");
+  const $main = document.getElementById("main");
+  const $itemImg = document.getElementById("itemImg");
+  const $itemNome = document.getElementById("itemNome");
+  const $itemDesc = document.getElementById("itemDesc");
+  const $itemIng = document.getElementById("itemIng");
+  const $itemPreco = document.getElementById("itemPreco");
+  const $qtyVal = document.getElementById("qtyVal");
+  const $agendarCampos = document.getElementById("agendarCampos");
+  const $linkCarrinho = document.getElementById("linkCarrinho");
+  const params = new URLSearchParams(window.location.search);
+  const idParam = params.get("id");
+  const slugParam = params.get("item");
+
+  function hideLoading() { $loading.hidden = true; }
+  function showError(msg) { $error.textContent = msg; $error.hidden = false; }
+
+  function initSupabase() {
+    supabase = window.supabase.createClient(CONFIG.supabaseUrl, CONFIG.supabaseAnonKey);
+  }
+
+  function formatPrice(v) { return "R$ " + Number(v).toFixed(2).replace(".", ","); }
+
+  function textos() {
+    return idioma === "ja"
+      ? { voltar: "← ホーム", titulo: "本日のメニュー", idioma: "🇧🇷 PT", ing: "材料", qty: "数量", tipo: "注文タイプ", agora: "今すぐ", agendar: "予約", add: "カートに追加", verCarrinho: "カートを見る" }
+      : { voltar: "← Início", titulo: "Cardápio do Dia", idioma: "JP 日本語", ing: "Ingredientes", qty: "Quantidade", tipo: "Tipo de Pedido", agora: "Para Agora", agendar: "Agendar", add: "Adicionar ao Carrinho", verCarrinho: "Ver carrinho →" };
+  }
+
+  function atualizarUI() {
+    const t = textos();
+    document.getElementById("btnVoltar").textContent = t.voltar;
+    document.getElementById("titulo").textContent = t.titulo;
+    document.getElementById("btnIdioma").textContent = t.idioma;
+    document.getElementById("labelIng").textContent = t.ing;
+    document.getElementById("labelQty").textContent = t.qty;
+    document.getElementById("labelTipo").textContent = t.tipo;
+    document.getElementById("btnParaAgora").textContent = t.agora;
+    document.getElementById("btnAgendar").textContent = t.agendar;
+    document.getElementById("btnAddCart").textContent = "🛒 " + t.add;
+    $linkCarrinho.textContent = t.verCarrinho;
+    if (item) renderItem();
+  }
+
+  function getInfoBySlug(slug) {
+    const info = window.PASTEIS_INFO && window.PASTEIS_INFO[slug] ? window.PASTEIS_INFO[slug] : window.PASTEIS_INFO.carne;
+    return idioma === "ja" ? { desc: info.desc_ja, ing: info.ingredientes_ja } : { desc: info.desc_pt, ing: info.ingredientes_pt };
+  }
+
+  function renderItem() {
+    if (!item) return;
+    const slug = window.slugFromNome ? window.slugFromNome(item.nome) : "carne";
+    const info = getInfoBySlug(slug);
+    $itemImg.src = window.imgParaItem ? window.imgParaItem(item.nome) : "img/pastel-carne.png";
+    $itemImg.alt = item.nome;
+    $itemNome.textContent = item.nome;
+    $itemDesc.textContent = info.desc;
+    $itemIng.innerHTML = (info.ing || []).map(function (x) { return '<span class="detalhe-tag">' + escapeHtml(x) + "</span>"; }).join("");
+    $itemPreco.textContent = formatPrice(item.preco);
+    $qtyVal.textContent = qty;
+  }
+
+  function escapeHtml(s) { const d = document.createElement("div"); d.textContent = s; return d.innerHTML; }
+
+  async function loadItemById(uuid) {
+    const { data: evento } = await supabase.from("eventos").select("cardapio_id").eq("ativo", true).limit(1).maybeSingle();
+    if (!evento) return null;
+    const { data: row } = await supabase.from("cardapio_itens").select("id, nome, preco").eq("id", uuid).eq("cardapio_id", evento.cardapio_id).maybeSingle();
+    return row;
+  }
+
+  async function loadItemBySlug(slug) {
+    const { data: evento } = await supabase.from("eventos").select("cardapio_id").eq("ativo", true).limit(1).maybeSingle();
+    if (!evento) return null;
+    const { data: itens } = await supabase.from("cardapio_itens").select("id, nome, preco").eq("cardapio_id", evento.cardapio_id).eq("ativo", true).order("ordem");
+    if (!itens || !itens.length) return null;
+    const s = (slug || "").toLowerCase();
+    function match(i) {
+      const n = i.nome.toLowerCase();
+      if (s === "carne-queijo") return n.indexOf("misto") >= 0 || (n.indexOf("carne") >= 0 && n.indexOf("queijo") >= 0);
+      if (s === "carne") return n.indexOf("carne") >= 0 && n.indexOf("queijo") < 0;
+      if (s === "queijo") return n.indexOf("queijo") >= 0;
+      if (s === "pizza") return n.indexOf("pizza") >= 0;
+      if (s === "frango") return n.indexOf("frango") >= 0;
+      return n.indexOf(s) >= 0;
+    }
+    return itens.find(match) || itens[0];
+  }
+
+  function getCart() { try { return JSON.parse(localStorage.getItem(CART_KEY) || "[]"); } catch (_) { return []; } }
+  function setCart(arr) { localStorage.setItem(CART_KEY, JSON.stringify(arr)); }
+
+  document.getElementById("btnIdioma").addEventListener("click", function () {
+    idioma = idioma === "ja" ? "pt" : "ja";
+    localStorage.setItem("idioma", idioma);
+    atualizarUI();
+  });
+
+  document.getElementById("btnMinus").addEventListener("click", function () { qty = Math.max(1, qty - 1); $qtyVal.textContent = qty; });
+  document.getElementById("btnPlus").addEventListener("click", function () { qty = qty + 1; $qtyVal.textContent = qty; });
+
+  document.getElementById("btnParaAgora").addEventListener("click", function () {
+    tipoRetirada = "agora";
+    document.querySelectorAll(".tipo-btn").forEach(function (b) { b.classList.toggle("ativo", b.dataset.tipo === "agora"); });
+    $agendarCampos.hidden = true;
+  });
+  document.getElementById("btnAgendar").addEventListener("click", function () {
+    tipoRetirada = "agendar";
+    document.querySelectorAll(".tipo-btn").forEach(function (b) { b.classList.toggle("ativo", b.dataset.tipo === "agendar"); });
+    $agendarCampos.hidden = false;
+    var d = document.getElementById("agendarData"); if (!d.min) d.min = new Date().toISOString().slice(0, 10);
+  });
+
+  document.getElementById("btnAddCart").addEventListener("click", function () {
+    if (!item) return;
+    var cart = getCart();
+    var existing = cart.find(function (x) { return x.id === item.id; });
+    if (existing) existing.quantidade += qty; else cart.push({ id: item.id, nome: item.nome, preco: item.preco, quantidade: qty });
+    setCart(cart);
+    $linkCarrinho.hidden = false;
+    alert(idioma === "ja" ? "カートに追加しました。" : "Adicionado ao carrinho!");
+  });
+
+  async function init() {
+    if (!CONFIG?.supabaseUrl || !CONFIG?.supabaseAnonKey) { showError("Configure config.js."); hideLoading(); return; }
+    initSupabase();
+    atualizarUI();
+
+    if (idParam) item = await loadItemById(idParam);
+    else if (slugParam) item = await loadItemBySlug(slugParam);
+    if (!item) { showError(idioma === "ja" ? "商品が見つかりません。" : "Item não encontrado."); hideLoading(); return; }
+
+    renderItem();
+    $main.hidden = false;
+    hideLoading();
+  }
+
+  init();
+})();
+  </script>
+</body>
+</html>

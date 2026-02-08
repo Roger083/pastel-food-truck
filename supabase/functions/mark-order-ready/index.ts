@@ -89,6 +89,7 @@ Deno.serve(async (req) => {
     return jsonResponse({ error: "Failed to update order" }, 500);
   }
 
+  let lineSent = false;
   if (channelToken && pedido.line_user_id) {
     const lineBody = {
       to: pedido.line_user_id,
@@ -99,7 +100,7 @@ Deno.serve(async (req) => {
         },
       ],
     };
-    await fetch("https://api.line.me/v2/bot/message/push", {
+    const lineRes = await fetch("https://api.line.me/v2/bot/message/push", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -107,7 +108,12 @@ Deno.serve(async (req) => {
       },
       body: JSON.stringify(lineBody),
     });
+    lineSent = lineRes.ok;
+    if (!lineRes.ok) {
+      const errText = await lineRes.text();
+      console.error("LINE push failed:", lineRes.status, errText);
+    }
   }
 
-  return jsonResponse({ ok: true });
+  return jsonResponse({ ok: true, line_sent: lineSent });
 });

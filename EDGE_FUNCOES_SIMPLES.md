@@ -64,8 +64,9 @@ Exemplo: se a senha for `pastel2025`:
 npx supabase secrets set ADMIN_SECRET=pastel2025
 ```
 
-**3.2 – Token do LINE**  
-No [LINE Developers](https://developers.line.biz) → seu canal (Messaging API) → aba **Messaging API** → em **Channel access token** clique em **Issue** ou **Reissue** e **copie** o token.
+**3.2 – Token do LINE (obrigatório para notificação “pedido pronto”)**  
+Use o token do canal **Messaging API** (ex.: “Roger”), **não** do canal LINE Login (Pastel Pedidos).  
+No [LINE Developers](https://developers.line.biz) → canal **Messaging API** → aba **Messaging API** → **Channel access token** → **Issue** ou **Reissue** → copie o token.
 
 No terminal, **cole o token no lugar de COLE_O_TOKEN_AQUI** (tudo numa linha, sem espaço no meio):
 

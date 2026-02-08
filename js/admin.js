@@ -76,10 +76,13 @@ async function loadOrders() {
     return;
   }
 
+  // Pedidos na hora: sempre. Agendados: só entram na fila 15 min antes do horário.
+  const cutoffAgendado = new Date(Date.now() + 15 * 60 * 1000).toISOString();
   const { data: pedidos, error: errPedidos } = await sb
     .from("pedidos")
     .select("*, pedido_itens(*)")
     .eq("evento_id", evento.id)
+    .or(`agendado_para.is.null,agendado_para.lte.${cutoffAgendado}`)
     .order("criado_em", { ascending: false });
 
   if (errPedidos) {
@@ -171,8 +174,20 @@ async function markReady(pedidoId) {
     },
     body: JSON.stringify({ pedido_id: pedidoId }),
   });
+  let lineSent = false;
+  try {
+    const data = await res.json();
+    lineSent = data && data.line_sent === true;
+  } catch (_) {}
   if (!res.ok) {
-    console.warn("Falha ao enviar notificação LINE (pedido já marcado como pronto)");
+    console.warn("Falha ao chamar mark-order-ready:", res.status);
+  }
+  if (!lineSent && res.ok) {
+    alert(
+      "Pedido marcado como pronto.\n\nNotificação LINE não foi enviada. " +
+        "Configure o CHANNEL_ACCESS_TOKEN no Supabase (Edge Functions > mark-order-ready > Secrets) " +
+        "e faça o deploy da função. O token é do canal Messaging API (Roger), não do LINE Login."
+    );
   }
   loadOrders();
 }

@@ -3,12 +3,23 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-  <title>Cardápio - Pastel Food Truck</title>
+  <title>Cardápio do Dia - Pastel Food Truck</title>
   <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/style.css">
   <link rel="stylesheet" href="css/cardapio-verde.css">
+  <style>
+    .cardapio-verde .header-verde { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+    .cardapio-verde .header-verde .titulo-centro { flex: 1; text-align: center; font-size: 1.1rem; margin: 0; }
+    .cardapio-verde .header-verde .btn-voltar, .cardapio-verde .header-verde .btn-idioma { flex-shrink: 0; background: rgba(255,255,255,0.25); border: 2px solid rgba(255,255,255,0.5); color: white; padding: 8px 14px; border-radius: 12px; font-size: 13px; font-weight: 700; cursor: pointer; text-decoration: none; }
+    .cardapio-verde .header-verde .btn-carrinho { flex-shrink: 0; background: rgba(255,255,255,0.25); border: 2px solid rgba(255,255,255,0.5); color: white; padding: 8px 14px; border-radius: 12px; font-size: 13px; font-weight: 700; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; }
+    .cardapio-verde .grid-opcoes { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; margin: 1rem 0 2rem; }
+    .cardapio-verde .opcao-card { display: block; background: white; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 14px rgba(13,117,65,0.15); border: 2px solid #a8e6cf; text-decoration: none; color: inherit; transition: transform 0.2s, box-shadow 0.2s; }
+    .cardapio-verde .opcao-card:hover { transform: translateY(-4px); box-shadow: 0 8px 20px rgba(13,117,65,0.25); }
+    .cardapio-verde .opcao-card img { width: 100%; height: 160px; object-fit: cover; display: block; }
+    .cardapio-verde .opcao-card .opcao-nome { padding: 12px; font-weight: 700; color: #0d7541; font-size: 0.95rem; text-align: center; }
+  </style>
 </head>
 <body class="cardapio-verde">
   <div id="app">
@@ -17,44 +28,149 @@
 
     <div id="main" hidden>
       <header class="header-verde">
-        <h1>🥟 Cardápio</h1>
-        <p>Escolha como quer retirar e monte seu pedido</p>
+        <a href="index.html" class="btn-voltar" id="btnVoltar">← Início</a>
+        <h1 class="titulo-centro" id="titulo">Cardápio do Dia</h1>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <a href="cardapio-carrinho.html" class="btn-carrinho" id="btnCarrinho">🛒 <span id="cart-count">0</span></a>
+          <button type="button" class="btn-idioma" id="btnIdioma">JP 日本語</button>
+        </div>
       </header>
 
-      <section class="escolha-retirada">
-        <p class="section-title">Como deseja retirar?</p>
-        <div class="escolha-tipo">
-          <button type="button" class="btn-tipo ativo" data-tipo="agora" id="btn-agora">🕐 Pedir na hora</button>
-          <button type="button" class="btn-tipo" data-tipo="agendar" id="btn-agendar">📅 Agendar</button>
-        </div>
-        <div class="agendar-campos" id="agendar-campos" hidden>
-          <label for="agendar-data">Data</label>
-          <input type="date" id="agendar-data" min="">
-          <label for="agendar-hora">Horário</label>
-          <input type="time" id="agendar-hora">
-        </div>
-      </section>
-
-      <p class="section-title">Itens do cardápio</p>
-      <ul class="menu-list" id="menu-list"></ul>
-
-      <section class="cart-section">
-        <h2>Seu pedido <span id="cart-count">0</span> itens</h2>
-        <ul class="cart-list" id="cart-list"></ul>
-        <p class="cart-total" id="cart-total">Total: R$ 0,00</p>
-        <button type="button" class="btn-confirm" id="btn-confirm" disabled>Confirmar pedido</button>
-      </section>
+      <p class="section-title" id="subtitulo">Escolha um pastel</p>
+      <div class="grid-opcoes" id="grid-opcoes"></div>
     </div>
-
-    <section id="success-section" class="success-section" hidden>
-      <h2>Pedido recebido!</h2>
-      <p class="order-number">Número: <strong id="order-number">-</strong></p>
-      <p class="order-msg" id="order-msg">Guarde este número. Quando estiver pronto você receberá notificação no LINE.</p>
-      <a href="index.html" class="back-link">← Voltar ao início</a>
-    </section>
   </div>
 
   <script src="js/config.js"></script>
-  <script src="js/cardapio-verde.js"></script>
+  <script src="js/cardapio-dados.js"></script>
+  <script>
+(function () {
+  const CONFIG = window.FOOD_TRUCK_CONFIG;
+  let supabase;
+  let eventoAtivo = null;
+  const CART_KEY = "foodtruck_cart";
+  const EVENTO_KEY = "foodtruck_evento_id";
+
+  const $loading = document.getElementById("loading");
+  const $error = document.getElementById("error");
+  const $main = document.getElementById("main");
+  const $grid = document.getElementById("grid-opcoes");
+  const $cartCount = document.getElementById("cart-count");
+  const $btnIdioma = document.getElementById("btnIdioma");
+  const $titulo = document.getElementById("titulo");
+  const $subtitulo = document.getElementById("subtitulo");
+  const $btnVoltar = document.getElementById("btnVoltar");
+
+  let idioma = localStorage.getItem("idioma") || "pt";
+
+  function getCart() {
+    try {
+      const raw = localStorage.getItem(CART_KEY);
+      return raw ? JSON.parse(raw) : [];
+    } catch (_) { return []; }
+  }
+
+  function updateCartCount() {
+    const cart = getCart();
+    const n = cart.reduce((s, i) => s + (i.quantidade || 0), 0);
+    $cartCount.textContent = n;
+  }
+
+  function hideLoading() { $loading.hidden = true; }
+  function showError(msg) { $error.textContent = msg; $error.hidden = false; }
+
+  function initSupabase() {
+    supabase = window.supabase.createClient(CONFIG.supabaseUrl, CONFIG.supabaseAnonKey);
+  }
+
+  function textos() {
+    return idioma === "ja"
+      ? { titulo: "本日のメニュー", subtitulo: "パステルを選んでください", voltar: "← ホーム", idioma: "🇧🇷 PT" }
+      : { titulo: "Cardápio do Dia", subtitulo: "Escolha um pastel", voltar: "← Início", idioma: "JP 日本語" };
+  }
+
+  function atualizarUI() {
+    const t = textos();
+    $titulo.textContent = t.titulo;
+    $subtitulo.textContent = t.subtitulo;
+    $btnVoltar.textContent = t.voltar;
+    $btnIdioma.textContent = t.idioma;
+  }
+
+  $btnIdioma.addEventListener("click", function () {
+    idioma = idioma === "ja" ? "pt" : "ja";
+    localStorage.setItem("idioma", idioma);
+    atualizarUI();
+  });
+
+  async function loadList() {
+    const { data: evento, error: errE } = await supabase
+      .from("eventos")
+      .select("id, nome, cardapio_id")
+      .eq("ativo", true)
+      .limit(1)
+      .maybeSingle();
+
+    if (errE || !evento) {
+      showError(idioma === "ja" ? "注文を受け付けるイベントがありません。" : "Não há evento aceitando pedidos no momento.");
+      hideLoading();
+      return;
+    }
+    eventoAtivo = evento;
+    localStorage.setItem(EVENTO_KEY, evento.id);
+
+    const { data: itens, error: errI } = await supabase
+      .from("cardapio_itens")
+      .select("id, nome, preco, ordem")
+      .eq("cardapio_id", evento.cardapio_id)
+      .eq("ativo", true)
+      .order("ordem", { ascending: true });
+
+    if (errI) {
+      showError(idioma === "ja" ? "メニューの取得に失敗しました。" : "Falha ao carregar o cardápio.");
+      hideLoading();
+      return;
+    }
+
+    const lista = itens || [];
+    $grid.innerHTML = lista
+      .map(function (item) {
+        const img = window.imgParaItem ? window.imgParaItem(item.nome) : "img/pastel-carne.png";
+        return (
+          '<a href="cardapio-item.html?id=' +
+          encodeURIComponent(item.id) +
+          '" class="opcao-card">' +
+          '<img src="' + img + '" alt="">' +
+          '<div class="opcao-nome">' + escapeHtml(item.nome) + "</div>" +
+          "</a>"
+        );
+      })
+      .join("");
+
+    $main.hidden = false;
+    hideLoading();
+    updateCartCount();
+  }
+
+  function escapeHtml(s) {
+    const d = document.createElement("div");
+    d.textContent = s;
+    return d.innerHTML;
+  }
+
+  async function init() {
+    if (!CONFIG?.supabaseUrl || !CONFIG?.supabaseAnonKey) {
+      showError("Configure Supabase em config.js.");
+      hideLoading();
+      return;
+    }
+    initSupabase();
+    atualizarUI();
+    await loadList();
+  }
+
+  init();
+})();
+  </script>
 </body>
 </html>

@@ -1,18 +1,18 @@
 # Como dar push das alterações para o GitHub Pages
 
-## 🚀 Guia rápido (sempre os mesmos 3 comandos)
+## ⭐ Copiar e colar (só isso)
 
-1. **Abra o terminal na pasta do repositório** (onde está a pasta `.git` — no Windows costuma ser `C:\Users\Roger\...\pastel-food-truck` ou `food-truck`).
+1. Abra o terminal **na pasta do repositório no Windows** (ex.: `C:\Users\Roger\projetos\pastel-food-truck` — onde está a pasta `.git`).
 
-2. Rode estes **3 comandos** (pode copiar e colar):
+2. Cole e rode os **3 comandos**:
 
-   ```bash
-   git add .
-   git commit -m "Atualiza site e migrações"
-   git push origin main
-   ```
+```bash
+git add .
+git commit -m "Atualiza site e migrações"
+git push origin main
+```
 
-   Se a branch for **master** em vez de **main**, use: `git push origin master`
+Se der erro na branch, tente: `git push origin master`
 
 3. Pronto. O GitHub Pages atualiza em 1–2 minutos.
 

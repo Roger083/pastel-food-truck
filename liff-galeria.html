@@ -322,53 +322,16 @@
             <div id="pasteisLista"></div>
         </div>
 
-        <!-- CTA -->
-        <button class="btn-cta" onclick="fecharLiff()" id="btnCTA">🛒 注文する</button>
     </div>
 
     <script>
         // Dados dos pastéis
         const pasteis = [
-            {
-                nome_ja: '🥩 牛肉パステル',
-                nome_pt: '🥩 Pastel de Carne',
-                desc_ja: 'スパイスで味付けした牛ひき肉',
-                desc_pt: 'Carne moída temperada',
-                foto: 'img/pastel-carne.png',
-                preco: 350
-            },
-            {
-                nome_ja: '🧀🥩 牛肉＆チーズパステル',
-                nome_pt: '🧀🥩 Pastel Carne c/ Queijo',
-                desc_ja: '牛肉とたっぷりチーズ',
-                desc_pt: 'Carne moída com muito queijo',
-                foto: 'img/pastel-carne-queijo.png',
-                preco: 400
-            },
-            {
-                nome_ja: '🍕 ピザパステル',
-                nome_pt: '🍕 Pastel de Pizza',
-                desc_ja: 'トマト、チーズ、オレガノ',
-                desc_pt: 'Tomate, queijo e orégano',
-                foto: 'img/pastel-pizza.png',
-                preco: 400
-            },
-            {
-                nome_ja: '🧀 チーズパステル',
-                nome_pt: '🧀 Pastel de Queijo',
-                desc_ja: 'たっぷりチーズ',
-                desc_pt: 'Muito queijo derretido',
-                foto: 'img/pastel-queijo.png',
-                preco: 350
-            },
-            {
-                nome_ja: '🐔 チキンパステル',
-                nome_pt: '🐔 Pastel de Frango',
-                desc_ja: 'チキンとトマトソース',
-                desc_pt: 'Frango com molho de tomate',
-                foto: 'img/pastel-frango.png',
-                preco: 350
-            }
+            { slug: 'carne', nome_ja: '🥩 牛肉パステル', nome_pt: '🥩 Pastel de Carne', desc_ja: 'スパイスで味付けした牛ひき肉', desc_pt: 'Carne moída temperada', foto: 'img/pastel-carne.png', preco: 350 },
+            { slug: 'carne-queijo', nome_ja: '🧀🥩 牛肉＆チーズパステル', nome_pt: '🧀🥩 Pastel Carne c/ Queijo', desc_ja: '牛肉とたっぷりチーズ', desc_pt: 'Carne moída com muito queijo', foto: 'img/pastel-carne-queijo.png', preco: 400 },
+            { slug: 'pizza', nome_ja: '🍕 ピザパステル', nome_pt: '🍕 Pastel de Pizza', desc_ja: 'トマト、チーズ、オレガノ', desc_pt: 'Tomate, queijo e orégano', foto: 'img/pastel-pizza.png', preco: 400 },
+            { slug: 'queijo', nome_ja: '🧀 チーズパステル', nome_pt: '🧀 Pastel de Queijo', desc_ja: 'たっぷりチーズ', desc_pt: 'Muito queijo derretido', foto: 'img/pastel-queijo.png', preco: 350 },
+            { slug: 'frango', nome_ja: '🐔 チキンパステル', nome_pt: '🐔 Pastel de Frango', desc_ja: 'チキンとトマトソース', desc_pt: 'Frango com molho de tomate', foto: 'img/pastel-frango.png', preco: 350 }
         ];
 
         // Textos
@@ -376,18 +339,18 @@
             ja: {
                 btnVoltar: '← ホーム',
                 btnIdioma: '🇧🇷 PT',
-                titulo: '美味しそうなパステルをご覧ください',
+                titulo: '📸 写真ギャラリー',
+                subtitulo: '美味しそうなパステルをご覧ください',
                 swipeHint: '← スワイプして他の写真を見る →',
-                listaTitulo: '全ての味',
-                btnCTA: '🛒 注文する'
+                listaTitulo: '全ての味'
             },
             pt: {
                 btnVoltar: '← Início',
                 btnIdioma: '🇯🇵 日本語',
-                titulo: 'Veja nossos deliciosos pastéis',
+                titulo: 'Galeria de fotos',
+                subtitulo: 'Veja nossos deliciosos pastéis',
                 swipeHint: '← Arraste para ver mais fotos →',
-                listaTitulo: 'Todos os Sabores',
-                btnCTA: '🛒 Fazer Pedido'
+                listaTitulo: 'Todos os Sabores'
             }
         };
 
@@ -466,7 +429,7 @@
             if (touchEndX > touchStartX + 50) prevSlide();
         }
 
-        // Lista de pastéis
+        // Lista de pastéis: clicar leva à página de detalhe do pastel (mesma do cardápio)
         function renderLista() {
             const container = document.getElementById('pasteisLista');
             container.innerHTML = '';
@@ -474,10 +437,14 @@
             pasteis.forEach((pastel, index) => {
                 const nome = idiomaAtual === 'ja' ? pastel.nome_ja : pastel.nome_pt;
                 const desc = idiomaAtual === 'ja' ? pastel.desc_ja : pastel.desc_pt;
+                const slug = pastel.slug || 'carne';
+                const url = 'cardapio-item.html?item=' + encodeURIComponent(slug);
 
-                const div = document.createElement('div');
+                const div = document.createElement('a');
                 div.className = 'pastel-mini';
-                div.onclick = () => goToSlide(index);
+                div.href = url;
+                div.style.textDecoration = 'none';
+                div.style.color = 'inherit';
                 div.innerHTML = `
                     <img src="${pastel.foto}" alt="${nome}">
                     <div class="pastel-mini-info">
@@ -507,7 +474,6 @@
             document.getElementById('subtitulo').textContent = t.subtitulo;
             document.getElementById('swipeHint').textContent = t.swipeHint;
             document.getElementById('listaTitulo').textContent = t.listaTitulo;
-            document.getElementById('btnCTA').textContent = t.btnCTA;
 
             renderSlider();
             renderLista();

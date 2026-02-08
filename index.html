@@ -19,8 +19,11 @@
       position: sticky; top: 0; z-index: 100;
       margin: 0 -1rem 24px; padding-left: 1rem; padding-right: 1rem;
     }
-    .landing .header-content { display: flex; justify-content: space-between; align-items: center; max-width: 600px; margin: 0 auto; }
-    .landing .logo { font-size: 24px; font-weight: 800; color: white; }
+    .landing .header-content { display: flex; align-items: center; max-width: 600px; margin: 0 auto; }
+    .landing .header-content .header-spacer { flex: 1; }
+    .landing .header-content .logo-wrap { flex: 1; text-align: center; }
+    .landing .logo { font-size: 24px; font-weight: 800; color: white; display: inline-block; }
+    .landing .header-content .btn-idioma-wrap { flex: 1; text-align: right; }
     .landing .btn-idioma {
       background: rgba(255,255,255,0.2); border: 2px solid rgba(255,255,255,0.5);
       color: white; padding: 8px 16px; border-radius: 20px; font-size: 13px; font-weight: 600;
@@ -69,8 +72,9 @@
     <div id="landing" class="landing">
       <div class="header-landing">
         <div class="header-content">
-          <div class="logo" id="logo">🥟 PASTEL</div>
-          <button type="button" class="btn-idioma" id="btnIdioma">🇧🇷 PT</button>
+          <div class="header-spacer"></div>
+          <div class="logo-wrap"><span class="logo" id="logo">🥟 PASTEL</span></div>
+          <div class="btn-idioma-wrap"><button type="button" class="btn-idioma" id="btnIdioma">🇧🇷 PT</button></div>
         </div>
       </div>
       <div class="hero-image">
@@ -143,7 +147,7 @@
   <script>
     (function() {
       var textos = {
-        ja: { logo: '🥟 PASTEL', btnIdioma: '🇧🇷 PT', heroTitle: 'パステル', heroSubtitle: 'ブラジルの伝統料理', btnPrincipal: '🛒 注文する', btn1: 'パステルとは？', btn2: 'アレルギー情報', btn3: '写真ギャラリー', btn4: 'よくある質問', footerTexto: 'ご注文後、LINEで通知が届きます！', footerDestaque: '出来立てをお召し上がりください 🔥' },
+        ja: { logo: '🥟 パステル', btnIdioma: '🇧🇷 PT', heroTitle: 'パステル', heroSubtitle: 'ブラジルの伝統料理', btnPrincipal: '🛒 注文する', btn1: 'パステルとは？', btn2: 'アレルギー情報', btn3: '写真ギャラリー', btn4: 'よくある質問', footerTexto: 'ご注文後、LINEで通知が届きます！', footerDestaque: '出来立てをお召し上がりください 🔥' },
         pt: { logo: '🥟 PASTEL', btnIdioma: '🇯🇵 日本語', heroTitle: 'PASTEL', heroSubtitle: 'Comida Tradicional Brasileira', btnPrincipal: '🛒 FAZER PEDIDO', btn1: 'O que é Pastel?', btn2: 'Alergênicos', btn3: 'Galeria', btn4: 'Perguntas Frequentes', footerTexto: 'Após o pedido, você receberá notificação no LINE!', footerDestaque: 'Coma quentinho! 🔥' }
       };
       var idioma = localStorage.getItem('idioma') || 'ja';

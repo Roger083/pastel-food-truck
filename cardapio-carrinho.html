@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Carrinho - Pastel Food Truck</title>
+  <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/cardapio-verde.css">
+  <style>
+    .cardapio-verde .header-verde { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+    .cardapio-verde .header-verde .titulo-centro { flex: 1; text-align: center; font-size: 1rem; margin: 0; }
+    .cardapio-verde .header-verde .btn-voltar, .cardapio-verde .header-verde .btn-idioma { flex-shrink: 0; background: rgba(255,255,255,0.25); border: 2px solid rgba(255,255,255,0.5); color: white; padding: 8px 14px; border-radius: 12px; font-size: 13px; font-weight: 700; cursor: pointer; text-decoration: none; }
+    .carrinho-lista { margin: 1rem 0; }
+    .carrinho-item { background: white; border-radius: 12px; padding: 12px 1rem; margin-bottom: 8px; border: 2px solid #a8e6cf; display: flex; justify-content: space-between; align-items: center; }
+    .carrinho-total { font-size: 1.25rem; font-weight: 800; color: #0d7541; margin: 1rem 0; }
+    .carrinho-vazio { text-align: center; padding: 2rem; color: #666; }
+    .carrinho-vazio a { color: #27ae60; font-weight: 700; }
+    .tipo-row { margin: 1rem 0; }
+    .tipo-row label { display: block; font-weight: 600; margin-bottom: 8px; }
+    .tipo-row .tipo-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .tipo-row .tipo-btn { padding: 12px; border: 3px solid #a8e6cf; border-radius: 12px; background: white; color: #0d7541; font-weight: 700; cursor: pointer; }
+    .tipo-row .tipo-btn.ativo { background: #27ae60; color: white; border-color: #0d7541; }
+    .tipo-row .agendar-campos input { width: 100%; padding: 10px; border: 2px solid #c8e6c9; border-radius: 10px; margin-top: 8px; }
+    .btn-confirmar { width: 100%; padding: 16px; border: none; border-radius: 16px; background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%); color: white; font-size: 1.1rem; font-weight: 800; cursor: pointer; margin-top: 1rem; }
+    .btn-confirmar:disabled { background: #bbb; cursor: not-allowed; }
+  </style>
+</head>
+<body class="cardapio-verde">
+  <div id="app">
+    <div id="loading">Carregando...</div>
+    <div id="error" class="error" hidden></div>
+
+    <div id="main" hidden>
+      <header class="header-verde">
+        <a href="cardapio-completo-verde.html" class="btn-voltar" id="btnVoltar">← Voltar</a>
+        <h1 class="titulo-centro" id="titulo">Carrinho</h1>
+        <button type="button" class="btn-idioma" id="btnIdioma">JP 日本語</button>
+      </header>
+
+      <div class="carrinho-lista" id="carrinhoLista"></div>
+      <div class="carrinho-total" id="carrinhoTotal"></div>
+
+      <div class="tipo-row">
+        <label id="labelTipo">Como deseja retirar?</label>
+        <div class="tipo-btns">
+          <button type="button" class="tipo-btn ativo" data-tipo="agora" id="btnAgora">Pedir na hora</button>
+          <button type="button" class="tipo-btn" data-tipo="agendar" id="btnAgendar">Agendar</button>
+        </div>
+        <div class="agendar-campos" id="agendarCampos" hidden>
+          <input type="date" id="agendarData">
+          <input type="time" id="agendarHora">
+        </div>
+      </div>
+
+      <button type="button" class="btn-confirmar" id="btnConfirmar" disabled>Confirmar pedido</button>
+    </div>
+
+    <div id="empty" class="carrinho-vazio" hidden>
+      <p id="emptyMsg">Carrinho vazio.</p>
+      <a href="cardapio-completo-verde.html" id="linkCardapio">Ver cardápio</a>
+    </div>
+
+    <section id="success-section" class="success-section" hidden>
+      <h2>Pedido recebido!</h2>
+      <p class="order-number">Número: <strong id="order-number">-</strong></p>
+      <p class="order-msg" id="order-msg"></p>
+      <a href="index.html" class="back-link">← Voltar ao início</a>
+    </section>
+  </div>
+
+  <script src="js/config.js"></script>
+  <script>
+(function () {
+  const CONFIG = window.FOOD_TRUCK_CONFIG;
+  const CART_KEY = "foodtruck_cart";
+  const EVENTO_KEY = "foodtruck_evento_id";
+  let supabase;
+  let lineUserId = null;
+  let idioma = localStorage.getItem("idioma") || "pt";
+
+  const $loading = document.getElementById("loading");
+  const $error = document.getElementById("error");
+  const $main = document.getElementById("main");
+  const $empty = document.getElementById("empty");
+  const $carrinhoLista = document.getElementById("carrinhoLista");
+  const $carrinhoTotal = document.getElementById("carrinhoTotal");
+  const $btnConfirmar = document.getElementById("btnConfirmar");
+  const $agendarCampos = document.getElementById("agendarCampos");
+  const $successSection = document.getElementById("success-section");
+  const $orderNumber = document.getElementById("order-number");
+  const $orderMsg = document.getElementById("order-msg");
+
+  function getCart() { try { return JSON.parse(localStorage.getItem(CART_KEY) || "[]"); } catch (_) { return []; } }
+  function setCart(arr) { localStorage.setItem(CART_KEY, JSON.stringify(arr)); }
+
+  function hideLoading() { $loading.hidden = true; }
+  function showError(msg) { $error.textContent = msg; $error.hidden = false; }
+
+  function formatPrice(v) { return "R$ " + Number(v).toFixed(2).replace(".", ","); }
+  function formatNumero(n) { return "A-" + String(n).padStart(3, "0"); }
+
+  function textos() {
+    return idioma === "ja"
+      ? { voltar: "← 戻る", titulo: "カート", idioma: "🇧🇷 PT", tipo: "受け取り方法", agora: "今すぐ", agendar: "予約", confirmar: "注文を確定", empty: "カートは空です。", linkCardapio: "メニューを見る", success: "注文を受け付けました。", msg: "準備ができたらLINEでお知らせします。" }
+      : { voltar: "← Voltar", titulo: "Carrinho", idioma: "JP 日本語", tipo: "Como deseja retirar?", agora: "Pedir na hora", agendar: "Agendar", confirmar: "Confirmar pedido", empty: "Carrinho vazio.", linkCardapio: "Ver cardápio", success: "Pedido recebido!", msg: "Quando estiver pronto você receberá notificação no LINE." };
+  }
+
+  function atualizarUI() {
+    const t = textos();
+    document.getElementById("btnVoltar").textContent = t.voltar;
+    document.getElementById("titulo").textContent = t.titulo;
+    document.getElementById("btnIdioma").textContent = t.idioma;
+    document.getElementById("labelTipo").textContent = t.tipo;
+    document.getElementById("btnAgora").textContent = t.agora;
+    document.getElementById("btnAgendar").textContent = t.agendar;
+    document.getElementById("btnConfirmar").textContent = t.confirmar;
+    document.getElementById("emptyMsg").textContent = t.empty;
+    document.getElementById("linkCardapio").textContent = t.linkCardapio;
+  }
+
+  function renderCart() {
+    const cart = getCart().filter(function (x) { return x.quantidade > 0; });
+    setCart(cart);
+    if (cart.length === 0) {
+      $main.hidden = true;
+      $empty.hidden = false;
+      hideLoading();
+      return;
+    }
+    $empty.hidden = true;
+    $main.hidden = false;
+    const total = cart.reduce(function (s, i) { return s + Number(i.preco) * i.quantidade; }, 0);
+    $carrinhoLista.innerHTML = cart.map(function (i) {
+      return '<div class="carrinho-item">' + escapeHtml(i.nome) + " x" + i.quantidade + " – " + formatPrice(Number(i.preco) * i.quantidade) + "</div>";
+    }).join("");
+    $carrinhoTotal.textContent = "Total: " + formatPrice(total);
+    $btnConfirmar.disabled = false;
+  }
+
+  function escapeHtml(s) { const d = document.createElement("div"); d.textContent = s; return d.innerHTML; }
+
+  function initSupabase() {
+    supabase = window.supabase.createClient(CONFIG.supabaseUrl, CONFIG.supabaseAnonKey);
+  }
+
+  document.getElementById("btnIdioma").addEventListener("click", function () {
+    idioma = idioma === "ja" ? "pt" : "ja";
+    localStorage.setItem("idioma", idioma);
+    atualizarUI();
+  });
+
+  document.getElementById("btnAgora").addEventListener("click", function () {
+    document.querySelectorAll(".tipo-btn").forEach(function (b) { b.classList.toggle("ativo", b.dataset.tipo === "agora"); });
+    $agendarCampos.hidden = true;
+  });
+  document.getElementById("btnAgendar").addEventListener("click", function () {
+    document.querySelectorAll(".tipo-btn").forEach(function (b) { b.classList.toggle("ativo", b.dataset.tipo === "agendar"); });
+    $agendarCampos.hidden = false;
+    var d = document.getElementById("agendarData"); if (!d.min) d.min = new Date().toISOString().slice(0, 10);
+  });
+
+  document.getElementById("btnConfirmar").addEventListener("click", async function () {
+    var cart = getCart().filter(function (x) { return x.quantidade > 0; });
+    if (cart.length === 0) return;
+    var eventoId = localStorage.getItem(EVENTO_KEY);
+    if (!eventoId) { showError("Recarregue o cardápio."); return; }
+    var tipoAgendar = document.getElementById("btnAgendar").classList.contains("ativo");
+    var agendadoPara = null;
+    if (tipoAgendar) {
+      var data = document.getElementById("agendarData").value;
+      var hora = document.getElementById("agendarHora").value;
+      if (!data || !hora) { alert(idioma === "ja" ? "日付と時刻を入力してください。" : "Informe data e horário."); return; }
+      agendadoPara = new Date(data + "T" + hora + ":00").toISOString();
+    }
+    $btnConfirmar.disabled = true;
+    $btnConfirmar.textContent = idioma === "ja" ? "送信中..." : "Enviando...";
+    var itens = cart.map(function (i) { return { cardapio_item_id: i.id, nome: i.nome, preco: i.preco, quantidade: i.quantidade }; });
+    var params = { p_evento_id: eventoId, p_line_user_id: lineUserId || null, p_itens: itens };
+    if (agendadoPara) params.p_agendado_para = agendadoPara;
+    var { data: pedido, error } = await supabase.rpc("criar_pedido", params);
+    if (error) {
+      showError(error.message || "Falha ao enviar.");
+      $btnConfirmar.disabled = false;
+      $btnConfirmar.textContent = textos().confirmar;
+      return;
+    }
+    setCart([]);
+    $main.hidden = true;
+    $successSection.hidden = false;
+    $orderNumber.textContent = formatNumero(pedido.numero);
+    $orderMsg.textContent = textos().msg;
+    $btnConfirmar.disabled = false;
+    $btnConfirmar.textContent = textos().confirmar;
+  });
+
+  async function init() {
+    if (!CONFIG?.supabaseUrl || !CONFIG?.supabaseAnonKey) { showError("Configure config.js."); hideLoading(); return; }
+    initSupabase();
+    atualizarUI();
+    if (window.liff && CONFIG.liffId) {
+      await window.liff.init({ liffId: CONFIG.liffId });
+      if (window.liff.isLoggedIn()) { try { var p = await window.liff.getProfile(); lineUserId = p && p.userId; } catch (_) {} }
+    }
+    renderCart();
+    hideLoading();
+  }
+
+  init();
+})();
+  </script>
+</body>
+</html>
