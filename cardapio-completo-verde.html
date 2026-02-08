@@ -11,14 +11,23 @@
   <link rel="stylesheet" href="css/cardapio-verde.css">
   <style>
     .cardapio-verde .header-verde { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
-    .cardapio-verde .header-verde .titulo-centro { flex: 1; text-align: center; font-size: 1.1rem; margin: 0; }
+    .cardapio-verde .header-verde .titulo-centro { flex: 1; text-align: center; font-size: 1rem; margin: 0; display: flex; align-items: center; justify-content: center; gap: 6px; }
+    .cardapio-verde .header-verde .titulo-centro .titulo-icone { font-size: 1.1rem; }
     .cardapio-verde .header-verde .btn-voltar, .cardapio-verde .header-verde .btn-idioma { flex-shrink: 0; background: rgba(255,255,255,0.25); border: 2px solid rgba(255,255,255,0.5); color: white; padding: 8px 14px; border-radius: 12px; font-size: 13px; font-weight: 700; cursor: pointer; text-decoration: none; }
     .cardapio-verde .header-verde .btn-carrinho { flex-shrink: 0; background: rgba(255,255,255,0.25); border: 2px solid rgba(255,255,255,0.5); color: white; padding: 8px 14px; border-radius: 12px; font-size: 13px; font-weight: 700; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; }
-    .cardapio-verde .grid-opcoes { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; margin: 1rem 0 2rem; }
-    .cardapio-verde .opcao-card { display: block; background: white; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 14px rgba(13,117,65,0.15); border: 2px solid #a8e6cf; text-decoration: none; color: inherit; transition: transform 0.2s, box-shadow 0.2s; }
-    .cardapio-verde .opcao-card:hover { transform: translateY(-4px); box-shadow: 0 8px 20px rgba(13,117,65,0.25); }
-    .cardapio-verde .opcao-card img { width: 100%; height: 160px; object-fit: cover; display: block; }
-    .cardapio-verde .opcao-card .opcao-nome { padding: 12px; font-weight: 700; color: #0d7541; font-size: 0.95rem; text-align: center; }
+    .cardapio-verde .section-title { text-align: center; color: #1a3d0a; font-size: 0.95rem; margin: 0 0 1rem; font-weight: 600; }
+    .cardapio-verde .lista-cards { margin: 0 0 2rem; display: flex; flex-direction: column; gap: 16px; }
+    .cardapio-verde .opcao-card { display: block; background: white; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 14px rgba(13,117,65,0.15); text-decoration: none; color: inherit; transition: transform 0.2s, box-shadow 0.2s; position: relative; }
+    .cardapio-verde .opcao-card:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(13,117,65,0.25); }
+    .cardapio-verde .opcao-card .opcao-img-wrap { position: relative; width: 100%; height: 200px; overflow: hidden; }
+    .cardapio-verde .opcao-card img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .cardapio-verde .opcao-card .opcao-arrow { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); width: 28px; height: 28px; background: rgba(0,0,0,0.4); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 700; }
+    .cardapio-verde .opcao-card .opcao-detalhes { padding: 14px 16px; display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: space-between; gap: 8px; }
+    .cardapio-verde .opcao-card .opcao-texto { flex: 1; min-width: 0; }
+    .cardapio-verde .opcao-card .opcao-icone { font-size: 1rem; margin-right: 6px; }
+    .cardapio-verde .opcao-card .opcao-nome { font-size: 1.05rem; font-weight: 700; color: #1a3d0a; margin-bottom: 4px; }
+    .cardapio-verde .opcao-card .opcao-desc { font-size: 0.85rem; color: #555; line-height: 1.35; }
+    .cardapio-verde .opcao-card .opcao-preco { font-size: 1.1rem; font-weight: 800; color: #0d7541; flex-shrink: 0; }
   </style>
 </head>
 <body class="cardapio-verde">
@@ -29,15 +38,15 @@
     <div id="main" hidden>
       <header class="header-verde">
         <a href="index.html" class="btn-voltar" id="btnVoltar">← Início</a>
-        <h1 class="titulo-centro" id="titulo">Cardápio do Dia</h1>
+        <h1 class="titulo-centro" id="titulo"><span class="titulo-icone" id="tituloIcone">🔥</span> <span id="tituloTexto">Cardápio do Dia</span></h1>
         <div style="display:flex;gap:8px;align-items:center;">
           <a href="cardapio-carrinho.html" class="btn-carrinho" id="btnCarrinho">🛒 <span id="cart-count">0</span></a>
           <button type="button" class="btn-idioma" id="btnIdioma">JP 日本語</button>
         </div>
       </header>
 
-      <p class="section-title" id="subtitulo">Escolha um pastel</p>
-      <div class="grid-opcoes" id="grid-opcoes"></div>
+      <p class="section-title" id="subtitulo">Comida tradicional brasileira «Pastel»</p>
+      <div class="lista-cards" id="grid-opcoes"></div>
     </div>
   </div>
 
@@ -62,6 +71,7 @@
   const $btnVoltar = document.getElementById("btnVoltar");
 
   let idioma = localStorage.getItem("idioma") || "pt";
+  let ultimosItens = [];
 
   function getCart() {
     try {
@@ -85,13 +95,18 @@
 
   function textos() {
     return idioma === "ja"
-      ? { titulo: "本日のメニュー", subtitulo: "パステルを選んでください", voltar: "← ホーム", idioma: "🇧🇷 PT" }
-      : { titulo: "Cardápio do Dia", subtitulo: "Escolha um pastel", voltar: "← Início", idioma: "JP 日本語" };
+      ? { titulo: "本日のメニュー", subtitulo: "ブラジルの伝統料理「パステル」", voltar: "← ホーム", idioma: "🇧🇷 PT" }
+      : { titulo: "Cardápio do Dia", subtitulo: "Comida tradicional brasileira «Pastel»", voltar: "← Início", idioma: "JP 日本語" };
+  }
+
+  function formatPrice(preco) {
+    return idioma === "ja" ? "¥" + Number(preco).toLocaleString() : "R$ " + Number(preco).toFixed(2).replace(".", ",");
   }
 
   function atualizarUI() {
     const t = textos();
-    $titulo.textContent = t.titulo;
+    var tituloEl = document.getElementById("tituloTexto");
+    if (tituloEl) tituloEl.textContent = t.titulo;
     $subtitulo.textContent = t.subtitulo;
     $btnVoltar.textContent = t.voltar;
     $btnIdioma.textContent = t.idioma;
@@ -101,7 +116,41 @@
     idioma = idioma === "ja" ? "pt" : "ja";
     localStorage.setItem("idioma", idioma);
     atualizarUI();
+    if (ultimosItens.length) renderCards(ultimosItens);
   });
+
+  function renderCards(lista) {
+    var infoBySlug = window.PASTEIS_INFO || {};
+    $grid.innerHTML = lista
+      .map(function (item) {
+        var slug = window.slugFromNome ? window.slugFromNome(item.nome) : "carne";
+        var info = infoBySlug[slug] || infoBySlug.carne || {};
+        var img = window.imgParaItem ? window.imgParaItem(item.nome) : "img/pastel-carne.png";
+        var emoji = info.emoji || "🥟";
+        var nomeExibir = idioma === "ja" && info.nome_ja ? info.nome_ja : escapeHtml(item.nome);
+        var descExibir = idioma === "ja" ? (info.desc_ja || "") : (info.desc_pt || "");
+        var precoStr = formatPrice(item.preco);
+        return (
+          '<a href="cardapio-item.html?id=' +
+          encodeURIComponent(item.id) +
+          '" class="opcao-card">' +
+          '<div class="opcao-img-wrap">' +
+          '<img src="' + img + '" alt="">' +
+          '<span class="opcao-arrow">→</span>' +
+          "</div>" +
+          '<div class="opcao-detalhes">' +
+          '<div class="opcao-texto">' +
+          '<span class="opcao-icone">' + emoji + "</span>" +
+          '<div class="opcao-nome">' + nomeExibir + "</div>" +
+          (descExibir ? '<div class="opcao-desc">' + escapeHtml(descExibir) + "</div>" : "") +
+          "</div>" +
+          '<div class="opcao-preco">' + precoStr + "</div>" +
+          "</div>" +
+          "</a>"
+        );
+      })
+      .join("");
+  }
 
   async function loadList() {
     const { data: evento, error: errE } = await supabase
@@ -132,20 +181,8 @@
       return;
     }
 
-    const lista = itens || [];
-    $grid.innerHTML = lista
-      .map(function (item) {
-        const img = window.imgParaItem ? window.imgParaItem(item.nome) : "img/pastel-carne.png";
-        return (
-          '<a href="cardapio-item.html?id=' +
-          encodeURIComponent(item.id) +
-          '" class="opcao-card">' +
-          '<img src="' + img + '" alt="">' +
-          '<div class="opcao-nome">' + escapeHtml(item.nome) + "</div>" +
-          "</a>"
-        );
-      })
-      .join("");
+    ultimosItens = itens || [];
+    renderCards(ultimosItens);
 
     $main.hidden = false;
     hideLoading();
