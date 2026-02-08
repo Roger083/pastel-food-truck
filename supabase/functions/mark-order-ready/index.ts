@@ -22,17 +22,37 @@ Deno.serve(async (req) => {
     return new Response(null, { headers: cors });
   }
 
-  // Auth: aceita JWT do Supabase Auth (admin logado com email/senha)
-  const authHeader = req.headers.get("Authorization") || "";
-  if (!authHeader.startsWith("Bearer ")) {
-    return jsonResponse({ error: "Unauthorized" }, 401);
-  }
-  const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-  const authRes = await fetch(supabaseUrl + "/auth/v1/user", {
-    headers: { Authorization: authHeader },
-  });
-  if (!authRes.ok) {
-    return jsonResponse({ error: "Unauthorized" }, 401);
+  // Auth: aceita (1) segredo ADMIN_SECRET no header x-admin-secret OU (2) JWT do Supabase Auth
+  const adminSecret = Deno.env.get("ADMIN_SECRET");
+  const sentSecret = (req.headers.get("x-admin-secret") || "").trim();
+  if (adminSecret && sentSecret && adminSecret === sentSecret) {
+    // Autenticado por segredo
+  } else {
+    if (sentSecret) {
+      if (!adminSecret) {
+        console.warn("mark-order-ready: x-admin-secret enviado mas ADMIN_SECRET não está definido no Supabase. Adicione o secret e faça deploy de novo.");
+        return jsonResponse({ error: "Unauthorized", hint: "ADMIN_SECRET não está no Supabase ou a função não foi deployada depois de adicionar. Edge Functions → Secrets → ADMIN_SECRET, depois deploy." }, 401);
+      }
+      console.warn("mark-order-ready: segredo não confere.");
+      return jsonResponse({ error: "Unauthorized", hint: "Segredo (adminSecret no config) não confere com ADMIN_SECRET no Supabase. Mesmo valor nos dois?" }, 401);
+    }
+    const authHeader = req.headers.get("Authorization") || "";
+    if (!authHeader.startsWith("Bearer ")) {
+      return jsonResponse({ error: "Unauthorized", hint: "Envie x-admin-secret (adicione adminSecret em config.js) ou faça login no admin." }, 401);
+    }
+    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const authRes = await fetch(supabaseUrl + "/auth/v1/user", {
+      headers: {
+        Authorization: authHeader,
+        apikey: serviceRoleKey,
+      },
+    });
+    if (!authRes.ok) {
+      const errText = await authRes.text();
+      console.error("Auth validation failed:", authRes.status, errText);
+      return jsonResponse({ error: "Unauthorized", hint: "JWT rejeitado. Use adminSecret em config.js igual ao ADMIN_SECRET no Supabase." }, 401);
+    }
   }
 
   let body: { pedido_id?: string };
@@ -47,7 +67,6 @@ Deno.serve(async (req) => {
     return jsonResponse({ error: "pedido_id required" }, 400);
   }
 
-  const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
   const channelToken = Deno.env.get("CHANNEL_ACCESS_TOKEN");
   console.log("mark-order-ready chamado", { pedidoId, hasToken: !!channelToken });
 

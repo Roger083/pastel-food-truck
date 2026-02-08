@@ -150,15 +150,11 @@ async function loadOrders() {
 
 async function markReady(pedidoId) {
   const sb = getSupabase();
-  // Atualiza a sessão para ter um token válido (evita 401 por token expirado)
   const { data: { session }, error: sessionError } = await sb.auth.getSession();
   if (sessionError || !session) {
     showLogin("Sessão expirada. Faça login novamente.");
     return;
   }
-  // Garante token fresco antes de chamar a Edge Function
-  const { data: { session: freshSession } } = await sb.auth.refreshSession();
-  const token = (freshSession && freshSession.access_token) || session.access_token;
 
   const prontoEm = new Date().toISOString();
   const { error: updateError } = await sb
@@ -169,27 +165,6 @@ async function markReady(pedidoId) {
   if (updateError) {
     alert("Falha ao atualizar: " + (updateError.message || updateError));
     return;
-  }
-
-  const res = await fetch(functionsUrl("/mark-order-ready"), {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: "Bearer " + token,
-      apikey: CONFIG?.supabaseAnonKey || "",
-    },
-    body: JSON.stringify({ pedido_id: pedidoId }),
-  });
-  let lineSent = false;
-  let lineReason = "";
-  let data = null;
-  try {
-    data = await res.json();
-    lineSent = data && data.line_sent === true;
-    if (data && data.line_reason) lineReason = data.line_reason;
-    console.log("mark-order-ready resposta:", res.status, data);
-  } catch (e) {
-    console.error("mark-order-ready parse erro:", e);
   }
 
   function showMsg(msg, type) {
@@ -203,23 +178,7 @@ async function markReady(pedidoId) {
     }
   }
 
-  if (!res.ok) {
-    const errMsg =
-      "Erro ao chamar a função (status " +
-      res.status +
-      "). " +
-      (data && data.error ? data.error : "Verifique se está logado e os logs em Supabase → Edge Functions → mark-order-ready.");
-    showMsg(errMsg, "error");
-    alert(errMsg + "\n\nAbra o console (F12) e veja a resposta completa.");
-  } else if (lineSent) {
-    showMsg("Pedido marcado como pronto. Notificação LINE enviada.", "success");
-  } else {
-    const msg =
-      "Pedido marcado como pronto. Notificação LINE não enviada." +
-      (lineReason ? " Motivo: " + lineReason : " (token ou line_user_id). Veja NOTIFICACAO_LINE.md.");
-    showMsg(msg, "warning");
-    alert(msg);
-  }
+  showMsg("Pedido marcado como pronto. A notificação no LINE é enviada automaticamente pelo webhook.", "success");
   loadOrders();
 }
 

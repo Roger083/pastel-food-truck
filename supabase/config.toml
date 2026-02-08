@@ -1,0 +1,8 @@
+# Configuração do projeto Supabase
+# Ver: https://supabase.com/docs/guides/functions/config
+
+# A função mark-order-ready valida o JWT dentro do código (via /auth/v1/user).
+# Desativar a verificação no gateway evita 401 "Invalid JWT" quando o token
+# é rejeitado pelo gateway (ex.: expirado ou algoritmo diferente).
+[functions.mark-order-ready]
+verify_jwt = false

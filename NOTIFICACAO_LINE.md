@@ -2,6 +2,8 @@
 
 Para o cliente receber a mensagem no LINE ao clicar em **"Marcar pronto"** no admin, faça estes 2 passos.
 
+**Alternativa (sem Edge Function, evita 401):** use **notificação por webhook** — o admin só atualiza o pedido no Supabase e um webhook envia a mensagem no LINE. Guia completo: **[NOTIFICACAO_LINE_WEBHOOK.md](NOTIFICACAO_LINE_WEBHOOK.md)**.
+
 ---
 
 ## Nome que aparece ao abrir o menu no LINE
@@ -36,6 +38,53 @@ A conta que **envia** a notificação "Seu pedido está pronto" é o **Official 
 4. Em **Channel name** (nome do canal), coloque o nome do food truck (ex.: **Pastel Food Truck**). Salve.
 
 O nome que o cliente vê no LINE (na conversa onde chega a notificação) pode demorar um pouco para atualizar; se não mudar, no [LINE Official Account Manager](https://manager.line.biz/) (vincule o canal se precisar) dá para ajustar o **nome de exibição** do bot.
+
+---
+
+## Se aparecer 401 ou "Invalid JWT" ao clicar em Marcar pronto
+
+O gateway do Supabase rejeita o token (401 Invalid JWT) **antes** da requisição chegar à função. É preciso desativar a verificação de JWT **no deploy**. No Dashboard essa opção às vezes não aparece ou tem outro nome; a forma que funciona é pelo **terminal**:
+
+**Fazer deploy com JWT desativado (recomendado)**  
+Na pasta do projeto (ex.: `pastel-food-truck` ou `food-truck`), no **Prompt de Comando** ou **PowerShell**:
+
+1. Instalar dependências (inclui o Supabase CLI no projeto):
+   ```bash
+   npm install
+   ```
+
+2. Login e link (só na primeira vez):
+   ```bash
+   npx supabase login
+   npx supabase link --project-ref ejzaaoyqeeqyuoiozfxn
+   ```
+   (O login abre o navegador; o link pode pedir a senha do banco.)
+
+3. Deploy da função com JWT desativado:
+   ```bash
+   npx supabase functions deploy mark-order-ready --no-verify-jwt
+   ```
+
+Se já tiver feito `supabase link` antes, basta o passo 3.
+
+**Se no Windows der “supabase não é reconhecido”** mesmo após `npm install`, instale o CLI pelo **Scoop** (em PowerShell):
+   ```powershell
+   scoop bucket add supabase https://github.com/supabase/scoop-bucket.git
+   scoop install supabase
+   ```
+   Depois use `supabase login`, `supabase link ...`, `supabase functions deploy mark-order-ready --no-verify-jwt` (sem `npx`).
+
+A flag **`--no-verify-jwt`** faz o gateway deixar a requisição chegar na função. A função continua segura: ela valida o login do admin por dentro (via Supabase Auth).
+
+**Se ainda aparecer 401 depois do deploy com --no-verify-jwt:** use o **segredo do admin**. A ordem importa:
+
+1. No Supabase: **Edge Functions** → **Secrets** → **Add new secret**: Name **ADMIN_SECRET**, Value = uma senha (ex.: `pastel2026admin`). **Salve.**
+2. **Só depois** faça o deploy da função (o secret fica disponível para a função só após o deploy):  
+   `npx supabase functions deploy mark-order-ready --no-verify-jwt`
+3. No projeto: em **js/config.js**, em **adminSecret**, coloque **exatamente a mesma** senha: `adminSecret: 'pastel2026admin'`.
+4. Dê **push** do `config.js` para o GitHub para o admin no site usar o novo valor (ou teste abrindo o admin direto do disco com o config alterado).
+
+Se der 401 de novo, o **alerta** vai mostrar uma **Dica** (por exemplo: "ADMIN_SECRET não está no Supabase..." ou "Segredo não confere"). No **console (F12)** veja também se aparece "Admin: enviando x-admin-secret" (se não aparecer, o `config.js` no site ainda está sem `adminSecret`).
 
 ---
 
@@ -124,7 +173,10 @@ A função que envia a mensagem no LINE precisa estar publicada no Supabase. Dua
 3. Defina o **nome** da função como: `mark-order-ready`.
 4. No editor, **apague** o código de exemplo e **cole** todo o conteúdo do arquivo `supabase/functions/mark-order-ready/index.ts` do seu projeto (é o código que marca o pedido como pronto e envia a mensagem no LINE).
 5. Clique em **Deploy function** (ou **Deploy**).
-6. Aguarde terminar (cerca de 10–30 segundos). Pronto.
+6. Aguarde terminar (cerca de 10–30 segundos).
+
+**Se ao clicar em "Marcar pronto" no admin aparecer 401 Invalid JWT:** a verificação de JWT no gateway precisa ser desativada. No Dashboard essa opção às vezes não aparece; use o terminal (veja a seção "Se aparecer 401 ou Invalid JWT" mais acima):  
+`npx supabase functions deploy mark-order-ready --no-verify-jwt`
 
 Os **secrets** (como `CHANNEL_ACCESS_TOKEN`) que você configurou em Edge Functions → Secrets já ficam disponíveis para a função; não precisa configurar de novo no editor.
 
