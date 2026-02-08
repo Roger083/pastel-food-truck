@@ -27,13 +27,6 @@
     .detalhe-card .qty-row .qty-controls { display: flex; align-items: center; gap: 8px; }
     .detalhe-card .qty-row .qty-controls button { width: 44px; height: 44px; border: none; border-radius: 12px; background: #27ae60; color: white; font-size: 1.25rem; cursor: pointer; font-weight: 700; }
     .detalhe-card .qty-row .qty-controls span { min-width: 2rem; text-align: center; font-weight: 700; font-size: 1.1rem; }
-    .detalhe-card .tipo-pedido-row { margin-bottom: 1rem; }
-    .detalhe-card .tipo-pedido-row label { display: block; font-weight: 600; color: #333; margin-bottom: 8px; }
-    .detalhe-card .tipo-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-    .detalhe-card .tipo-btn { padding: 12px; border: 3px solid #a8e6cf; border-radius: 12px; background: white; color: #0d7541; font-weight: 700; cursor: pointer; transition: all 0.2s; }
-    .detalhe-card .tipo-btn.ativo { background: #27ae60; color: white; border-color: #0d7541; }
-    .detalhe-card .agendar-campos { margin-top: 10px; }
-    .detalhe-card .agendar-campos input { width: 100%; padding: 8px; border: 2px solid #c8e6c9; border-radius: 8px; margin-bottom: 8px; }
     .detalhe-card .btn-add { width: 100%; padding: 16px; border: none; border-radius: 16px; background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%); color: white; font-size: 1.1rem; font-weight: 800; cursor: pointer; margin-top: 0.5rem; }
     .detalhe-card .btn-add:hover { opacity: 0.95; }
     .link-carrinho { display: block; text-align: center; margin-top: 1rem; color: #27ae60; font-weight: 700; text-decoration: none; }
@@ -67,17 +60,6 @@
               <button type="button" id="btnPlus">+</button>
             </div>
           </div>
-          <div class="tipo-pedido-row">
-            <label id="labelTipo">Tipo de Pedido</label>
-            <div class="tipo-btns">
-              <button type="button" class="tipo-btn ativo" data-tipo="agora" id="btnParaAgora">Para Agora</button>
-              <button type="button" class="tipo-btn" data-tipo="agendar" id="btnAgendar">Agendar</button>
-            </div>
-            <div class="agendar-campos" id="agendarCampos" hidden>
-              <input type="date" id="agendarData">
-              <input type="time" id="agendarHora">
-            </div>
-          </div>
           <button type="button" class="btn-add" id="btnAddCart">🛒 Adicionar ao Carrinho</button>
           <a href="cardapio-carrinho.html" class="link-carrinho" id="linkCarrinho" hidden>Ver carrinho →</a>
         </div>
@@ -94,7 +76,6 @@
   let supabase;
   let item = null;
   let qty = 1;
-  let tipoRetirada = "agora";
   let idioma = localStorage.getItem("idioma") || "pt";
 
   const $loading = document.getElementById("loading");
@@ -106,7 +87,6 @@
   const $itemIng = document.getElementById("itemIng");
   const $itemPreco = document.getElementById("itemPreco");
   const $qtyVal = document.getElementById("qtyVal");
-  const $agendarCampos = document.getElementById("agendarCampos");
   const $linkCarrinho = document.getElementById("linkCarrinho");
   const params = new URLSearchParams(window.location.search);
   const idParam = params.get("id");
@@ -123,8 +103,8 @@
 
   function textos() {
     return idioma === "ja"
-      ? { voltar: "← ホーム", titulo: "本日のメニュー", idioma: "🇧🇷 PT", ing: "材料", qty: "数量", tipo: "注文タイプ", agora: "今すぐ", agendar: "予約", add: "カートに追加", verCarrinho: "カートを見る" }
-      : { voltar: "← Início", titulo: "Cardápio do Dia", idioma: "JP 日本語", ing: "Ingredientes", qty: "Quantidade", tipo: "Tipo de Pedido", agora: "Para Agora", agendar: "Agendar", add: "Adicionar ao Carrinho", verCarrinho: "Ver carrinho →" };
+      ? { voltar: "← ホーム", titulo: "本日のメニュー", idioma: "🇧🇷 PT", ing: "材料", qty: "数量", add: "カートに追加", verCarrinho: "カートを見る" }
+      : { voltar: "← Início", titulo: "Cardápio do Dia", idioma: "JP 日本語", ing: "Ingredientes", qty: "Quantidade", add: "Adicionar ao Carrinho", verCarrinho: "Ver carrinho →" };
   }
 
   function atualizarUI() {
@@ -134,9 +114,6 @@
     document.getElementById("btnIdioma").textContent = t.idioma;
     document.getElementById("labelIng").textContent = t.ing;
     document.getElementById("labelQty").textContent = t.qty;
-    document.getElementById("labelTipo").textContent = t.tipo;
-    document.getElementById("btnParaAgora").textContent = t.agora;
-    document.getElementById("btnAgendar").textContent = t.agendar;
     document.getElementById("btnAddCart").textContent = "🛒 " + t.add;
     $linkCarrinho.textContent = t.verCarrinho;
     if (item) renderItem();
@@ -198,18 +175,6 @@
 
   document.getElementById("btnMinus").addEventListener("click", function () { qty = Math.max(1, qty - 1); $qtyVal.textContent = qty; });
   document.getElementById("btnPlus").addEventListener("click", function () { qty = qty + 1; $qtyVal.textContent = qty; });
-
-  document.getElementById("btnParaAgora").addEventListener("click", function () {
-    tipoRetirada = "agora";
-    document.querySelectorAll(".tipo-btn").forEach(function (b) { b.classList.toggle("ativo", b.dataset.tipo === "agora"); });
-    $agendarCampos.hidden = true;
-  });
-  document.getElementById("btnAgendar").addEventListener("click", function () {
-    tipoRetirada = "agendar";
-    document.querySelectorAll(".tipo-btn").forEach(function (b) { b.classList.toggle("ativo", b.dataset.tipo === "agendar"); });
-    $agendarCampos.hidden = false;
-    var d = document.getElementById("agendarData"); if (!d.min) d.min = new Date().toISOString().slice(0, 10);
-  });
 
   document.getElementById("btnAddCart").addEventListener("click", function () {
     if (!item) return;
