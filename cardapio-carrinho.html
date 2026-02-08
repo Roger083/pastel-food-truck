@@ -178,7 +178,7 @@
     $btnConfirmar.disabled = true;
     $btnConfirmar.textContent = idioma === "ja" ? "送信中..." : "Enviando...";
     var itens = cart.map(function (i) { return { cardapio_item_id: i.id, nome: i.nome, preco: i.preco, quantidade: i.quantidade }; });
-    var params = { p_evento_id: eventoId, p_line_user_id: lineUserId || null, p_itens: itens };
+    var params = { p_evento_id: eventoId, p_line_user_id: lineUserId || null, p_itens: itens, p_idioma: idioma };
     if (agendadoPara) params.p_agendado_para = agendadoPara;
     var { data: pedido, error } = await supabase.rpc("criar_pedido", params);
     if (error) {

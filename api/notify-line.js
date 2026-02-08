@@ -44,6 +44,7 @@ export default async function handler(req, res) {
 
   const lineUserId = record?.line_user_id;
   const numero = record?.numero;
+  const idioma = record?.idioma || 'ja';
   const token = process.env.CHANNEL_ACCESS_TOKEN;
 
   if (!token) {
@@ -53,7 +54,9 @@ export default async function handler(req, res) {
     return res.status(200).json({ ok: true, line_sent: false, reason: "no line_user_id" });
   }
 
-  const text = `Seu pedido ${formatNumero(numero)} está pronto! Venha buscar.`;
+  const text = idioma === 'pt'
+    ? `Seu pedido ${formatNumero(numero)} está pronto! Venha buscar.`
+    : `ご注文 ${formatNumero(numero)} の準備ができました！お受け取りください。`;
   const lineRes = await fetch("https://api.line.me/v2/bot/message/push", {
     method: "POST",
     headers: {
