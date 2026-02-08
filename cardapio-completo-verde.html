@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Cardápio - Pastel Food Truck</title>
+  <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/cardapio-verde.css">
+</head>
+<body class="cardapio-verde">
+  <div id="app">
+    <div id="loading">Carregando...</div>
+    <div id="error" class="error" hidden></div>
+
+    <div id="main" hidden>
+      <header class="header-verde">
+        <h1>🥟 Cardápio</h1>
+        <p>Escolha como quer retirar e monte seu pedido</p>
+      </header>
+
+      <section class="escolha-retirada">
+        <p class="section-title">Como deseja retirar?</p>
+        <div class="escolha-tipo">
+          <button type="button" class="btn-tipo ativo" data-tipo="agora" id="btn-agora">🕐 Pedir na hora</button>
+          <button type="button" class="btn-tipo" data-tipo="agendar" id="btn-agendar">📅 Agendar</button>
+        </div>
+        <div class="agendar-campos" id="agendar-campos" hidden>
+          <label for="agendar-data">Data</label>
+          <input type="date" id="agendar-data" min="">
+          <label for="agendar-hora">Horário</label>
+          <input type="time" id="agendar-hora">
+        </div>
+      </section>
+
+      <p class="section-title">Itens do cardápio</p>
+      <ul class="menu-list" id="menu-list"></ul>
+
+      <section class="cart-section">
+        <h2>Seu pedido <span id="cart-count">0</span> itens</h2>
+        <ul class="cart-list" id="cart-list"></ul>
+        <p class="cart-total" id="cart-total">Total: R$ 0,00</p>
+        <button type="button" class="btn-confirm" id="btn-confirm" disabled>Confirmar pedido</button>
+      </section>
+    </div>
+
+    <section id="success-section" class="success-section" hidden>
+      <h2>Pedido recebido!</h2>
+      <p class="order-number">Número: <strong id="order-number">-</strong></p>
+      <p class="order-msg" id="order-msg">Guarde este número. Quando estiver pronto você receberá notificação no LINE.</p>
+      <a href="index.html" class="back-link">← Voltar ao início</a>
+    </section>
+  </div>
+
+  <script src="js/config.js"></script>
+  <script src="js/cardapio-verde.js"></script>
+</body>
+</html>

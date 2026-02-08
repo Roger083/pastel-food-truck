@@ -12,6 +12,12 @@ const $btnLogout = document.getElementById("btn-admin-logout");
 const $ordersLoading = document.getElementById("orders-loading");
 const $ordersList = document.getElementById("orders-list");
 
+/** Formato do número do pedido: A-001, A-002, ... */
+function formatoNumeroPedido(num) {
+  const n = num == null ? 0 : Number(num);
+  return "A-" + String(n).padStart(3, "0");
+}
+
 let supabase = null;
 let pollInterval = null;
 
@@ -49,7 +55,7 @@ function showDashboard() {
 async function loadOrders() {
   const sb = getSupabase();
   if (!sb) {
-    $ordersLoading.textContent = "config.js に Supabase を設定してください。";
+    $ordersLoading.textContent = "Configure o Supabase em config.js.";
     return;
   }
 
@@ -60,11 +66,11 @@ async function loadOrders() {
     .maybeSingle();
 
   if (errEvento) {
-    $ordersLoading.textContent = "読み込みに失敗しました。";
+    $ordersLoading.textContent = "Falha ao carregar.";
     return;
   }
   if (!evento) {
-    $eventName.textContent = "（アクティブなイベントなし）";
+    $eventName.textContent = "(Nenhum evento ativo)";
     $ordersList.innerHTML = "";
     $ordersLoading.hidden = true;
     return;
@@ -77,20 +83,29 @@ async function loadOrders() {
     .order("criado_em", { ascending: false });
 
   if (errPedidos) {
-    $ordersLoading.textContent = "読み込みに失敗しました。";
+    $ordersLoading.textContent = "Falha ao carregar.";
     return;
   }
 
   $ordersLoading.hidden = true;
-  $eventName.textContent = evento.nome || "（イベント名なし）";
+  $eventName.textContent = evento.nome || "(Sem nome)";
   const orders = pedidos || [];
 
   $ordersList.innerHTML = orders
     .map(function (p) {
       const itens = p.pedido_itens || [];
-      const itemsText = itens.map((i) => i.nome + " x" + i.quantidade).join("、");
+      const itemsText = itens.map((i) => i.nome + " x" + i.quantidade).join(", ");
       const time = p.criado_em
-        ? new Date(p.criado_em).toLocaleTimeString("ja-JP", {
+        ? new Date(p.criado_em).toLocaleTimeString("pt-BR", {
+            hour: "2-digit",
+            minute: "2-digit",
+          })
+        : "";
+      const agendadoStr = p.agendado_para
+        ? "Agendado: " +
+          new Date(p.agendado_para).toLocaleString("pt-BR", {
+            day: "2-digit",
+            month: "2-digit",
             hour: "2-digit",
             minute: "2-digit",
           })
@@ -102,19 +117,20 @@ async function loadOrders() {
         '" data-id="' +
         p.id +
         '">' +
-        '<div class="order-num">#' +
-        (p.numero ?? "?") +
+        '<div class="order-num">' +
+        formatoNumeroPedido(p.numero) +
         "</div>" +
         '<div class="order-items">' +
-        (itemsText || "（内容なし）") +
+        (itemsText || "(Sem itens)") +
         "</div>" +
         '<div class="order-time">' +
         time +
         "</div>" +
+        (agendadoStr ? '<div class="order-agendado">' + agendadoStr + "</div>" : "") +
         (!isPronto
           ? '<button type="button" class="btn-ready" data-id="' +
             p.id +
-            '">できあがり</button>'
+            '">Marcar pronto</button>'
           : "") +
         "</li>"
       );
@@ -132,7 +148,7 @@ async function markReady(pedidoId) {
   const sb = getSupabase();
   const { data: { session } } = await sb.auth.getSession();
   if (!session) {
-    showLogin("セッションが切れました。再ログインしてください。");
+    showLogin("Sessão expirada. Faça login novamente.");
     return;
   }
 
@@ -143,7 +159,7 @@ async function markReady(pedidoId) {
     .eq("id", pedidoId);
 
   if (updateError) {
-    alert("更新に失敗しました: " + (updateError.message || updateError));
+    alert("Falha ao atualizar: " + (updateError.message || updateError));
     return;
   }
 
@@ -156,7 +172,7 @@ async function markReady(pedidoId) {
     body: JSON.stringify({ pedido_id: pedidoId }),
   });
   if (!res.ok) {
-    console.warn("LINE通知の送信に失敗しました（注文は完了済み）");
+    console.warn("Falha ao enviar notificação LINE (pedido já marcado como pronto)");
   }
   loadOrders();
 }
@@ -165,21 +181,21 @@ $btnLogin.addEventListener("click", async function () {
   const email = ($emailInput?.value || "").trim();
   const password = ($passwordInput?.value || "").trim();
   if (!email || !password) {
-    $loginError.textContent = "メールとパスワードを入力してください。";
+    $loginError.textContent = "Digite o e-mail e a senha.";
     $loginError.hidden = false;
     return;
   }
 
   const sb = getSupabase();
   if (!sb) {
-    $loginError.textContent = "config.js に Supabase を設定してください。";
+    $loginError.textContent = "Configure o Supabase em config.js.";
     $loginError.hidden = false;
     return;
   }
 
   const { data, error } = await sb.auth.signInWithPassword({ email, password });
   if (error) {
-    $loginError.textContent = "ログインに失敗しました: " + (error.message || "合言葉が違います");
+    $loginError.textContent = "Login falhou: " + (error.message || "E-mail ou senha incorretos.");
     $loginError.hidden = false;
     return;
   }
@@ -196,7 +212,7 @@ $btnLogout.addEventListener("click", async function () {
 
 (async function init() {
   if (!CONFIG?.supabaseUrl) {
-    $loginError.textContent = "config.js に Supabase URL を設定してください。";
+    $loginError.textContent = "Configure a URL do Supabase em config.js.";
     $loginError.hidden = false;
     $ordersLoading.hidden = true;
     return;

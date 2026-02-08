@@ -34,6 +34,12 @@
     return '¥' + Number(val).toLocaleString();
   }
 
+  /** Formato do número do pedido: A-001, A-002, ... */
+  function formatNumeroPedido(num) {
+    const n = num == null ? 0 : Number(num);
+    return 'A-' + String(n).padStart(3, '0');
+  }
+
   function getCartTotal() {
     return cart.reduce((sum, item) => sum + Number(item.preco) * item.quantidade, 0);
   }
@@ -162,7 +168,7 @@
 
     $main.hidden = true;
     $successSection.hidden = false;
-    $orderNumber.textContent = String(pedido.numero ?? pedido?.numero ?? '-');
+    $orderNumber.textContent = formatNumeroPedido(pedido.numero ?? pedido?.numero);
     $btnConfirm.textContent = '注文する';
     $btnConfirm.disabled = false;
     cart.length = 0;

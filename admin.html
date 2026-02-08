@@ -1,30 +1,30 @@
 <!DOCTYPE html>
-<html lang="ja">
+<html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-  <title>管理 - Food Truck</title>
+  <title>Admin - Food Truck</title>
   <link rel="stylesheet" href="css/style.css">
   <link rel="stylesheet" href="css/admin.css">
 </head>
 <body>
   <div id="admin-app">
     <div id="admin-login" class="admin-panel">
-      <h1>管理画面</h1>
-      <p>メールとパスワードでログイン</p>
-      <input type="email" id="admin-email" placeholder="メール" autocomplete="email">
-      <input type="password" id="admin-password" placeholder="パスワード" autocomplete="current-password">
-      <button type="button" id="btn-admin-login">入る</button>
+      <h1>Painel admin</h1>
+      <p>Entre com e-mail e senha</p>
+      <input type="email" id="admin-email" placeholder="E-mail" autocomplete="email">
+      <input type="password" id="admin-password" placeholder="Senha" autocomplete="current-password">
+      <button type="button" id="btn-admin-login">Entrar</button>
       <p id="admin-login-error" class="error" hidden></p>
     </div>
 
     <div id="admin-dashboard" class="admin-panel" hidden>
       <header class="admin-header">
-        <h1>注文一覧</h1>
+        <h1>Pedidos</h1>
         <p id="event-name"></p>
-        <button type="button" id="btn-admin-logout">ログアウト</button>
+        <button type="button" id="btn-admin-logout">Sair</button>
       </header>
-      <div id="orders-loading">読み込み中...</div>
+      <div id="orders-loading">Carregando...</div>
       <ul id="orders-list"></ul>
     </div>
   </div>

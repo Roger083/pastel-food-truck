@@ -5,6 +5,11 @@ const cors = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-admin-secret",
 };
 
+function formatNumeroPedido(num: number | null | undefined): string {
+  const n = num == null ? 0 : Number(num);
+  return "A-" + String(n).padStart(3, "0");
+}
+
 function jsonResponse(body: unknown, status = 200) {
   return new Response(JSON.stringify(body), {
     status,
@@ -90,7 +95,7 @@ Deno.serve(async (req) => {
       messages: [
         {
           type: "text",
-          text: `注文 #${pedido.numero} ができあがりました。お取りに来てください。`,
+          text: `Seu pedido ${formatNumeroPedido(pedido.numero)} está pronto! Venha buscar.`,
         },
       ],
     };

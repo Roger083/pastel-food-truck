@@ -1,0 +1,274 @@
+/* Cardápio completo – tema verde */
+body.cardapio-verde {
+  background: linear-gradient(180deg, #e8f5e9 0%, #f0f9f4 50%, #e8f5e9 100%);
+  font-family: 'Noto Sans JP', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  color: #1a3d0a;
+}
+
+.cardapio-verde #app {
+  max-width: 480px;
+  margin: 0 auto;
+  padding: 0 1rem 2rem;
+  min-height: 100vh;
+}
+
+.cardapio-verde .header-verde {
+  background: linear-gradient(135deg, #0d7541 0%, #27ae60 100%);
+  color: white;
+  padding: 1.25rem 1rem;
+  margin: 0 -1rem 1.5rem;
+  box-shadow: 0 4px 12px rgba(13, 117, 65, 0.25);
+}
+
+.cardapio-verde .header-verde h1 {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 800;
+}
+
+.cardapio-verde .header-verde p {
+  margin: 0.25rem 0 0;
+  font-size: 0.9rem;
+  opacity: 0.95;
+}
+
+/* Escolha: Pedir na hora / Agendar */
+.cardapio-verde .escolha-tipo {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 1.5rem;
+}
+
+.cardapio-verde .btn-tipo {
+  padding: 1rem;
+  border: 3px solid #a8e6cf;
+  border-radius: 16px;
+  background: white;
+  color: #0d7541;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-align: center;
+  box-shadow: 0 2px 8px rgba(13, 117, 65, 0.1);
+}
+
+.cardapio-verde .btn-tipo:hover {
+  border-color: #27ae60;
+  transform: translateY(-2px);
+}
+
+.cardapio-verde .btn-tipo.ativo {
+  background: linear-gradient(135deg, #27ae60 0%, #0d7541 100%);
+  color: white;
+  border-color: #0d7541;
+}
+
+.cardapio-verde .agendar-campos {
+  background: white;
+  border-radius: 16px;
+  padding: 1rem;
+  margin-bottom: 1.5rem;
+  border: 2px solid #a8e6cf;
+  box-shadow: 0 2px 8px rgba(13, 117, 65, 0.08);
+}
+
+.cardapio-verde .agendar-campos label {
+  display: block;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #1a3d0a;
+  margin-bottom: 0.5rem;
+}
+
+.cardapio-verde .agendar-campos input {
+  width: 100%;
+  padding: 0.6rem;
+  border: 2px solid #c8e6c9;
+  border-radius: 10px;
+  font-size: 1rem;
+  margin-bottom: 0.75rem;
+}
+
+.cardapio-verde .agendar-campos input:focus {
+  outline: none;
+  border-color: #27ae60;
+}
+
+/* Lista do cardápio */
+.cardapio-verde .menu-list {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 1.5rem;
+}
+
+.cardapio-verde .menu-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem;
+  margin-bottom: 0.75rem;
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 2px 10px rgba(13, 117, 65, 0.1);
+  border: 2px solid transparent;
+  gap: 0.75rem;
+}
+
+.cardapio-verde .menu-item .name {
+  flex: 1;
+  font-weight: 600;
+  color: #1a3d0a;
+}
+
+.cardapio-verde .menu-item .price {
+  color: #0d7541;
+  font-weight: 700;
+  font-size: 1.05rem;
+}
+
+.cardapio-verde .menu-item .qty-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.cardapio-verde .menu-item .qty-controls button {
+  width: 40px;
+  height: 40px;
+  border: none;
+  border-radius: 12px;
+  background: #27ae60;
+  color: white;
+  font-size: 1.25rem;
+  cursor: pointer;
+  line-height: 1;
+  font-weight: 700;
+}
+
+.cardapio-verde .menu-item .qty-controls button:active {
+  background: #0d7541;
+}
+
+.cardapio-verde .menu-item .qty {
+  min-width: 1.75rem;
+  text-align: center;
+  font-weight: 700;
+  color: #333;
+}
+
+.cardapio-verde .cart-section {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 2px dashed #a8e6cf;
+}
+
+.cardapio-verde .cart-section h2 {
+  font-size: 1rem;
+  color: #1a3d0a;
+  margin-bottom: 0.5rem;
+}
+
+.cardapio-verde .cart-list {
+  list-style: none;
+  padding: 0;
+  margin: 0.5rem 0;
+}
+
+.cardapio-verde .cart-item {
+  padding: 0.4rem 0;
+  font-size: 0.95rem;
+  color: #333;
+}
+
+.cardapio-verde .cart-total {
+  font-weight: 800;
+  font-size: 1.2rem;
+  margin: 0.75rem 0 1rem;
+  color: #0d7541;
+}
+
+.cardapio-verde .btn-confirm {
+  width: 100%;
+  padding: 1.1rem;
+  font-size: 1.15rem;
+  font-weight: 800;
+  border: none;
+  border-radius: 16px;
+  background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%);
+  color: white;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(46, 204, 113, 0.4);
+  transition: transform 0.2s;
+}
+
+.cardapio-verde .btn-confirm:hover:not(:disabled) {
+  transform: scale(1.02);
+}
+
+.cardapio-verde .btn-confirm:disabled {
+  background: #bbb;
+  color: #666;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+.cardapio-verde .success-section {
+  text-align: center;
+  padding: 2rem 1rem;
+}
+
+.cardapio-verde .success-section h2 {
+  color: #0d7541;
+  font-size: 1.35rem;
+  margin-bottom: 1rem;
+}
+
+.cardapio-verde .order-number {
+  font-size: 1.5rem;
+  margin: 1rem 0;
+}
+
+.cardapio-verde .order-number strong {
+  color: #0d7541;
+  font-size: 2rem;
+}
+
+.cardapio-verde .order-msg {
+  color: #555;
+  font-size: 0.95rem;
+  margin-top: 1rem;
+}
+
+.cardapio-verde .back-link {
+  display: inline-block;
+  margin-top: 1.5rem;
+  color: #27ae60;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.cardapio-verde .back-link:hover {
+  text-decoration: underline;
+}
+
+.cardapio-verde #loading,
+.cardapio-verde .error {
+  text-align: center;
+  padding: 1.5rem;
+}
+
+.cardapio-verde .error {
+  background: #ffebee;
+  color: #c62828;
+  border-radius: 12px;
+  border: 2px solid #ffcdd2;
+}
+
+.cardapio-verde .section-title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #0d7541;
+  margin: 1rem 0 0.75rem;
+}
