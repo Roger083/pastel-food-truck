@@ -49,6 +49,7 @@ Deno.serve(async (req) => {
 
   const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
   const channelToken = Deno.env.get("CHANNEL_ACCESS_TOKEN");
+  console.log("mark-order-ready chamado", { pedidoId, hasToken: !!channelToken });
 
   const resGet = await fetch(
     `${supabaseUrl}/rest/v1/pedidos?id=eq.${pedidoId}&select=id,numero,line_user_id`,
@@ -69,6 +70,11 @@ Deno.serve(async (req) => {
   if (!pedido) {
     return jsonResponse({ error: "Order not found" }, 404);
   }
+  console.log("mark-order-ready pedido", {
+    pedidoId,
+    numero: pedido.numero,
+    hasLineUserId: !!pedido.line_user_id,
+  });
 
   const prontoEm = new Date().toISOString();
   const resUpdate = await fetch(
@@ -90,7 +96,14 @@ Deno.serve(async (req) => {
   }
 
   let lineSent = false;
-  if (channelToken && pedido.line_user_id) {
+  let lineReason: string | undefined;
+  if (!channelToken) {
+    lineReason = "CHANNEL_ACCESS_TOKEN não configurado no Supabase (Edge Functions → Secrets).";
+    console.warn("mark-order-ready: " + lineReason);
+  } else if (!pedido.line_user_id) {
+    lineReason = "Pedido sem line_user_id (cliente pode ter aberto fora do LIFF ou página do carrinho não obteve o perfil LINE).";
+    console.warn("mark-order-ready: pedido_id=" + pedidoId + " " + lineReason);
+  } else {
     const lineBody = {
       to: pedido.line_user_id,
       messages: [
@@ -109,11 +122,14 @@ Deno.serve(async (req) => {
       body: JSON.stringify(lineBody),
     });
     lineSent = lineRes.ok;
+    const lineResText = await lineRes.text();
     if (!lineRes.ok) {
-      const errText = await lineRes.text();
-      console.error("LINE push failed:", lineRes.status, errText);
+      lineReason = "LINE API retornou " + lineRes.status + ": " + lineResText;
+      console.error("LINE push failed:", lineRes.status, lineResText);
+    } else {
+      console.log("LINE push ok para", pedido.line_user_id);
     }
   }
 
-  return jsonResponse({ ok: true, line_sent: lineSent });
+  return jsonResponse({ ok: true, line_sent: lineSent, line_reason: lineReason });
 });

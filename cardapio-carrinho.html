@@ -201,8 +201,15 @@
     initSupabase();
     atualizarUI();
     if (window.liff && CONFIG.liffId) {
-      await window.liff.init({ liffId: CONFIG.liffId });
-      if (window.liff.isLoggedIn()) { try { var p = await window.liff.getProfile(); lineUserId = p && p.userId; } catch (_) {} }
+      try {
+        await window.liff.init({ liffId: CONFIG.liffId });
+        if (window.liff.isLoggedIn()) {
+          try { var p = await window.liff.getProfile(); lineUserId = p && p.userId; } catch (_) {}
+          if (!lineUserId && typeof window.liff.getDecodedIDToken === "function") {
+            try { var tok = await window.liff.getDecodedIDToken(); lineUserId = tok && tok.sub; } catch (_) {}
+          }
+        }
+      } catch (e) { console.warn("LIFF init:", e); }
     }
     renderCart();
     hideLoading();

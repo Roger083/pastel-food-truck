@@ -7,7 +7,9 @@
  * 3) liffId       → LINE Developers → seu Channel → LIFF → "LIFF ID"
  */
 // Atenção: é "qee" no meio, NÃO "gee" → ejzaaoyqeeqyuoiozfxn
+// foodTruckName: nome que aparece no app (ex.: no cabeçalho do LIFF). Veja NOTIFICACAO_LINE.md para o nome no LINE Developers.
 window.FOOD_TRUCK_CONFIG = {
+  foodTruckName: 'Pastel Food Truck',
   liffId: '2009073867-mQNTAnqH',
   supabaseUrl: 'https://ejzaaoyqeeqyuoiozfxn.supabase.co',
   supabaseAnonKey: 'sb_publishable_r18ogAShfeiOmhF4SOHupg_Hyw-tHGR'

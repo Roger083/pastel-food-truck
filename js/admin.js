@@ -11,6 +11,7 @@ const $eventName = document.getElementById("event-name");
 const $btnLogout = document.getElementById("btn-admin-logout");
 const $ordersLoading = document.getElementById("orders-loading");
 const $ordersList = document.getElementById("orders-list");
+const $feedback = document.getElementById("admin-feedback");
 
 /** Formato do número do pedido: A-001, A-002, ... */
 function formatoNumeroPedido(num) {
@@ -175,19 +176,44 @@ async function markReady(pedidoId) {
     body: JSON.stringify({ pedido_id: pedidoId }),
   });
   let lineSent = false;
+  let lineReason = "";
+  let data = null;
   try {
-    const data = await res.json();
+    data = await res.json();
     lineSent = data && data.line_sent === true;
-  } catch (_) {}
-  if (!res.ok) {
-    console.warn("Falha ao chamar mark-order-ready:", res.status);
+    if (data && data.line_reason) lineReason = data.line_reason;
+    console.log("mark-order-ready resposta:", res.status, data);
+  } catch (e) {
+    console.error("mark-order-ready parse erro:", e);
   }
-  if (!lineSent && res.ok) {
-    alert(
-      "Pedido marcado como pronto.\n\nNotificação LINE não foi enviada. " +
-        "Configure o CHANNEL_ACCESS_TOKEN no Supabase (Edge Functions > mark-order-ready > Secrets) " +
-        "e faça o deploy da função. O token é do canal Messaging API (Roger), não do LINE Login."
-    );
+
+  function showMsg(msg, type) {
+    if ($feedback) {
+      $feedback.textContent = msg;
+      $feedback.className = "admin-feedback " + (type || "success");
+      $feedback.hidden = false;
+      setTimeout(function () {
+        $feedback.hidden = true;
+      }, 8000);
+    }
+  }
+
+  if (!res.ok) {
+    const errMsg =
+      "Erro ao chamar a função (status " +
+      res.status +
+      "). " +
+      (data && data.error ? data.error : "Verifique se está logado e os logs em Supabase → Edge Functions → mark-order-ready.");
+    showMsg(errMsg, "error");
+    alert(errMsg + "\n\nAbra o console (F12) e veja a resposta completa.");
+  } else if (lineSent) {
+    showMsg("Pedido marcado como pronto. Notificação LINE enviada.", "success");
+  } else {
+    const msg =
+      "Pedido marcado como pronto. Notificação LINE não enviada." +
+      (lineReason ? " Motivo: " + lineReason : " (token ou line_user_id). Veja NOTIFICACAO_LINE.md.");
+    showMsg(msg, "warning");
+    alert(msg);
   }
   loadOrders();
 }
