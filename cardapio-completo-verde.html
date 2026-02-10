@@ -170,6 +170,25 @@
     const t = textos();
     const infoBySlug = window.PASTEIS_INFO || {};
 
+    // Se não há itens, não renderiza nada
+    if (!itens || itens.length === 0) {
+      $categoriasContainer.innerHTML = '<p style="text-align:center;color:#666;padding:2rem;">Nenhum item disponível</p>';
+      return;
+    }
+
+    // Se não há categorias, mostrar todos os itens em uma única seção
+    if (!cats || cats.length === 0) {
+      let html = '<div class="categoria-secao">';
+      html += '<div class="lista-cards">';
+      itens.forEach(function(item) {
+        html += renderCard(item, infoBySlug, t);
+      });
+      html += '</div></div>';
+      $categoriasContainer.innerHTML = html;
+      addCardEventListeners();
+      return;
+    }
+
     // Agrupar itens por categoria
     const itensPorCategoria = {};
     const itensSemCategoria = [];
@@ -225,14 +244,17 @@
     }
 
     $categoriasContainer.innerHTML = html;
+    addCardEventListeners();
+  }
 
+  function addCardEventListeners() {
     // Adicionar event listeners aos botões +
     $categoriasContainer.querySelectorAll(".btn-add-quick").forEach(function(btn) {
       btn.addEventListener("click", function(e) {
         e.preventDefault();
         e.stopPropagation();
         const itemId = btn.dataset.itemId;
-        const item = ultimosItens.find(i => i.id === itemId);
+        const item = ultimosItens.find(function(i) { return i.id === itemId; });
         if (item) {
           addToCart(item);
           // Feedback visual
@@ -288,20 +310,25 @@
     eventoAtivo = evento;
     localStorage.setItem(EVENTO_KEY, evento.id);
 
-    // Buscar categorias
-    const { data: cats, error: errC } = await supabase
-      .from("categorias")
-      .select("id, nome_pt, nome_ja, emoji, ordem")
-      .order("ordem", { ascending: true });
+    // Buscar categorias (pode falhar se tabela não existe ainda)
+    try {
+      const { data: cats, error: errC } = await supabase
+        .from("categorias")
+        .select("id, nome_pt, nome_ja, emoji, ordem")
+        .order("ordem", { ascending: true });
 
-    if (!errC && cats) {
-      categorias = cats;
+      if (!errC && cats) {
+        categorias = cats;
+      }
+    } catch (e) {
+      console.log("Categorias não disponíveis:", e);
+      categorias = [];
     }
 
-    // Buscar itens do cardápio (incluindo categoria_id e popular)
+    // Buscar itens do cardápio
     const { data: itens, error: errI } = await supabase
       .from("cardapio_itens")
-      .select("id, nome, preco, ordem, categoria_id, popular")
+      .select("*")
       .eq("cardapio_id", evento.cardapio_id)
       .eq("ativo", true)
       .order("ordem", { ascending: true });
