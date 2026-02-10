@@ -278,17 +278,17 @@
       renderItems("combo3Items", t.combo3Items);
 
       // Preços
-      document.getElementById("combo1Old").textContent = formatPrice(2500);
-      document.getElementById("combo1New").textContent = formatPrice(2100);
-      document.getElementById("combo1Save").textContent = formatPrice(400) + " " + t.off;
+      document.getElementById("combo1Old").textContent = formatPrice(3200);
+      document.getElementById("combo1New").textContent = formatPrice(2720);
+      document.getElementById("combo1Save").textContent = formatPrice(480) + " " + t.off;
 
-      document.getElementById("combo2Old").textContent = formatPrice(2700);
-      document.getElementById("combo2New").textContent = formatPrice(2400);
-      document.getElementById("combo2Save").textContent = formatPrice(300) + " " + t.off;
+      document.getElementById("combo2Old").textContent = formatPrice(2000);
+      document.getElementById("combo2New").textContent = formatPrice(1800);
+      document.getElementById("combo2Save").textContent = formatPrice(200) + " " + t.off;
 
-      document.getElementById("combo3Old").textContent = formatPrice(3700);
-      document.getElementById("combo3New").textContent = formatPrice(2950);
-      document.getElementById("combo3Save").textContent = formatPrice(750) + " " + t.off;
+      document.getElementById("combo3Old").textContent = formatPrice(1520);
+      document.getElementById("combo3New").textContent = formatPrice(1220);
+      document.getElementById("combo3Save").textContent = formatPrice(300) + " " + t.off;
 
       // Botões
       document.querySelectorAll(".promo-btn").forEach(function(btn) {
@@ -321,15 +321,15 @@
 
     document.getElementById("btnCombo1").onclick = function() {
       var name = idioma === "ja" ? "ファミリーセット" : "Combo Família";
-      addComboToCart(name, 2100);
+      addComboToCart(name, 2720);
     };
     document.getElementById("btnCombo2").onclick = function() {
       var name = idioma === "ja" ? "カップルセット" : "Combo Casal";
-      addComboToCart(name, 2400);
+      addComboToCart(name, 1800);
     };
     document.getElementById("btnCombo3").onclick = function() {
       var name = idioma === "ja" ? "BBQセット" : "Combo Churrasco";
-      addComboToCart(name, 2950);
+      addComboToCart(name, 1220);
     };
 
     atualizar();
