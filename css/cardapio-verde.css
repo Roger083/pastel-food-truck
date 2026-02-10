@@ -272,3 +272,252 @@ body.cardapio-verde {
   color: #0d7541;
   margin: 1rem 0 0.75rem;
 }
+
+/* ============================================
+   NOVO LAYOUT: Grid de Cards por Categoria
+   ============================================ */
+
+/* Container de cada seção de categoria */
+.cardapio-verde .categoria-secao {
+  margin-bottom: 1.5rem;
+}
+
+/* Header sticky da categoria */
+.cardapio-verde .categoria-header {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: linear-gradient(135deg, #e8f5e9 0%, #f0f9f4 100%);
+  padding: 0.75rem 0;
+  margin: 0 -1rem;
+  padding-left: 1rem;
+  padding-right: 1rem;
+  border-bottom: 2px solid #a8e6cf;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.cardapio-verde .categoria-header .categoria-emoji {
+  font-size: 1.3rem;
+}
+
+.cardapio-verde .categoria-header .categoria-nome {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #0d7541;
+  margin: 0;
+}
+
+/* Grid 2x2 para os cards */
+.cardapio-verde .lista-cards {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+  margin: 0.75rem 0 1rem;
+}
+
+/* Card individual no grid */
+.cardapio-verde .opcao-card {
+  display: flex;
+  flex-direction: column;
+  background: white;
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow: 0 3px 10px rgba(13, 117, 65, 0.12);
+  text-decoration: none;
+  color: inherit;
+  transition: transform 0.2s, box-shadow 0.2s;
+  position: relative;
+}
+
+.cardapio-verde .opcao-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(13, 117, 65, 0.2);
+}
+
+/* Imagem do card */
+.cardapio-verde .opcao-card .opcao-img-wrap {
+  position: relative;
+  width: 100%;
+  height: 120px;
+  overflow: hidden;
+}
+
+.cardapio-verde .opcao-card img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* Badge popular */
+.cardapio-verde .badge-popular {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+  color: white;
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 10px;
+  box-shadow: 0 2px 6px rgba(231, 76, 60, 0.4);
+  z-index: 2;
+}
+
+/* Botão + para adicionar rápido */
+.cardapio-verde .btn-add-quick {
+  position: absolute;
+  bottom: 8px;
+  right: 8px;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #27ae60 0%, #0d7541 100%);
+  color: white;
+  border: none;
+  font-size: 1.25rem;
+  font-weight: 700;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 3px 8px rgba(13, 117, 65, 0.35);
+  transition: transform 0.15s, box-shadow 0.15s;
+  z-index: 2;
+}
+
+.cardapio-verde .btn-add-quick:hover {
+  transform: scale(1.1);
+  box-shadow: 0 4px 12px rgba(13, 117, 65, 0.45);
+}
+
+.cardapio-verde .btn-add-quick:active {
+  transform: scale(0.95);
+}
+
+/* Detalhes do card (nome e preço) */
+.cardapio-verde .opcao-card .opcao-detalhes {
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+}
+
+.cardapio-verde .opcao-card .opcao-texto {
+  flex: 1;
+}
+
+.cardapio-verde .opcao-card .opcao-nome {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #1a3d0a;
+  line-height: 1.2;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.cardapio-verde .opcao-card .opcao-preco {
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: #0d7541;
+  margin-top: auto;
+}
+
+/* Esconder elementos não usados no novo layout */
+.cardapio-verde .opcao-card .opcao-arrow,
+.cardapio-verde .opcao-card .opcao-desc,
+.cardapio-verde .opcao-card .opcao-icone {
+  display: none;
+}
+
+/* ============================================
+   Carrinho Flutuante
+   ============================================ */
+.cardapio-verde .carrinho-flutuante {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: linear-gradient(135deg, #0d7541 0%, #27ae60 100%);
+  color: white;
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  box-shadow: 0 -4px 20px rgba(13, 117, 65, 0.35);
+  z-index: 100;
+  transition: transform 0.3s ease;
+}
+
+.cardapio-verde .carrinho-flutuante.hidden {
+  transform: translateY(100%);
+}
+
+.cardapio-verde .carrinho-flutuante .carrinho-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.cardapio-verde .carrinho-flutuante .carrinho-icone {
+  font-size: 1.3rem;
+}
+
+.cardapio-verde .carrinho-flutuante .carrinho-badge {
+  background: white;
+  color: #0d7541;
+  font-size: 0.85rem;
+  font-weight: 800;
+  min-width: 24px;
+  height: 24px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 6px;
+}
+
+.cardapio-verde .carrinho-flutuante .carrinho-total {
+  font-size: 1.1rem;
+  font-weight: 700;
+}
+
+.cardapio-verde .carrinho-flutuante .btn-ver-carrinho {
+  background: white;
+  color: #0d7541;
+  padding: 10px 18px;
+  border-radius: 12px;
+  font-size: 0.95rem;
+  font-weight: 700;
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: transform 0.15s;
+}
+
+.cardapio-verde .carrinho-flutuante .btn-ver-carrinho:hover {
+  transform: scale(1.03);
+}
+
+/* Padding extra no container para não esconder conteúdo atrás do carrinho */
+.cardapio-verde #app {
+  padding-bottom: 80px;
+}
+
+/* Responsividade para telas muito pequenas */
+@media (max-width: 340px) {
+  .cardapio-verde .lista-cards {
+    grid-template-columns: 1fr;
+  }
+
+  .cardapio-verde .opcao-card .opcao-img-wrap {
+    height: 150px;
+  }
+}

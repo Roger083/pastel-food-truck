@@ -71,3 +71,21 @@ function imgParaItem(nomeOuSlug) {
 
 window.slugFromNome = slugFromNome;
 window.imgParaItem = imgParaItem;
+
+/**
+ * Textos de i18n para uso no cardápio
+ */
+window.CARDAPIO_I18N = {
+  pt: {
+    verCarrinho: "Ver carrinho",
+    popular: "Popular",
+    adicionado: "Adicionado!",
+    outros: "Outros"
+  },
+  ja: {
+    verCarrinho: "カートを見る",
+    popular: "人気",
+    adicionado: "追加しました！",
+    outros: "その他"
+  }
+};
