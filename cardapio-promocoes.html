@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Promoções - Pastel Food Truck</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/cardapio-verde.css">
+  <style>
+    .cardapio-verde .header-verde { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+    .cardapio-verde .header-verde .titulo-centro { flex: 1; text-align: center; font-size: 1rem; margin: 0; display: flex; align-items: center; justify-content: center; gap: 6px; }
+    .cardapio-verde .header-verde .btn-voltar, .cardapio-verde .header-verde .btn-idioma { flex-shrink: 0; background: rgba(255,255,255,0.25); border: 2px solid rgba(255,255,255,0.5); color: white; padding: 8px 14px; border-radius: 12px; font-size: 13px; font-weight: 700; cursor: pointer; text-decoration: none; }
+
+    .promo-card {
+      background: white;
+      border-radius: 20px;
+      overflow: hidden;
+      box-shadow: 0 6px 20px rgba(13,117,65,0.15);
+      border: 3px solid #27ae60;
+      margin-bottom: 1.5rem;
+      position: relative;
+    }
+    .promo-badge {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+      color: white;
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 0.85rem;
+      font-weight: 800;
+      box-shadow: 0 3px 10px rgba(231,76,60,0.4);
+    }
+    .promo-header {
+      background: linear-gradient(135deg, #27ae60 0%, #0d7541 100%);
+      padding: 1rem 1.25rem;
+      color: white;
+    }
+    .promo-title {
+      font-size: 1.3rem;
+      font-weight: 800;
+      margin: 0;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .promo-body {
+      padding: 1.25rem;
+    }
+    .promo-items {
+      list-style: none;
+      padding: 0;
+      margin: 0 0 1rem;
+    }
+    .promo-items li {
+      padding: 8px 0;
+      border-bottom: 1px dashed #e0e0e0;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 0.95rem;
+    }
+    .promo-items li:last-child {
+      border-bottom: none;
+    }
+    .promo-items .item-emoji {
+      font-size: 1.2rem;
+    }
+    .promo-prices {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 1rem;
+    }
+    .promo-price-old {
+      font-size: 1rem;
+      color: #999;
+      text-decoration: line-through;
+    }
+    .promo-price-new {
+      font-size: 1.5rem;
+      font-weight: 800;
+      color: #0d7541;
+    }
+    .promo-economy {
+      background: #fff3cd;
+      color: #856404;
+      padding: 4px 10px;
+      border-radius: 12px;
+      font-size: 0.8rem;
+      font-weight: 700;
+    }
+    .promo-btn {
+      width: 100%;
+      padding: 14px;
+      border: none;
+      border-radius: 14px;
+      background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%);
+      color: white;
+      font-size: 1rem;
+      font-weight: 800;
+      cursor: pointer;
+      box-shadow: 0 4px 12px rgba(46,204,113,0.35);
+    }
+    .promo-btn:hover {
+      opacity: 0.95;
+    }
+    .section-intro {
+      text-align: center;
+      padding: 1rem;
+      color: #555;
+      font-size: 0.95rem;
+    }
+  </style>
+</head>
+<body class="cardapio-verde">
+  <div id="app">
+    <div id="main">
+      <header class="header-verde">
+        <a href="index.html" class="btn-voltar" id="btnVoltar">← Início</a>
+        <h1 class="titulo-centro" id="titulo"><span>🎁</span> <span id="tituloTexto">Promoções</span></h1>
+        <button type="button" class="btn-idioma" id="btnIdioma">JP 日本語</button>
+      </header>
+
+      <p class="section-intro" id="introTexto">Combos especiais com desconto!</p>
+
+      <!-- Combo 1: Família -->
+      <div class="promo-card">
+        <span class="promo-badge" id="badge1">-15%</span>
+        <div class="promo-header">
+          <h2 class="promo-title" id="combo1Title">🥟 Combo Família</h2>
+        </div>
+        <div class="promo-body">
+          <ul class="promo-items" id="combo1Items">
+            <li><span class="item-emoji">🥩</span> 2x Pastel de Carne</li>
+            <li><span class="item-emoji">🧀</span> 2x Pastel de Queijo</li>
+            <li><span class="item-emoji">🥤</span> 2x Refrigerante</li>
+          </ul>
+          <div class="promo-prices">
+            <span class="promo-price-old" id="combo1Old">¥2,500</span>
+            <span class="promo-price-new" id="combo1New">¥2,100</span>
+            <span class="promo-economy" id="combo1Save">¥400 OFF</span>
+          </div>
+          <button class="promo-btn" id="btnCombo1">🛒 Adicionar ao Carrinho</button>
+        </div>
+      </div>
+
+      <!-- Combo 2: Casal -->
+      <div class="promo-card">
+        <span class="promo-badge" id="badge2">-10%</span>
+        <div class="promo-header">
+          <h2 class="promo-title" id="combo2Title">💑 Combo Casal</h2>
+        </div>
+        <div class="promo-body">
+          <ul class="promo-items" id="combo2Items">
+            <li><span class="item-emoji">🥩</span> 1x Pastel de Carne</li>
+            <li><span class="item-emoji">🧀</span> 1x Pastel de Queijo</li>
+            <li><span class="item-emoji">🍺</span> 2x Chopp</li>
+          </ul>
+          <div class="promo-prices">
+            <span class="promo-price-old" id="combo2Old">¥2,700</span>
+            <span class="promo-price-new" id="combo2New">¥2,400</span>
+            <span class="promo-economy" id="combo2Save">¥300 OFF</span>
+          </div>
+          <button class="promo-btn" id="btnCombo2">🛒 Adicionar ao Carrinho</button>
+        </div>
+      </div>
+
+      <!-- Combo 3: Churrasco -->
+      <div class="promo-card">
+        <span class="promo-badge" id="badge3">-20%</span>
+        <div class="promo-header">
+          <h2 class="promo-title" id="combo3Title">🍖 Combo Churrasco</h2>
+        </div>
+        <div class="promo-body">
+          <ul class="promo-items" id="combo3Items">
+            <li><span class="item-emoji">🍢</span> 1x Espeto Japonês</li>
+            <li><span class="item-emoji">🥩</span> 1x Churrasco Misto</li>
+            <li><span class="item-emoji">🍺</span> 2x Chopp</li>
+          </ul>
+          <div class="promo-prices">
+            <span class="promo-price-old" id="combo3Old">¥3,700</span>
+            <span class="promo-price-new" id="combo3New">¥2,950</span>
+            <span class="promo-economy" id="combo3Save">¥750 OFF</span>
+          </div>
+          <button class="promo-btn" id="btnCombo3">🛒 Adicionar ao Carrinho</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+  (function() {
+    var textos = {
+      ja: {
+        voltar: "← ホーム",
+        titulo: "お得なセット",
+        idioma: "🇧🇷 PT",
+        intro: "お得なコンボセット！",
+        combo1Title: "🥟 ファミリーセット",
+        combo1Items: [
+          { emoji: "🥩", text: "牛肉パステル x2" },
+          { emoji: "🧀", text: "チーズパステル x2" },
+          { emoji: "🥤", text: "ソフトドリンク x2" }
+        ],
+        combo2Title: "💑 カップルセット",
+        combo2Items: [
+          { emoji: "🥩", text: "牛肉パステル x1" },
+          { emoji: "🧀", text: "チーズパステル x1" },
+          { emoji: "🍺", text: "生ビール x2" }
+        ],
+        combo3Title: "🍖 BBQセット",
+        combo3Items: [
+          { emoji: "🍢", text: "焼き鳥 x1" },
+          { emoji: "🥩", text: "ミックスBBQ x1" },
+          { emoji: "🍺", text: "生ビール x2" }
+        ],
+        btn: "🛒 カートに追加",
+        off: "OFF"
+      },
+      pt: {
+        voltar: "← Início",
+        titulo: "Promoções",
+        idioma: "JP 日本語",
+        intro: "Combos especiais com desconto!",
+        combo1Title: "🥟 Combo Família",
+        combo1Items: [
+          { emoji: "🥩", text: "Pastel de Carne x2" },
+          { emoji: "🧀", text: "Pastel de Queijo x2" },
+          { emoji: "🥤", text: "Refrigerante x2" }
+        ],
+        combo2Title: "💑 Combo Casal",
+        combo2Items: [
+          { emoji: "🥩", text: "Pastel de Carne x1" },
+          { emoji: "🧀", text: "Pastel de Queijo x1" },
+          { emoji: "🍺", text: "Chopp x2" }
+        ],
+        combo3Title: "🍖 Combo Churrasco",
+        combo3Items: [
+          { emoji: "🍢", text: "Espeto Japonês x1" },
+          { emoji: "🥩", text: "Churrasco Misto x1" },
+          { emoji: "🍺", text: "Chopp x2" }
+        ],
+        btn: "🛒 Adicionar ao Carrinho",
+        off: "OFF"
+      }
+    };
+
+    var idioma = localStorage.getItem("idioma") || "ja";
+
+    function formatPrice(v) {
+      return idioma === "ja" ? "¥" + Number(v).toLocaleString() : "R$ " + Number(v).toFixed(2).replace(".", ",");
+    }
+
+    function renderItems(containerId, items) {
+      var container = document.getElementById(containerId);
+      container.innerHTML = items.map(function(item) {
+        return '<li><span class="item-emoji">' + item.emoji + '</span> ' + item.text + '</li>';
+      }).join('');
+    }
+
+    function atualizar() {
+      var t = textos[idioma];
+      document.getElementById("btnVoltar").textContent = t.voltar;
+      document.getElementById("tituloTexto").textContent = t.titulo;
+      document.getElementById("btnIdioma").textContent = t.idioma;
+      document.getElementById("introTexto").textContent = t.intro;
+
+      document.getElementById("combo1Title").textContent = t.combo1Title;
+      document.getElementById("combo2Title").textContent = t.combo2Title;
+      document.getElementById("combo3Title").textContent = t.combo3Title;
+
+      renderItems("combo1Items", t.combo1Items);
+      renderItems("combo2Items", t.combo2Items);
+      renderItems("combo3Items", t.combo3Items);
+
+      // Preços
+      document.getElementById("combo1Old").textContent = formatPrice(2500);
+      document.getElementById("combo1New").textContent = formatPrice(2100);
+      document.getElementById("combo1Save").textContent = formatPrice(400) + " " + t.off;
+
+      document.getElementById("combo2Old").textContent = formatPrice(2700);
+      document.getElementById("combo2New").textContent = formatPrice(2400);
+      document.getElementById("combo2Save").textContent = formatPrice(300) + " " + t.off;
+
+      document.getElementById("combo3Old").textContent = formatPrice(3700);
+      document.getElementById("combo3New").textContent = formatPrice(2950);
+      document.getElementById("combo3Save").textContent = formatPrice(750) + " " + t.off;
+
+      // Botões
+      document.querySelectorAll(".promo-btn").forEach(function(btn) {
+        btn.textContent = t.btn;
+      });
+    }
+
+    document.getElementById("btnIdioma").onclick = function() {
+      idioma = idioma === "ja" ? "pt" : "ja";
+      localStorage.setItem("idioma", idioma);
+      atualizar();
+    };
+
+    // Adicionar combos ao carrinho
+    var CART_KEY = "foodtruck_cart";
+    function getCart() { try { return JSON.parse(localStorage.getItem(CART_KEY) || "[]"); } catch(e) { return []; } }
+    function setCart(arr) { localStorage.setItem(CART_KEY, JSON.stringify(arr)); }
+
+    function addComboToCart(comboName, price) {
+      var cart = getCart();
+      var existing = cart.find(function(x) { return x.nome === comboName; });
+      if (existing) {
+        existing.quantidade += 1;
+      } else {
+        cart.push({ id: "combo-" + comboName, nome: comboName, preco: price, quantidade: 1 });
+      }
+      setCart(cart);
+      alert(idioma === "ja" ? "カートに追加しました！" : "Adicionado ao carrinho!");
+    }
+
+    document.getElementById("btnCombo1").onclick = function() {
+      var name = idioma === "ja" ? "ファミリーセット" : "Combo Família";
+      addComboToCart(name, 2100);
+    };
+    document.getElementById("btnCombo2").onclick = function() {
+      var name = idioma === "ja" ? "カップルセット" : "Combo Casal";
+      addComboToCart(name, 2400);
+    };
+    document.getElementById("btnCombo3").onclick = function() {
+      var name = idioma === "ja" ? "BBQセット" : "Combo Churrasco";
+      addComboToCart(name, 2950);
+    };
+
+    atualizar();
+  })();
+  </script>
+</body>
+</html>

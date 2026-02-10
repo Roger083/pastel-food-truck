@@ -21,6 +21,10 @@
     .detalhe-card .detalhe-ing { font-size: 0.85rem; font-weight: 600; color: #333; margin-bottom: 0.5rem; }
     .detalhe-card .detalhe-tags { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 1rem; }
     .detalhe-card .detalhe-tag { background: #e8f5e9; color: #0d7541; padding: 6px 12px; border-radius: 20px; font-size: 0.85rem; font-weight: 600; }
+    .detalhe-card .detalhe-alerg { margin-bottom: 1rem; }
+    .detalhe-card .detalhe-alerg-label { font-size: 0.85rem; font-weight: 600; color: #c0392b; margin-bottom: 0.5rem; }
+    .detalhe-card .detalhe-alerg-tags { display: flex; flex-wrap: wrap; gap: 8px; }
+    .detalhe-card .detalhe-alerg-tag { background: #ffebee; color: #c0392b; padding: 6px 12px; border-radius: 20px; font-size: 0.85rem; font-weight: 600; }
     .detalhe-card .detalhe-preco { font-size: 1.5rem; font-weight: 800; color: #0d7541; margin-bottom: 1rem; }
     .detalhe-card .qty-row { display: flex; align-items: center; gap: 12px; margin-bottom: 1rem; }
     .detalhe-card .qty-row label { font-weight: 600; color: #333; min-width: 90px; }
@@ -51,6 +55,10 @@
           <div class="detalhe-desc" id="itemDesc"></div>
           <div class="detalhe-ing" id="labelIng">Ingredientes</div>
           <div class="detalhe-tags" id="itemIng"></div>
+          <div class="detalhe-alerg" id="alergenosSection">
+            <div class="detalhe-alerg-label" id="labelAlerg">⚠️ Alérgenos</div>
+            <div class="detalhe-alerg-tags" id="itemAlerg"></div>
+          </div>
           <div class="detalhe-preco" id="itemPreco"></div>
           <div class="qty-row">
             <label id="labelQty">Quantidade</label>
@@ -103,8 +111,8 @@
 
   function textos() {
     return idioma === "ja"
-      ? { voltar: "← ホーム", titulo: "本日のメニュー", idioma: "🇧🇷 PT", ing: "材料", qty: "数量", add: "カートに追加", verCarrinho: "カートを見る" }
-      : { voltar: "← Início", titulo: "Cardápio do Dia", idioma: "JP 日本語", ing: "Ingredientes", qty: "Quantidade", add: "Adicionar ao Carrinho", verCarrinho: "Ver carrinho →" };
+      ? { voltar: "← ホーム", titulo: "本日のメニュー", idioma: "🇧🇷 PT", ing: "材料", alerg: "⚠️ アレルゲン", qty: "数量", add: "カートに追加", verCarrinho: "カートを見る" }
+      : { voltar: "← Início", titulo: "Cardápio do Dia", idioma: "JP 日本語", ing: "Ingredientes", alerg: "⚠️ Alérgenos", qty: "Quantidade", add: "Adicionar ao Carrinho", verCarrinho: "Ver carrinho →" };
   }
 
   function atualizarUI() {
@@ -113,6 +121,7 @@
     document.getElementById("titulo").textContent = t.titulo;
     document.getElementById("btnIdioma").textContent = t.idioma;
     document.getElementById("labelIng").textContent = t.ing;
+    document.getElementById("labelAlerg").textContent = t.alerg;
     document.getElementById("labelQty").textContent = t.qty;
     document.getElementById("btnAddCart").textContent = "🛒 " + t.add;
     $linkCarrinho.textContent = t.verCarrinho;
@@ -121,7 +130,9 @@
 
   function getInfoBySlug(slug) {
     const info = window.PASTEIS_INFO && window.PASTEIS_INFO[slug] ? window.PASTEIS_INFO[slug] : window.PASTEIS_INFO.carne;
-    return idioma === "ja" ? { desc: info.desc_ja, ing: info.ingredientes_ja } : { desc: info.desc_pt, ing: info.ingredientes_pt };
+    return idioma === "ja"
+      ? { desc: info.desc_ja, ing: info.ingredientes_ja, alerg: info.alergenicos_ja || [] }
+      : { desc: info.desc_pt, ing: info.ingredientes_pt, alerg: info.alergenicos_pt || [] };
   }
 
   function renderItem() {
@@ -133,6 +144,15 @@
     $itemNome.textContent = item.nome;
     $itemDesc.textContent = info.desc;
     $itemIng.innerHTML = (info.ing || []).map(function (x) { return '<span class="detalhe-tag">' + escapeHtml(x) + "</span>"; }).join("");
+    // Alérgenos
+    const $itemAlerg = document.getElementById("itemAlerg");
+    const $alergenosSection = document.getElementById("alergenosSection");
+    if (info.alerg && info.alerg.length > 0) {
+      $itemAlerg.innerHTML = info.alerg.map(function (x) { return '<span class="detalhe-alerg-tag">' + escapeHtml(x) + "</span>"; }).join("");
+      $alergenosSection.style.display = "block";
+    } else {
+      $alergenosSection.style.display = "none";
+    }
     $itemPreco.textContent = formatPrice(item.preco);
     $qtyVal.textContent = qty;
   }
