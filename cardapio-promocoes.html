@@ -252,7 +252,7 @@
     var idioma = localStorage.getItem("idioma") || "ja";
 
     function formatPrice(v) {
-      return idioma === "ja" ? "¥" + Number(v).toLocaleString() : "R$ " + Number(v).toFixed(2).replace(".", ",");
+      return "¥" + Math.round(Number(v)).toLocaleString();
     }
 
     function renderItems(containerId, items) {

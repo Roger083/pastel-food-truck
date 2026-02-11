@@ -107,7 +107,7 @@
     supabase = window.supabase.createClient(CONFIG.supabaseUrl, CONFIG.supabaseAnonKey);
   }
 
-  function formatPrice(v) { return "R$ " + Number(v).toFixed(2).replace(".", ","); }
+  function formatPrice(v) { return "¥" + Math.round(Number(v)).toLocaleString(); }
 
   function textos() {
     return idioma === "ja"

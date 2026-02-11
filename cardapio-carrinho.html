@@ -99,7 +99,7 @@
   function hideLoading() { $loading.hidden = true; }
   function showError(msg) { $error.textContent = msg; $error.hidden = false; }
 
-  function formatPrice(v) { return "R$ " + Number(v).toFixed(2).replace(".", ","); }
+  function formatPrice(v) { return "¥" + Math.round(Number(v)).toLocaleString(); }
   function formatNumero(n) { return "A-" + String(n).padStart(3, "0"); }
 
   function textos() {
