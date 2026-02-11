@@ -182,12 +182,8 @@
           qty += cart[i].quantidade || 0;
         }
 
-        console.log("DEBUG: qty=" + qty + ", cart=" + JSON.stringify(cart));
-
         var btnCarrinho = document.getElementById("btnCarrinho");
         var cartCount = document.getElementById("header-cart-count");
-
-        console.log("DEBUG: btnCarrinho=" + btnCarrinho + ", cartCount=" + cartCount);
 
         if (btnCarrinho) {
           if (qty > 0) {
