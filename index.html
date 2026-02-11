@@ -209,8 +209,9 @@
         document.getElementById('footerDestaque').textContent = t.footerDestaque;
       }
       // Mostrar carrinho flutuante se tiver itens
-      function updateFloatingCart() {
+      function updateFloatingCart(lang) {
         var CART_KEY = "foodtruck_cart";
+        var currentLang = lang || idioma;
         try {
           var cart = JSON.parse(localStorage.getItem(CART_KEY) || "[]");
           var qty = cart.reduce(function(s, i) { return s + (i.quantidade || 0); }, 0);
@@ -219,11 +220,10 @@
           var cartCount = document.getElementById("cart-count");
           var cartTotal = document.getElementById("cart-total");
           var btnVerCarrinho = document.getElementById("btn-ver-carrinho");
-          var lang = localStorage.getItem("idioma") || "ja";
 
           // Atualizar texto do botão
           if (btnVerCarrinho) {
-            btnVerCarrinho.textContent = (lang === "ja" ? "カートを見る" : "Ver carrinho") + " →";
+            btnVerCarrinho.textContent = (currentLang === "ja" ? "カートを見る" : "Ver carrinho") + " →";
           }
 
           if (qty > 0) {
@@ -240,14 +240,14 @@
         idioma = idioma === 'ja' ? 'pt' : 'ja';
         localStorage.setItem('idioma', idioma);
         atualizar();
-        updateFloatingCart();
+        updateFloatingCart(idioma);
       };
       document.getElementById('btnPrincipal').onclick = function() {
         window.location.href = 'cardapio-completo-verde.html';
       };
 
-      updateFloatingCart();
       atualizar();
+      updateFloatingCart(idioma);
     })();
   </script>
 </body>
