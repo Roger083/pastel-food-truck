@@ -75,7 +75,7 @@
           <div class="header-spacer"></div>
           <div class="logo-wrap"><span class="logo" id="logo">🥟 PASTEL</span></div>
           <div class="btn-idioma-wrap" style="display:flex;align-items:center;gap:8px;">
-            <a href="cardapio-carrinho.html" id="btnCarrinho" style="display:none;background:rgba(255,255,255,0.2);border:2px solid rgba(255,255,255,0.5);color:white;padding:8px 12px;border-radius:20px;font-size:13px;font-weight:600;text-decoration:none;">🛒 <span id="cart-count">0</span></a>
+            <a href="cardapio-carrinho.html" id="btnCarrinho" style="display:none;background:rgba(255,255,255,0.2);border:2px solid rgba(255,255,255,0.5);color:white;padding:8px 12px;border-radius:20px;font-size:13px;font-weight:600;text-decoration:none;">🛒 <span id="header-cart-count">0</span></a>
             <button type="button" class="btn-idioma" id="btnIdioma">🇧🇷 PT</button>
           </div>
         </div>
@@ -175,12 +175,12 @@
           var cart = JSON.parse(localStorage.getItem(CART_KEY) || "[]");
           var qty = cart.reduce(function(s, i) { return s + (i.quantidade || 0); }, 0);
           var btnCarrinho = document.getElementById("btnCarrinho");
-          var cartCount = document.getElementById("cart-count");
+          var cartCount = document.getElementById("header-cart-count");
 
-          if (qty > 0) {
+          if (qty > 0 && btnCarrinho && cartCount) {
             btnCarrinho.style.display = "inline-flex";
             cartCount.textContent = qty;
-          } else {
+          } else if (btnCarrinho) {
             btnCarrinho.style.display = "none";
           }
         } catch(e) { console.error(e); }
