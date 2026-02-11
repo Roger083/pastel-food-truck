@@ -171,19 +171,29 @@
       // Mostrar ícone do carrinho se tiver itens
       function updateCartIcon() {
         var CART_KEY = "foodtruck_cart";
+        var cart = [];
         try {
-          var cart = JSON.parse(localStorage.getItem(CART_KEY) || "[]");
-          var qty = cart.reduce(function(s, i) { return s + (i.quantidade || 0); }, 0);
-          var btnCarrinho = document.getElementById("btnCarrinho");
-          var cartCount = document.getElementById("header-cart-count");
+          cart = JSON.parse(localStorage.getItem(CART_KEY)) || [];
+        } catch(e) {
+          cart = [];
+        }
+        var qty = 0;
+        for (var i = 0; i < cart.length; i++) {
+          qty += cart[i].quantidade || 0;
+        }
+        var btnCarrinho = document.getElementById("btnCarrinho");
+        var cartCount = document.getElementById("header-cart-count");
 
-          if (qty > 0 && btnCarrinho && cartCount) {
+        console.log("Cart:", cart, "Qty:", qty, "Btn:", btnCarrinho, "Count:", cartCount);
+
+        if (btnCarrinho) {
+          if (qty > 0) {
             btnCarrinho.style.display = "inline-flex";
-            cartCount.textContent = qty;
-          } else if (btnCarrinho) {
+            if (cartCount) cartCount.textContent = qty;
+          } else {
             btnCarrinho.style.display = "none";
           }
-        } catch(e) { console.error(e); }
+        }
       }
 
       document.getElementById('btnIdioma').onclick = function() {
