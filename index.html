@@ -228,12 +228,15 @@
           var cartCount = document.getElementById("cart-count");
           var cartTotal = document.getElementById("cart-total");
           var btnVerCarrinho = document.getElementById("btn-ver-carrinho");
+          var currentIdioma = localStorage.getItem("idioma") || "ja";
+
+          // Sempre atualizar o texto do botão
+          btnVerCarrinho.textContent = (currentIdioma === "ja" ? "カートを見る" : "Ver carrinho") + " →";
 
           if (qty > 0) {
             carrinhoFlutuante.classList.remove("hidden");
             cartCount.textContent = qty;
             cartTotal.textContent = "¥" + Math.round(totalPrice).toLocaleString();
-            btnVerCarrinho.textContent = (idioma === "ja" ? "カートを見る" : "Ver carrinho") + " →";
           } else {
             carrinhoFlutuante.classList.add("hidden");
           }
