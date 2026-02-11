@@ -14,7 +14,9 @@
     .cardapio-verde .header-verde .titulo-centro { flex: 1; text-align: center; font-size: 1rem; margin: 0; }
     .cardapio-verde .header-verde .btn-voltar, .cardapio-verde .header-verde .btn-idioma { flex-shrink: 0; background: rgba(255,255,255,0.25); border: 2px solid rgba(255,255,255,0.5); color: white; padding: 8px 14px; border-radius: 12px; font-size: 13px; font-weight: 700; cursor: pointer; text-decoration: none; }
     .carrinho-lista { margin: 1rem 0; }
-    .carrinho-item { background: white; border-radius: 12px; padding: 12px 1rem; margin-bottom: 8px; border: 2px solid #a8e6cf; display: flex; justify-content: space-between; align-items: center; }
+    .carrinho-item { background: white; border-radius: 12px; padding: 12px 1rem; margin-bottom: 8px; border: 2px solid #a8e6cf; display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+    .carrinho-item .item-info { flex: 1; }
+    .carrinho-item .btn-remover { background: #e74c3c; color: white; border: none; border-radius: 8px; width: 32px; height: 32px; font-size: 1rem; cursor: pointer; font-weight: 700; }
     .carrinho-total { font-size: 1.25rem; font-weight: 800; color: #0d7541; margin: 1rem 0; }
     .carrinho-vazio { text-align: center; padding: 2rem; color: #666; }
     .carrinho-vazio a { color: #27ae60; font-weight: 700; }
@@ -133,11 +135,25 @@
     $empty.hidden = true;
     $main.hidden = false;
     const total = cart.reduce(function (s, i) { return s + Number(i.preco) * i.quantidade; }, 0);
-    $carrinhoLista.innerHTML = cart.map(function (i) {
-      return '<div class="carrinho-item">' + escapeHtml(i.nome) + " x" + i.quantidade + " – " + formatPrice(Number(i.preco) * i.quantidade) + "</div>";
+    $carrinhoLista.innerHTML = cart.map(function (i, index) {
+      return '<div class="carrinho-item">' +
+        '<span class="item-info">' + escapeHtml(i.nome) + " x" + i.quantidade + " – " + formatPrice(Number(i.preco) * i.quantidade) + '</span>' +
+        '<button type="button" class="btn-remover" data-index="' + index + '">✕</button>' +
+        "</div>";
     }).join("");
     $carrinhoTotal.textContent = "Total: " + formatPrice(total);
     $btnConfirmar.disabled = false;
+
+    // Event listeners para botões de remover
+    $carrinhoLista.querySelectorAll(".btn-remover").forEach(function(btn) {
+      btn.addEventListener("click", function() {
+        var index = parseInt(btn.dataset.index);
+        var cart = getCart();
+        cart.splice(index, 1);
+        setCart(cart);
+        renderCart();
+      });
+    });
   }
 
   function escapeHtml(s) { const d = document.createElement("div"); d.textContent = s; return d.innerHTML; }
@@ -177,7 +193,11 @@
     }
     $btnConfirmar.disabled = true;
     $btnConfirmar.textContent = idioma === "ja" ? "送信中..." : "Enviando...";
-    var itens = cart.map(function (i) { return { cardapio_item_id: i.id, nome: i.nome, preco: i.preco, quantidade: i.quantidade }; });
+    var itens = cart.map(function (i) {
+      // Se for combo (ID não é UUID válido), enviar cardapio_item_id como null
+      var isCombo = typeof i.id === "string" && i.id.indexOf("combo-") === 0;
+      return { cardapio_item_id: isCombo ? null : i.id, nome: i.nome, preco: i.preco, quantidade: i.quantidade };
+    });
     var params = { p_evento_id: eventoId, p_line_user_id: lineUserId || null, p_itens: itens, p_idioma: idioma };
     if (agendadoPara) params.p_agendado_para = agendadoPara;
     var { data: pedido, error } = await supabase.rpc("criar_pedido", params);
