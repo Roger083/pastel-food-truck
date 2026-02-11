@@ -156,17 +156,17 @@
       var idioma = localStorage.getItem('idioma') || 'ja';
       function atualizar() {
         var t = textos[idioma];
-        document.getElementById('logo').textContent = t.logo;
-        document.getElementById('btnIdioma').textContent = t.btnIdioma;
-        document.getElementById('heroTitle').textContent = t.heroTitle;
-        document.getElementById('heroSubtitle').textContent = t.heroSubtitle;
-        document.getElementById('btnPrincipal').textContent = t.btnPrincipal;
-        document.getElementById('btn1').textContent = t.btn1;
-        document.getElementById('btn2').textContent = t.btn2;
-        document.getElementById('btn3').textContent = t.btn3;
-        document.getElementById('btn4').textContent = t.btn4;
-        document.getElementById('footerTexto').innerHTML = t.footerTexto + '<br>';
-        document.getElementById('footerDestaque').textContent = t.footerDestaque;
+        var el;
+        if ((el = document.getElementById('logo'))) el.textContent = t.logo;
+        if ((el = document.getElementById('btnIdioma'))) el.textContent = t.btnIdioma;
+        if ((el = document.getElementById('heroTitle'))) el.textContent = t.heroTitle;
+        if ((el = document.getElementById('heroSubtitle'))) el.textContent = t.heroSubtitle;
+        if ((el = document.getElementById('btnPrincipal'))) el.textContent = t.btnPrincipal;
+        if ((el = document.getElementById('btn1'))) el.textContent = t.btn1;
+        if ((el = document.getElementById('btn2'))) el.textContent = t.btn2;
+        if ((el = document.getElementById('btn3'))) el.textContent = t.btn3;
+        if ((el = document.getElementById('btn4'))) el.textContent = t.btn4;
+        if ((el = document.getElementById('footerTexto'))) el.innerHTML = t.footerTexto + '<br><span class="footer-destaque">' + t.footerDestaque + '</span>';
       }
       // Mostrar ícone do carrinho se tiver itens
       function updateCartIcon() {
@@ -182,10 +182,12 @@
           qty += cart[i].quantidade || 0;
         }
 
-        alert("Carrinho: " + qty + " itens");
+        console.log("DEBUG: qty=" + qty + ", cart=" + JSON.stringify(cart));
 
         var btnCarrinho = document.getElementById("btnCarrinho");
         var cartCount = document.getElementById("header-cart-count");
+
+        console.log("DEBUG: btnCarrinho=" + btnCarrinho + ", cartCount=" + cartCount);
 
         if (btnCarrinho) {
           if (qty > 0) {
