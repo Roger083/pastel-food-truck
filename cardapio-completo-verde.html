@@ -27,10 +27,7 @@
       <header class="header-verde">
         <a href="index.html" class="btn-voltar" id="btnVoltar">← Início</a>
         <h1 class="titulo-centro" id="titulo"><span class="titulo-icone" id="tituloIcone">🔥</span> <span id="tituloTexto">Cardápio do Dia</span></h1>
-        <div style="display:flex;gap:8px;align-items:center;">
-          <a href="cardapio-carrinho.html" class="btn-carrinho" id="btnCarrinho">🛒 <span id="cart-count">0</span></a>
-          <button type="button" class="btn-idioma" id="btnIdioma">JP 日本語</button>
-        </div>
+        <button type="button" class="btn-idioma" id="btnIdioma">JP 日本語</button>
       </header>
 
       <p class="section-title" id="subtitulo">Comida tradicional brasileira «Pastel»</p>
@@ -64,7 +61,6 @@
   const $error = document.getElementById("error");
   const $main = document.getElementById("main");
   const $categoriasContainer = document.getElementById("categorias-container");
-  const $cartCount = document.getElementById("cart-count");
   const $btnIdioma = document.getElementById("btnIdioma");
   const $subtitulo = document.getElementById("subtitulo");
   const $btnVoltar = document.getElementById("btnVoltar");
@@ -86,12 +82,6 @@
 
   function saveCart(cart) {
     localStorage.setItem(CART_KEY, JSON.stringify(cart));
-  }
-
-  function updateCartCount() {
-    const cart = getCart();
-    const n = cart.reduce((s, i) => s + (i.quantidade || 0), 0);
-    $cartCount.textContent = n;
   }
 
   function updateFloatingCart() {
@@ -127,7 +117,7 @@
       });
     }
     saveCart(cart);
-    updateCartCount();
+    updateFloatingCart();
     updateFloatingCart();
   }
 
@@ -324,7 +314,7 @@
 
     $main.hidden = false;
     hideLoading();
-    updateCartCount();
+    updateFloatingCart();
     updateFloatingCart();
   }
 
