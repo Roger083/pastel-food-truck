@@ -185,8 +185,7 @@
       });
       html += '</div></div>';
       $categoriasContainer.innerHTML = html;
-      addCardEventListeners();
-      return;
+            return;
     }
 
     // Agrupar itens por categoria
@@ -244,26 +243,8 @@
     }
 
     $categoriasContainer.innerHTML = html;
-    addCardEventListeners();
-  }
+      }
 
-  function addCardEventListeners() {
-    // Adicionar event listeners aos botões +
-    $categoriasContainer.querySelectorAll(".btn-add-quick").forEach(function(btn) {
-      btn.addEventListener("click", function(e) {
-        e.preventDefault();
-        e.stopPropagation();
-        const itemId = btn.dataset.itemId;
-        const item = ultimosItens.find(function(i) { return i.id === itemId; });
-        if (item) {
-          addToCart(item);
-          // Feedback visual
-          btn.textContent = "✓";
-          setTimeout(function() { btn.textContent = "+"; }, 500);
-        }
-      });
-    });
-  }
 
   function renderCard(item, infoBySlug, t) {
     const slug = window.slugFromNome ? window.slugFromNome(item.nome) : "carne";
@@ -281,7 +262,6 @@
       cardHtml += '<span class="badge-popular">' + t.popular + '</span>';
     }
 
-    cardHtml += '<button type="button" class="btn-add-quick" data-item-id="' + item.id + '">+</button>';
     cardHtml += '</div>';
     cardHtml += '<div class="opcao-detalhes">';
     cardHtml += '<div class="opcao-texto">';

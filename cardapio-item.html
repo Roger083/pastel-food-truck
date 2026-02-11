@@ -202,8 +202,9 @@
     var existing = cart.find(function (x) { return x.id === item.id; });
     if (existing) existing.quantidade += qty; else cart.push({ id: item.id, nome: item.nome, preco: item.preco, quantidade: qty });
     setCart(cart);
-    $linkCarrinho.hidden = false;
     alert(idioma === "ja" ? "カートに追加しました。" : "Adicionado ao carrinho!");
+    // Voltar para o cardápio
+    window.location.href = "cardapio-completo-verde.html";
   });
 
   async function init() {

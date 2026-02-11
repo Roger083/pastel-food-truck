@@ -30,6 +30,11 @@
       cursor: pointer; transition: all 0.3s;
     }
     .landing .btn-idioma:hover { background: rgba(255,255,255,0.3); }
+    .landing .btn-carrinho {
+      background: rgba(255,255,255,0.2); border: 2px solid rgba(255,255,255,0.5);
+      color: white; padding: 8px 14px; border-radius: 20px; font-size: 13px; font-weight: 600;
+      text-decoration: none; display: inline-flex; align-items: center; gap: 4px;
+    }
     .landing .hero-image {
       width: 100%; height: 280px; border-radius: 20px; overflow: hidden; margin-bottom: 24px;
       position: relative; box-shadow: 0 8px 24px rgba(13,117,65,0.2);
@@ -74,7 +79,10 @@
         <div class="header-content">
           <div class="header-spacer"></div>
           <div class="logo-wrap"><span class="logo" id="logo">🥟 PASTEL</span></div>
-          <div class="btn-idioma-wrap"><button type="button" class="btn-idioma" id="btnIdioma">🇧🇷 PT</button></div>
+          <div class="btn-idioma-wrap">
+            <a href="cardapio-carrinho.html" class="btn-carrinho" id="btnCarrinho" style="display:none;margin-right:8px;">🛒 <span id="cart-count">0</span></a>
+            <button type="button" class="btn-idioma" id="btnIdioma">🇧🇷 PT</button>
+          </div>
         </div>
       </div>
       <div class="hero-image">
@@ -173,6 +181,23 @@
       document.getElementById('btnPrincipal').onclick = function() {
         window.location.href = 'cardapio-completo-verde.html';
       };
+      // Mostrar carrinho se tiver itens
+      function updateCartIcon() {
+        var CART_KEY = "foodtruck_cart";
+        try {
+          var cart = JSON.parse(localStorage.getItem(CART_KEY) || "[]");
+          var total = cart.reduce(function(s, i) { return s + (i.quantidade || 0); }, 0);
+          var btnCarrinho = document.getElementById("btnCarrinho");
+          var cartCount = document.getElementById("cart-count");
+          if (total > 0) {
+            btnCarrinho.style.display = "inline-flex";
+            cartCount.textContent = total;
+          } else {
+            btnCarrinho.style.display = "none";
+          }
+        } catch(e) {}
+      }
+      updateCartIcon();
       atualizar();
     })();
   </script>
