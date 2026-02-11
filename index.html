@@ -30,11 +30,6 @@
       cursor: pointer; transition: all 0.3s;
     }
     .landing .btn-idioma:hover { background: rgba(255,255,255,0.3); }
-    .landing .btn-carrinho {
-      background: rgba(255,255,255,0.2); border: 2px solid rgba(255,255,255,0.5);
-      color: white; padding: 8px 14px; border-radius: 20px; font-size: 13px; font-weight: 600;
-      text-decoration: none; display: inline-flex; align-items: center; gap: 4px;
-    }
     .landing .hero-image {
       width: 100%; height: 280px; border-radius: 20px; overflow: hidden; margin-bottom: 24px;
       position: relative; box-shadow: 0 8px 24px rgba(13,117,65,0.2);
@@ -69,6 +64,37 @@
     }
     .landing .footer-texto { color: #666; font-size: 14px; line-height: 1.6; }
     .landing .footer-destaque { color: #0d7541; font-weight: 700; }
+    /* Carrinho flutuante */
+    .carrinho-flutuante {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: linear-gradient(135deg, #0d7541 0%, #27ae60 100%);
+      color: white;
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      box-shadow: 0 -4px 20px rgba(13, 117, 65, 0.35);
+      z-index: 100;
+      transition: transform 0.3s ease;
+    }
+    .carrinho-flutuante.hidden { transform: translateY(100%); }
+    .carrinho-flutuante .carrinho-info { display: flex; align-items: center; gap: 12px; }
+    .carrinho-flutuante .carrinho-icone { font-size: 1.3rem; }
+    .carrinho-flutuante .carrinho-badge {
+      background: white; color: #0d7541; font-size: 0.85rem; font-weight: 800;
+      min-width: 24px; height: 24px; border-radius: 12px;
+      display: flex; align-items: center; justify-content: center; padding: 0 6px;
+    }
+    .carrinho-flutuante .carrinho-total { font-size: 1.1rem; font-weight: 700; }
+    .carrinho-flutuante .btn-ver-carrinho {
+      background: white; color: #0d7541; padding: 10px 18px; border-radius: 12px;
+      font-size: 0.95rem; font-weight: 700; text-decoration: none;
+      display: flex; align-items: center; gap: 6px;
+    }
+    .landing { padding-bottom: 80px; }
   </style>
 </head>
 <body>
@@ -80,7 +106,6 @@
           <div class="header-spacer"></div>
           <div class="logo-wrap"><span class="logo" id="logo">🥟 PASTEL</span></div>
           <div class="btn-idioma-wrap">
-            <a href="cardapio-carrinho.html" class="btn-carrinho" id="btnCarrinho" style="display:none;margin-right:8px;">🛒 <span id="cart-count">0</span></a>
             <button type="button" class="btn-idioma" id="btnIdioma">🇧🇷 PT</button>
           </div>
         </div>
@@ -117,6 +142,16 @@
           <span class="footer-destaque" id="footerDestaque">出来立てをお召し上がりください 🔥</span>
         </div>
       </div>
+    </div>
+
+    <!-- Carrinho Flutuante -->
+    <div id="carrinho-flutuante" class="carrinho-flutuante hidden">
+      <div class="carrinho-info">
+        <span class="carrinho-icone">🛒</span>
+        <span class="carrinho-badge" id="cart-count">0</span>
+        <span class="carrinho-total" id="cart-total">¥0</span>
+      </div>
+      <a href="cardapio-carrinho.html" class="btn-ver-carrinho" id="btn-ver-carrinho">Ver carrinho →</a>
     </div>
 
     <div id="loading" style="display:none;">読み込み中...</div>
@@ -177,27 +212,34 @@
         idioma = idioma === 'ja' ? 'pt' : 'ja';
         localStorage.setItem('idioma', idioma);
         atualizar();
+        updateFloatingCart();
       };
       document.getElementById('btnPrincipal').onclick = function() {
         window.location.href = 'cardapio-completo-verde.html';
       };
-      // Mostrar carrinho se tiver itens
-      function updateCartIcon() {
+      // Mostrar carrinho flutuante se tiver itens
+      function updateFloatingCart() {
         var CART_KEY = "foodtruck_cart";
         try {
           var cart = JSON.parse(localStorage.getItem(CART_KEY) || "[]");
-          var total = cart.reduce(function(s, i) { return s + (i.quantidade || 0); }, 0);
-          var btnCarrinho = document.getElementById("btnCarrinho");
+          var qty = cart.reduce(function(s, i) { return s + (i.quantidade || 0); }, 0);
+          var totalPrice = cart.reduce(function(s, i) { return s + (i.preco || 0) * (i.quantidade || 0); }, 0);
+          var carrinhoFlutuante = document.getElementById("carrinho-flutuante");
           var cartCount = document.getElementById("cart-count");
-          if (total > 0) {
-            btnCarrinho.style.display = "inline-flex";
-            cartCount.textContent = total;
+          var cartTotal = document.getElementById("cart-total");
+          var btnVerCarrinho = document.getElementById("btn-ver-carrinho");
+
+          if (qty > 0) {
+            carrinhoFlutuante.classList.remove("hidden");
+            cartCount.textContent = qty;
+            cartTotal.textContent = "¥" + Math.round(totalPrice).toLocaleString();
+            btnVerCarrinho.textContent = (idioma === "ja" ? "カートを見る" : "Ver carrinho") + " →";
           } else {
-            btnCarrinho.style.display = "none";
+            carrinhoFlutuante.classList.add("hidden");
           }
         } catch(e) {}
       }
-      updateCartIcon();
+      updateFloatingCart();
       atualizar();
     })();
   </script>
