@@ -181,10 +181,11 @@
         for (var i = 0; i < cart.length; i++) {
           qty += cart[i].quantidade || 0;
         }
+
+        alert("Carrinho: " + qty + " itens");
+
         var btnCarrinho = document.getElementById("btnCarrinho");
         var cartCount = document.getElementById("header-cart-count");
-
-        console.log("Cart:", cart, "Qty:", qty, "Btn:", btnCarrinho, "Count:", cartCount);
 
         if (btnCarrinho) {
           if (qty > 0) {
