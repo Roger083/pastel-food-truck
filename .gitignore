@@ -13,3 +13,9 @@ config.local.js
 # OS
 .DS_Store
 Thumbs.db
+
+# Windows downloaded file metadata (avoid dirty git status)
+*:Zone.Identifier
+
+# Local notes / artifacts (keep out of repo)
+implementação.rtf
