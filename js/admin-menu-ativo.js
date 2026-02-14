@@ -12,6 +12,7 @@ const $btnLogout = document.getElementById("btn-logout");
 
 const params = new URLSearchParams(window.location.search);
 const templateId = params.get("template");
+const isTemplateMode = !!templateId;
 
 // 8 alergenicos obrigatorios no Japao + recomendados relevantes
 const ALLERGENS = [
@@ -305,6 +306,14 @@ function openItemModal(itemId) {
   const isNew = !itemId;
   document.getElementById("modal-item-titulo").textContent = isNew ? "Novo Item" : "Editar Item";
 
+  // Adjust price label depending on context:
+  // - Template mode: user is setting the price for this template (override)
+  // - Normal mode: user is editing the catalog default price
+  const $priceLabel = document.querySelector('label[for="item-preco"]');
+  if ($priceLabel) {
+    $priceLabel.textContent = isTemplateMode ? "Preco neste template (yen)" : "Preco padrao (yen)";
+  }
+
   const $preview = document.getElementById("item-foto-preview");
   const $fotoNome = document.getElementById("foto-nome");
 
@@ -329,7 +338,9 @@ function openItemModal(itemId) {
     document.getElementById("item-desc-ja").value = item.desc_ja || "";
     document.getElementById("item-ing-pt").value = (item.ingredientes_pt || []).join(", ");
     document.getElementById("item-ing-ja").value = (item.ingredientes_ja || []).join(", ");
-    document.getElementById("item-preco").value = item.preco_padrao || "";
+    // Important: in template mode, do NOT bind the modal price to menu_items.preco_padrao (global),
+    // otherwise changing price here would affect other templates.
+    document.getElementById("item-preco").value = (isTemplateMode ? item.preco_atual : item.preco_padrao) || "";
     document.getElementById("item-categoria").value = item.categoria_id || "";
     document.getElementById("item-popular").checked = item.popular || false;
     if (item.foto_url) {
@@ -379,14 +390,13 @@ async function saveItem() {
     document.getElementById("btn-item-save").textContent = "Salvar Item";
   }
 
-  const itemData = {
+  const itemDataCommon = {
     nome,
     nome_ja: document.getElementById("item-nome-ja").value.trim() || null,
     desc_pt: document.getElementById("item-desc-pt").value.trim() || null,
     desc_ja: document.getElementById("item-desc-ja").value.trim() || null,
     ingredientes_pt: parseCommaList(document.getElementById("item-ing-pt").value),
     ingredientes_ja: parseCommaList(document.getElementById("item-ing-ja").value),
-    preco_padrao: preco,
     foto_url: fotoUrl,
     categoria_id: document.getElementById("item-categoria").value || null,
     alergenicos_texto_pt: allergens.pt,
@@ -398,15 +408,20 @@ async function saveItem() {
   const sb = getSupabase();
 
   if (editingCatalogItemId) {
-    const { error } = await sb.from("menu_items").update(itemData).eq("id", editingCatalogItemId);
+    // In template mode we should NOT update menu_items.preco_padrao, only the template override.
+    const itemUpdate = isTemplateMode ? itemDataCommon : { ...itemDataCommon, preco_padrao: preco };
+    const { error } = await sb.from("menu_items").update(itemUpdate).eq("id", editingCatalogItemId);
     if (error) { showMsg("Erro: " + error.message, "error"); return; }
-    Object.assign(state[editingCatalogItemId], itemData);
+    Object.assign(state[editingCatalogItemId], itemDataCommon);
+    if (!isTemplateMode) state[editingCatalogItemId].preco_padrao = preco;
     state[editingCatalogItemId].preco_atual = preco;
     showMsg("Item atualizado!", "success");
   } else {
-    const { data: newItem, error } = await sb.from("menu_items").insert(itemData).select().single();
+    // New catalog item always needs a default price.
+    const itemInsert = { ...itemDataCommon, preco_padrao: preco };
+    const { data: newItem, error } = await sb.from("menu_items").insert(itemInsert).select().single();
     if (error) { showMsg("Erro: " + error.message, "error"); return; }
-    state[newItem.id] = { ...itemData, checked: false, preco_atual: preco };
+    state[newItem.id] = { ...itemInsert, checked: false, preco_atual: preco };
     showMsg("Item criado!", "success");
   }
 
