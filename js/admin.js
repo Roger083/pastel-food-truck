@@ -75,24 +75,38 @@ async function loadOrders() {
 
   // Pedidos na hora: sempre. Agendados: só entram na fila 15 min antes do horário.
   const cutoffAgendado = new Date(Date.now() + 15 * 60 * 1000).toISOString();
-  const { data: pedidos, error: errPedidos } = await sb
+  
+  // Buscar pedidos separados: pendentes (ASC - mais antigo primeiro) e prontos (DESC - mais recente primeiro)
+  const { data: pedidosPendentes, error: errPendentes } = await sb
     .from("pedidos")
     .select("*, pedido_itens(*)")
     .eq("evento_id", evento.id)
+    .neq("status", "pronto")
     .or(`agendado_para.is.null,agendado_para.lte.${cutoffAgendado}`)
+    .order("criado_em", { ascending: true });
+
+  const { data: pedidosProntos, error: errProntos } = await sb
+    .from("pedidos")
+    .select("*, pedido_itens(*)")
+    .eq("evento_id", evento.id)
+    .eq("status", "pronto")
     .order("criado_em", { ascending: false });
 
-  if (errPedidos) {
+  if (errPendentes || errProntos) {
     $ordersLoading.textContent = "Falha ao carregar.";
     return;
   }
 
   $ordersLoading.hidden = true;
   $eventName.textContent = evento.nome || "(Sem nome)";
-  const orders = pedidos || [];
+  
+  // Combinar: pendentes primeiro (mais antigo no topo), depois prontos
+  const orders = [...(pedidosPendentes || []), ...(pedidosProntos || [])];
+  
+  const totalPendentes = (pedidosPendentes || []).length;
 
   $ordersList.innerHTML = orders
-    .map(function (p) {
+    .map(function (p, index) {
       const itens = p.pedido_itens || [];
       const itemsText = itens.map((i) => i.nome + " x" + i.quantidade).join(", ");
       const time = p.criado_em
@@ -111,9 +125,12 @@ async function loadOrders() {
           })
         : "";
       const isPronto = p.status === "pronto";
+      const isPrimeiroPendente = index === 0 && !isPronto;
+      
       return (
         '<li class="order-card' +
         (isPronto ? " pronto" : "") +
+        (isPrimeiroPendente ? " primeiro-pendente" : "") +
         '" data-id="' +
         p.id +
         '">' +

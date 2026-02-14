@@ -1,0 +1,351 @@
+{\rtf1\fbidis\ansi\ansicpg1252\deff0\nouicompat\deflang1046{\fonttbl{\f0\fnil\fcharset1 Segoe UI Symbol;}{\f1\fnil Calibri;}{\f2\fnil\fcharset0 Calibri;}{\f3\fnil\fcharset1 Segoe UI Symbol;}{\f4\fnil\fcharset1 Segoe UI Emoji;}}
+{\*\generator Riched20 10.0.19041}\viewkind4\uc1 
+\pard\sa200\sl276\slmult1\f0\fs22\lang22\u-10180?\u-8273?\f1  \f2 CONTEXTO:\par
+Sistema de food truck j\'e1 existente com card\'e1pio, pedidos e integra\'e7\'e3o LINE. Agora precisa adicionar painel administrativo para o dono gerenciar diferentes configura\'e7\'f5es de menu por evento.\par
+\par
+\f0\u-10179?\u-8923?\f1  \f2 PROBLEMA A RESOLVER:\par
+Dono do food truck participa de eventos diferentes, cada um com:\par
+\par
+Items diferentes no menu (alguns eventos vendem bebidas, outros n\'e3o)\par
+Pre\'e7os diferentes (evento A cobra \'a5400, evento B cobra \'a5500)\par
+Atualmente tem que reconfigurar tudo manualmente a cada evento\par
+\par
+\par
+\f3\u9989?\f1  \f2 SOLU\'c7\'c3O PROPOSTA:\par
+Sistema de templates reutiliz\'e1veis + edi\'e7\'e3o r\'e1pida por checkboxes.\par
+Fluxo principal:\par
+\par
+Dono acessa admin panel\par
+Seleciona template salvo (ex: "Festival de Ver\'e3o")\par
+Sistema ativa automaticamente todos items e pre\'e7os daquele template\par
+Se necess\'e1rio, dono faz ajustes r\'e1pidos via checkboxes\par
+Menu do cliente atualiza automaticamente\par
+\par
+\par
+\f0\u-10179?\u-9014?\f1  \f2 REQUISITOS FUNCIONAIS:\par
+RF01: Dashboard de Templates\par
+\par
+Listar todos templates salvos\par
+Cada template mostra: nome, descri\'e7\'e3o, quantidade de items, pre\'e7o m\'e9dio, quantas vezes foi usado, \'faltima vez usado\par
+Bot\'f5es por template: "Usar Este", "Editar", "Duplicar", "Deletar"\par
+Bot\'e3o global: "Criar Template Novo"\par
+Bot\'e3o global: "Configura\'e7\'e3o R\'e1pida" (pular template, ir direto pra checkboxes)\par
+\par
+RF02: Ativar Template\par
+\par
+Ao clicar "Usar Este", sistema deve:\par
+\par
+Limpar menu ativo atual\par
+Carregar todos items do template selecionado\par
+Aplicar pre\'e7os configurados no template\par
+Marcar template como "usado" (incrementar contador, atualizar data)\par
+Redirecionar para tela de menu ativo\par
+\par
+\par
+\par
+RF03: Tela de Menu Ativo (Checkboxes)\par
+\par
+Dividir em duas se\'e7\'f5es:\par
+\par
+Se\'e7\'e3o 1: Items atualmente ativos (checkboxes marcados)\par
+Se\'e7\'e3o 2: Items dispon\'edveis no cat\'e1logo mas n\'e3o ativos (checkboxes desmarcados)\par
+\par
+\par
+Cada item mostra: checkbox, emoji/\'edcone, nome, pre\'e7o atual\par
+Funcionalidades:\par
+\par
+Marcar/desmarcar checkbox ativa/desativa item\par
+Bot\'e3o "Editar Pre\'e7o" abre modal simples para mudar pre\'e7o\par
+Bot\'e3o "Remover" desativa item\par
+Arrastar items para reordenar (opcional na v1)\par
+\par
+\par
+Bot\'f5es de a\'e7\'e3o em massa:\par
+\par
+"Marcar Todos"\par
+"Desmarcar Todos"\par
+"Restaurar Pre\'e7os Padr\'e3o"\par
+"Salvar"\par
+"Preview Menu Cliente" (abre em nova aba)\par
+\par
+\par
+\par
+RF04: Adicionar Item Novo\par
+\par
+Formul\'e1rio completo com campos:\par
+\par
+Upload de foto (com compress\'e3o autom\'e1tica, max 5MB)\par
+Nome em japon\'eas\par
+Nome em portugu\'eas\par
+Descri\'e7\'e3o em japon\'eas\par
+Descri\'e7\'e3o em portugu\'eas\par
+Ingredientes (arrays, m\'faltiplos inputs)\par
+Pre\'e7o padr\'e3o\par
+Categoria (salgado/doce/bebida)\par
+Al\'e9rgenos (checkboxes dos principais: gl\'faten, latic\'ednios, ovo, soja, etc)\par
+Ordem de exibi\'e7\'e3o (n\'famero)\par
+Checkbox: "Adicionar ao menu ativo automaticamente"\par
+\par
+\par
+Ao salvar:\par
+\par
+Adiciona item ao cat\'e1logo geral\par
+Se checkbox marcado, adiciona ao menu ativo tamb\'e9m\par
+Upload de foto deve comprimir antes de enviar\par
+\par
+\par
+\par
+RF05: Criar Template Novo\par
+\par
+Input: nome do template (obrigat\'f3rio, \'fanico)\par
+Input: descri\'e7\'e3o (opcional)\par
+Ao criar, redireciona para tela de checkboxes\par
+Usu\'e1rio seleciona items e define pre\'e7os\par
+Bot\'e3o "Salvar como Template" persiste configura\'e7\'e3o\par
+\par
+RF06: Editar Template Existente\par
+\par
+Carrega items do template em tela de checkboxes\par
+Permite adicionar/remover items\par
+Permite alterar pre\'e7os\par
+Bot\'e3o "Salvar Altera\'e7\'f5es" atualiza template\par
+Bot\'e3o "Deletar Template" remove permanentemente\par
+\par
+RF07: Duplicar Template\par
+\par
+Cria c\'f3pia exata de template existente\par
+Nome autom\'e1tico: "[Nome Original] (C\'f3pia)"\par
+Permite edi\'e7\'e3o imediata ap\'f3s duplicar\par
+\par
+RF08: Menu do Cliente (Auto-atualiza\'e7\'e3o)\par
+\par
+Card\'e1pio p\'fablico (/menu ou rota atual) deve:\par
+\par
+Buscar apenas items com ativo = true no menu ativo\par
+Usar preco_atual (n\'e3o pre\'e7o padr\'e3o)\par
+Ordenar por campo ordem\par
+Atualizar automaticamente quando admin salva mudan\'e7as\par
+\par
+\par
+\par
+\par
+\f0\u-10179?\u-8944?\f1  \f2 REQUISITOS DE SEGURAN\'c7A:\par
+RS01: Autentica\'e7\'e3o Admin\par
+\par
+Apenas dono pode acessar /admin/*\par
+Usar LINE Login (LIFF ID j\'e1 existente: 2009073867-mQNTAnqH)\par
+Verificar userId contra ID do dono (hardcoded ou em vari\'e1vel de ambiente)\par
+Se n\'e3o autenticado, redirecionar para home\par
+\par
+RS02: Valida\'e7\'f5es\par
+\par
+Nome de template deve ser \'fanico\par
+Pre\'e7os devem ser n\'fameros positivos\par
+Fotos devem ser < 5MB\par
+Comprimir fotos antes de upload (max 800px, 200KB)\par
+\par
+\par
+\f4\u-10179?\u-8764?\u-497?\f1  \f2 REQUISITOS DE DADOS:\par
+RD01: Estrutura de Dados\par
+Precisa de 4 tabelas principais no Supabase:\par
+1. menu_items (cat\'e1logo master - J\'c1 EXISTE, EXPANDIR):\par
+\par
+Adicionar campos se n\'e3o existirem:\par
+\par
+desc_ja, desc_pt (descri\'e7\'f5es)\par
+ingredientes_ja, ingredientes_pt (arrays)\par
+preco_padrao (pre\'e7o base)\par
+foto_url (URL da foto)\par
+categoria (salgado/doce/bebida)\par
+alergenicos (array de \'edcones: ['\f0\u-10180?\u-8386?\f2 ', '\f0\u-10178?\u-8869?\f2 '])\par
+alergenicos_texto_ja, alergenicos_texto_pt (arrays de texto)\par
+ordem (para ordena\'e7\'e3o)\par
+ativo_no_catalogo (soft delete)\par
+\par
+\par
+\par
+2. event_templates (CRIAR NOVA):\par
+\par
+id (UUID primary key)\par
+nome (text, unique)\par
+descricao (text, nullable)\par
+usado_count (integer, default 0)\par
+ultima_uso (timestamp, nullable)\par
+criado_em (timestamp)\par
+\par
+3. event_template_items (CRIAR NOVA):\par
+\par
+id (UUID primary key)\par
+template_id (UUID, foreign key)\par
+item_id (UUID, foreign key)\par
+preco_override (integer, nullable - se NULL usa preco_padrao)\par
+ativo (boolean)\par
+ordem (integer)\par
+Constraint UNIQUE em (template_id, item_id)\par
+\par
+4. active_menu (CRIAR NOVA):\par
+\par
+id (UUID primary key)\par
+item_id (UUID, foreign key, UNIQUE)\par
+preco_atual (integer)\par
+ativo (boolean)\par
+template_origem (text, nullable - nome do template usado)\par
+data_ativacao (timestamp)\par
+\par
+RD02: Storage\par
+\par
+Bucket do Supabase chamado menu-items\par
+P\'fablico, aceita apenas imagens (jpeg, png, webp)\par
+Max 5MB por arquivo\par
+\par
+\par
+\f0\u-10180?\u-8280?\f1  \f2 REQUISITOS DE INTERFACE:\par
+RI01: P\'e1ginas Necess\'e1rias\par
+\par
+/admin/dashboard - Lista de templates\par
+/admin/menu-ativo - Tela de checkboxes\par
+/admin/item-novo - Form adicionar item\par
+/admin/template-novo - Form criar template\par
+/admin/template/edit/:id - Editar template\par
+\par
+RI02: Componentes Reutiliz\'e1veis\par
+\par
+Card de template (dashboard)\par
+Card de item (checkboxes)\par
+Modal de edi\'e7\'e3o de pre\'e7o\par
+Modal de confirma\'e7\'e3o de dele\'e7\'e3o\par
+Form de upload de foto com preview\par
+\par
+RI03: Design\par
+\par
+Manter identidade visual existente (verde brasileiro)\par
+Responsivo (funcionar em mobile)\par
+Japon\'eas como idioma padr\'e3o, bot\'e3o trocar para PT\par
+Loading states durante opera\'e7\'f5es async\par
+Toasts/alertas para feedback de a\'e7\'f5es\par
+\par
+\par
+\f0\u-10179?\u-8956?\f1  \f2 REQUISITOS DE INTEGRA\'c7\'c3O:\par
+RI01: Com Sistema Existente\par
+\par
+Menu do cliente deve buscar de active_menu em vez de menu_items diretamente\par
+Sistema de pedidos continua funcionando normalmente\par
+Webhook/backend n\'e3o precisa mudar\par
+\par
+RI02: Com LINE\par
+\par
+Usar LIFF SDK j\'e1 configurado\par
+Autentica\'e7\'e3o via LINE Login\par
+Manter notifica\'e7\'f5es existentes funcionando\par
+\par
+\par
+\f3\u9889?\f1  \f2 REQUISITOS N\'c3O-FUNCIONAIS:\par
+RNF01: Performance\par
+\par
+Comprimir fotos no cliente antes de upload\par
+Lazy loading de imagens\par
+Otimizar queries (usar joins, evitar N+1)\par
+\par
+RNF02: Custo\par
+\par
+Manter 100% no plano free do Supabase\par
+Comprimir fotos para economizar storage\par
+Usar Vercel/GitHub Pages (j\'e1 configurado)\par
+\par
+RNF03: Manutenibilidade\par
+\par
+C\'f3digo organizado por features\par
+Coment\'e1rios em partes complexas\par
+Nomes de vari\'e1veis descritivos\par
+\par
+\par
+\f0\u-10179?\u-8995?\f1  \f2 CASOS DE USO PRINCIPAIS:\par
+CU01: Dono prepara para evento recorrente\par
+1. Dono acessa admin panel\par
+2. V\'ea lista de templates salvos\par
+3. Clica "Usar Este" no template "Festival de Ver\'e3o"\par
+4. Sistema ativa menu automaticamente\par
+5. Menu do cliente atualiza\par
+6. Tempo total: ~5 segundos\par
+CU02: Dono prepara para evento novo\par
+1. Dono acessa admin panel\par
+2. Clica "Configura\'e7\'e3o R\'e1pida"\par
+3. Marca checkboxes dos items que quer\par
+4. Ajusta alguns pre\'e7os\par
+5. Clica "Salvar como Template"\par
+6. D\'e1 nome: "Feira Corporativa"\par
+7. Menu ativa, template salvo para reutilizar\par
+8. Tempo total: ~2 minutos\par
+CU03: Dono faz ajuste r\'e1pido em template\par
+1. Dono usa template "Matsuri"\par
+2. Percebe que hoje quer vender bebida tamb\'e9m\par
+3. Clica "Ajuste R\'e1pido"\par
+4. Marca checkbox de "Guaran\'e1"\par
+5. Salva\par
+6. Menu atualiza, mas template original n\'e3o muda\par
+7. Tempo total: ~20 segundos\par
+CU04: Dono adiciona item totalmente novo\par
+1. Durante evento, cliente pede "Pastel de chocolate"\par
+2. Dono acessa admin panel\par
+3. Clica "Adicionar Item Novo"\par
+4. Preenche form (foto, nomes, pre\'e7o, etc)\par
+5. Marca "Adicionar ao menu ativo"\par
+6. Salva\par
+7. Item aparece no card\'e1pio imediatamente\par
+8. Tempo total: ~3 minutos\par
+\par
+\f0\u-10179?\u-8533?\f1  \f2 RESTRI\'c7\'d5ES:\par
+\par
+Deve funcionar 100% no free tier (Supabase + Vercel + LINE)\par
+N\'e3o pode usar bibliotecas pagas ou servi\'e7os externos pagos\par
+Fotos devem ser comprimidas automaticamente\par
+Admin panel deve funcionar em mobile (dono usa celular)\par
+N\'e3o adicionar autentica\'e7\'e3o complexa na v1 (LINE Login suficiente)\par
+\par
+\par
+\f0\u-10179?\u-9014?\f1  \f2 M\'c9TRICAS DE SUCESSO:\par
+\par
+Setup de evento recorrente: < 10 segundos\par
+Setup de evento novo: < 3 minutos\par
+Adicionar item novo: < 5 minutos\par
+Zero reclama\'e7\'f5es sobre menu errado em eventos\par
+Dono consegue usar sozinho sem suporte\par
+\par
+\par
+\f0\u-10180?\u-8273?\f1  \f2 PRIORIZA\'c7\'c3O:\par
+MUST HAVE (MVP):\par
+\par
+Dashboard de templates\par
+Ativar template (RF02)\par
+Tela de checkboxes (RF03)\par
+Criar template novo (RF05)\par
+Autentica\'e7\'e3o b\'e1sica (RS01)\par
+\par
+SHOULD HAVE (v1.1):\par
+\par
+Adicionar item novo (RF04)\par
+Editar template (RF06)\par
+Duplicar template (RF07)\par
+Upload de foto com compress\'e3o\par
+\par
+NICE TO HAVE (v1.2):\par
+\par
+Arrastar para reordenar\par
+Preview menu cliente\par
+Estat\'edsticas de uso\par
+Busca/filtros\par
+\par
+\par
+\f0\u-10179?\u-8937?\f1  \f2 INFORMA\'c7\'d5ES T\'c9CNICAS EXISTENTES:\par
+\par
+Stack: Supabase (backend/DB), Vercel (hosting), GitHub Pages (alternativa)\par
+LIFF ID: 2009073867-mQNTAnqH\par
+Projeto j\'e1 tem: card\'e1pio funcionando, sistema de pedidos, webhook, integra\'e7\'e3o LINE\par
+Database: Supabase PostgreSQL\par
+Frontend: HTML/CSS/JS (sem framework espec\'edfico aparentemente)\par
+\par
+\par
+FIM DA ESPECIFICA\'c7\'c3O\par
+Claude Code: implemente este sistema seguindo as melhores pr\'e1ticas, criando a estrutura de dados necess\'e1ria no Supabase, desenvolvendo as p\'e1ginas do admin panel, e integrando com o sistema existente de forma que o card\'e1pio do cliente busque do active_menu.\par
+}
+ 

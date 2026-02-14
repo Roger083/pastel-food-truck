@@ -1,3 +1,7 @@
+body {
+  background: #ffffff;
+}
+
 #admin-app {
   max-width: 600px;
   margin: 0 auto;
@@ -70,48 +74,48 @@
 
 .order-card {
   /* PEDIDOS PENDENTES - Cor base */
-  background: linear-gradient(135deg, #fff9f0 0%, #fff4e6 100%);
+  background: linear-gradient(135deg, #f1f8f4 0%, #d4edda 100%);
   border-radius: 10px;
   padding: 0.75rem;
   margin-bottom: 0.65rem;
-  border: 2px solid #e8d5c4;
+  border: 2px solid #c3e6cb;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
   transition: all 0.3s ease;
   position: relative;
   animation: pulse-pending 3s ease-in-out infinite;
 }
 
-/* Gradiente de urgência INVERTIDO: Primeiro (recente) = CLARO, Último (antigo) = ESCURO */
+/* Gradiente de urgência: Primeiro (MAIS ANTIGO) = ESCURO, Último (recente) = CLARO */
 .order-card:not(.pronto):nth-child(1) {
-  /* Mais recente = MAIS CLARO (menos urgente) */
-  background: linear-gradient(135deg, #fff9f0 0%, #fff4e6 100%);
-  border-color: #e8d5c4;
+  /* Mais antigo/urgente = MAIS ESCURO - FAZER PRIMEIRO! */
+  background: linear-gradient(135deg, #9dc7ab 0%, #82b794 100%);
+  border-color: #6da87d;
 }
 
 .order-card:not(.pronto):nth-child(2) {
-  background: linear-gradient(135deg, #fff0dc 0%, #ffe8cc 100%);
-  border-color: #d9c3a8;
+  background: linear-gradient(135deg, #b8dac2 0%, #9dc7ab 100%);
+  border-color: #81b995;
 }
 
 .order-card:not(.pronto):nth-child(3) {
-  background: linear-gradient(135deg, #ffe8cc 0%, #ffd9a3 100%);
-  border-color: #ccb08f;
+  background: linear-gradient(135deg, #c5e3cd 0%, #a9d2b5 100%);
+  border-color: #8fc4a1;
 }
 
 .order-card:not(.pronto):nth-child(4) {
-  background: linear-gradient(135deg, #ffd9a3 0%, #ffc97a 100%);
-  border-color: #bf9d76;
+  background: linear-gradient(135deg, #d4edda 0%, #b8dac2 100%);
+  border-color: #a3cfb3;
 }
 
 .order-card:not(.pronto):nth-child(5) {
-  background: linear-gradient(135deg, #ffc97a 0%, #ffb85c 100%);
-  border-color: #b38a5d;
+  background: linear-gradient(135deg, #e3f1e7 0%, #c8e5d0 100%);
+  border-color: #b5ddc0;
 }
 
 .order-card:not(.pronto):nth-child(n+6) {
-  /* Mais antigo = MAIS ESCURO (mais urgente!) */
-  background: linear-gradient(135deg, #ffb85c 0%, #ffa73d 100%);
-  border-color: #a67744;
+  /* Mais recentes = MAIS CLARO */
+  background: linear-gradient(135deg, #f1f8f4 0%, #d4edda 100%);
+  border-color: #c3e6cb;
 }
 
 .order-card:hover {
@@ -129,6 +133,35 @@
   opacity: 0.5;
 }
 
+/* PRIMEIRO PENDENTE - Badge de urgência */
+.order-card.primeiro-pendente::after {
+  content: "← FAZER ESTE!";
+  position: absolute;
+  top: 50%;
+  right: 0.75rem;
+  transform: translateY(-50%);
+  background: linear-gradient(135deg, #ff6b6b 0%, #ee5a52 100%);
+  color: white;
+  padding: 0.35rem 0.7rem;
+  border-radius: 6px;
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.3px;
+  box-shadow: 0 2px 6px rgba(255, 107, 107, 0.4);
+  animation: pulse-urgente 2s ease-in-out infinite;
+}
+
+@keyframes pulse-urgente {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow: 0 2px 6px rgba(255, 107, 107, 0.4);
+  }
+  50% {
+    transform: scale(1.05);
+    box-shadow: 0 3px 10px rgba(255, 107, 107, 0.6);
+  }
+}
+
 @keyframes pulse-pending {
   0%, 100% {
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
@@ -139,13 +172,14 @@
 }
 
 .order-card.pronto {
-  /* PEDIDOS PRONTOS - Verde suave */
-  background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
-  border: 2px solid #b8dab9;
-  box-shadow: 0 2px 6px rgba(76, 175, 80, 0.15);
+  /* PEDIDOS PRONTOS - Cinza suave */
+  background: linear-gradient(135deg, #e0e0e0 0%, #bdbdbd 100%);
+  border: 2px solid #9e9e9e;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
   opacity: 0.7;
   animation: none;
   padding: 0.75rem;
+  margin-bottom: 0.65rem;
 }
 
 .order-card.pronto:hover {
@@ -154,17 +188,25 @@
 }
 
 .order-card.pronto::before {
-  /* Badge "PRONTO" visual */
-  content: "✅";
-  font-size: 1.1rem;
-  opacity: 0.6;
+  /* Sem badge nos pedidos prontos */
+  content: "";
+}
+
+/* Último pedido pendente (antes do primeiro pronto) */
+.order-card:not(.pronto):has(+ .order-card.pronto) {
+  margin-bottom: 7rem;
+}
+
+/* Fallback caso :has não funcione - usar JS ou adicionar classe manual */
+.order-card:not(.pronto):last-of-type {
+  margin-bottom: 7rem;
 }
 
 .order-card .order-num {
   /* NÚMERO DO PEDIDO */
   font-size: 1.5rem;
   font-weight: 900;
-  color: #8b6f47;
+  color: #155724;
   margin-bottom: 0.3rem;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
   letter-spacing: 0.5px;
@@ -173,7 +215,7 @@
 .order-card.pronto .order-num {
   /* Número para pedidos prontos */
   font-size: 1.3rem;
-  color: #558b57;
+  color: #424242;
   opacity: 0.85;
 }
 
