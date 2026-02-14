@@ -1,4 +1,4 @@
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { getSupabase as getSharedSupabase } from "./admin-auth.js";
 
 const CONFIG = window.FOOD_TRUCK_CONFIG;
 const $login = document.getElementById("admin-login");
@@ -19,14 +19,10 @@ function formatoNumeroPedido(num) {
   return "A-" + String(n).padStart(3, "0");
 }
 
-let supabase = null;
 let pollInterval = null;
 
 function getSupabase() {
-  if (!supabase && CONFIG?.supabaseUrl && CONFIG?.supabaseAnonKey) {
-    supabase = createClient(CONFIG.supabaseUrl, CONFIG.supabaseAnonKey);
-  }
-  return supabase;
+  return getSharedSupabase();
 }
 
 function functionsUrl(path) {

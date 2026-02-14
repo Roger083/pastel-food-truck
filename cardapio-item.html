@@ -160,17 +160,25 @@
   function escapeHtml(s) { const d = document.createElement("div"); d.textContent = s; return d.innerHTML; }
 
   async function loadItemById(uuid) {
-    const { data: evento } = await supabase.from("eventos").select("cardapio_id").eq("ativo", true).limit(1).maybeSingle();
-    if (!evento) return null;
-    const { data: row } = await supabase.from("cardapio_itens").select("id, nome, preco").eq("id", uuid).eq("cardapio_id", evento.cardapio_id).maybeSingle();
-    return row;
+    const { data: row } = await supabase
+      .from("active_menu")
+      .select("preco_atual, menu_items(id, nome)")
+      .eq("item_id", uuid)
+      .eq("ativo", true)
+      .maybeSingle();
+    if (!row || !row.menu_items) return null;
+    return { id: row.menu_items.id, nome: row.menu_items.nome, preco: row.preco_atual };
   }
 
   async function loadItemBySlug(slug) {
-    const { data: evento } = await supabase.from("eventos").select("cardapio_id").eq("ativo", true).limit(1).maybeSingle();
-    if (!evento) return null;
-    const { data: itens } = await supabase.from("cardapio_itens").select("id, nome, preco").eq("cardapio_id", evento.cardapio_id).eq("ativo", true).order("ordem");
-    if (!itens || !itens.length) return null;
+    const { data: activeItems } = await supabase
+      .from("active_menu")
+      .select("preco_atual, menu_items(id, nome)")
+      .eq("ativo", true);
+    if (!activeItems || !activeItems.length) return null;
+    var itens = activeItems.map(function (a) {
+      return { id: a.menu_items.id, nome: a.menu_items.nome, preco: a.preco_atual };
+    });
     const s = (slug || "").toLowerCase();
     function match(i) {
       const n = i.nome.toLowerCase();

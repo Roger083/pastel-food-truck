@@ -265,22 +265,20 @@
   }
 
   async function loadList() {
-    const { data: evento, error: errE } = await supabase
+    // Buscar evento ativo (para sistema de pedidos)
+    const { data: evento } = await supabase
       .from("eventos")
-      .select("id, nome, cardapio_id")
+      .select("id, nome")
       .eq("ativo", true)
       .limit(1)
       .maybeSingle();
 
-    if (errE || !evento) {
-      showError(idioma === "ja" ? "注文を受け付けるイベントがありません。" : "Não há evento aceitando pedidos no momento.");
-      hideLoading();
-      return;
+    if (evento) {
+      eventoAtivo = evento;
+      localStorage.setItem(EVENTO_KEY, evento.id);
     }
-    eventoAtivo = evento;
-    localStorage.setItem(EVENTO_KEY, evento.id);
 
-    // Buscar categorias (pode falhar se tabela não existe ainda)
+    // Buscar categorias
     try {
       const { data: cats, error: errC } = await supabase
         .from("categorias")
@@ -291,30 +289,39 @@
         categorias = cats;
       }
     } catch (e) {
-      console.log("Categorias não disponíveis:", e);
       categorias = [];
     }
 
-    // Buscar itens do cardápio
-    const { data: itens, error: errI } = await supabase
-      .from("cardapio_itens")
-      .select("*")
-      .eq("cardapio_id", evento.cardapio_id)
-      .eq("ativo", true)
-      .order("ordem", { ascending: true });
+    // Buscar items do active_menu + menu_items
+    const { data: activeItems, error: errA } = await supabase
+      .from("active_menu")
+      .select("item_id, preco_atual, menu_items(id, nome, preco_padrao, categoria_id, ordem, popular, foto_url)")
+      .eq("ativo", true);
 
-    if (errI) {
-      showError(idioma === "ja" ? "メニューの取得に失敗しました。" : "Falha ao carregar o cardápio.");
+    if (errA || !activeItems || activeItems.length === 0) {
+      showError(idioma === "ja" ? "メニューがありません。" : "Nenhum item no menu ativo.");
       hideLoading();
       return;
     }
 
-    ultimosItens = itens || [];
+    // Map to format expected by renderCategoriasECards
+    ultimosItens = activeItems.map(function (a) {
+      var mi = a.menu_items;
+      return {
+        id: mi.id,
+        nome: mi.nome,
+        preco: a.preco_atual,
+        categoria_id: mi.categoria_id,
+        ordem: mi.ordem,
+        popular: mi.popular,
+        foto_url: mi.foto_url
+      };
+    }).sort(function (a, b) { return (a.ordem || 0) - (b.ordem || 0); });
+
     renderCategoriasECards(categorias, ultimosItens);
 
     $main.hidden = false;
     hideLoading();
-    updateFloatingCart();
     updateFloatingCart();
   }
 
