@@ -194,9 +194,8 @@
     $btnConfirmar.disabled = true;
     $btnConfirmar.textContent = idioma === "ja" ? "送信中..." : "Enviando...";
     var itens = cart.map(function (i) {
-      // Se for combo (ID não é UUID válido), enviar cardapio_item_id como null
-      var isCombo = typeof i.id === "string" && i.id.indexOf("combo-") === 0;
-      return { cardapio_item_id: isCombo ? null : i.id, nome: i.nome, preco: i.preco, quantidade: i.quantidade };
+      // IDs agora vem de menu_items, nao de cardapio_itens - enviar null para o FK
+      return { cardapio_item_id: null, nome: i.nome, preco: i.preco, quantidade: i.quantidade };
     });
     var params = { p_evento_id: eventoId, p_line_user_id: lineUserId || null, p_itens: itens, p_idioma: idioma };
     if (agendadoPara) params.p_agendado_para = agendadoPara;

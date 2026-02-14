@@ -102,9 +102,10 @@ async function loadMenu() {
     $pageTitle.textContent = tmpl ? tmpl.nome : "Editar Template";
     document.title = (tmpl ? tmpl.nome : "Template") + " - Admin";
 
-    // Hide pedidos/sair in template edit mode
+    // Hide pedidos/sair in template edit mode, show rename
     if ($navPedidos) $navPedidos.style.display = "none";
     if ($btnLogout) $btnLogout.style.display = "none";
+    document.getElementById("btn-renomear").hidden = false;
 
     // Show "Usar Este" button
     $btnUsarEste.hidden = false;
@@ -450,6 +451,21 @@ async function usarEste() {
   showMsg("Template ativado! " + rows.length + " items no menu.", "success");
 }
 
+// -- Rename template --
+async function renomearTemplate() {
+  const novoNome = prompt("Novo nome do template:", $pageTitle.textContent);
+  if (!novoNome || !novoNome.trim()) return;
+  const sb = getSupabase();
+  const { error } = await sb.from("event_templates").update({ nome: novoNome.trim() }).eq("id", templateId);
+  if (error) {
+    showMsg("Erro: " + error.message, "error");
+    return;
+  }
+  $pageTitle.textContent = novoNome.trim();
+  document.title = novoNome.trim() + " - Admin";
+  showMsg("Nome atualizado!", "success");
+}
+
 // -- Mass actions --
 document.getElementById("btn-marcar-todos").addEventListener("click", () => {
   Object.values(state).forEach(s => { if (s.ativo_no_catalogo) s.checked = true; });
@@ -474,6 +490,7 @@ document.getElementById("btn-restaurar-precos").addEventListener("click", () => 
 $btnLogout.addEventListener("click", logout);
 $btnSalvar.addEventListener("click", salvar);
 $btnUsarEste.addEventListener("click", usarEste);
+document.getElementById("btn-renomear").addEventListener("click", renomearTemplate);
 document.getElementById("btn-add-item").addEventListener("click", () => openItemModal(null));
 document.getElementById("btn-preco-cancel").addEventListener("click", closePrecoModal);
 document.getElementById("btn-preco-save").addEventListener("click", savePreco);

@@ -143,8 +143,8 @@ async function usarTemplate(id) {
     ultima_uso: new Date().toISOString()
   }).eq("id", id);
 
-  // Redirect to menu ativo
-  window.location.href = "admin-menu-ativo.html";
+  showMsg("Template '" + templateNome + "' ativado! " + rows.length + " items no menu.", "success");
+  loadTemplates();
 }
 
 function editarTemplate(id) {
