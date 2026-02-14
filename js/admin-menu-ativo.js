@@ -5,16 +5,35 @@ const $feedback = document.getElementById("feedback");
 const $menuContainer = document.getElementById("menu-container");
 const $pageTitle = document.getElementById("page-title");
 const $modalPreco = document.getElementById("modal-preco");
-const $modalTemplate = document.getElementById("modal-template");
+const $modalItem = document.getElementById("modal-item");
 const $inputPreco = document.getElementById("input-preco");
 const $modalPrecoNome = document.getElementById("modal-preco-nome");
+const $btnSalvar = document.getElementById("btn-salvar");
+const $btnUsarEste = document.getElementById("btn-usar-este");
+const $navPedidos = document.getElementById("nav-pedidos");
+const $btnLogout = document.getElementById("btn-logout");
 
 const params = new URLSearchParams(window.location.search);
 const templateId = params.get("template");
 
-// Local state: { itemId: { nome, preco_padrao, categoria_id, ordem, popular, checked, preco_atual } }
+// State
 let state = {};
+let categorias = [];
 let editingItemId = null;
+let editingCatalogItemId = null; // for item editor modal
+let isDirty = false;
+
+function markDirty() {
+  isDirty = true;
+  $btnSalvar.disabled = false;
+  $btnSalvar.textContent = "Salvar";
+}
+
+function markClean() {
+  isDirty = false;
+  $btnSalvar.disabled = true;
+  $btnSalvar.textContent = "Salvo";
+}
 
 function showMsg(msg, type) {
   $feedback.textContent = msg;
@@ -25,7 +44,7 @@ function showMsg(msg, type) {
 
 function escapeHtml(s) {
   const d = document.createElement("div");
-  d.textContent = s;
+  d.textContent = s || "";
   return d.innerHTML;
 }
 
@@ -33,11 +52,10 @@ async function loadMenu() {
   const sb = getSupabase();
   $loading.hidden = false;
 
-  // Load all catalog items
+  // Load all catalog items (including inactive for editing)
   const { data: items, error: errItems } = await sb
     .from("menu_items")
-    .select("id, nome, preco_padrao, categoria_id, ordem, popular, ativo_no_catalogo")
-    .eq("ativo_no_catalogo", true)
+    .select("*")
     .order("ordem", { ascending: true });
 
   if (errItems) {
@@ -50,24 +68,47 @@ async function loadMenu() {
     .from("categorias")
     .select("id, nome_pt, emoji, ordem")
     .order("ordem", { ascending: true });
+  categorias = cats || [];
 
   // Initialize state from catalog
   state = {};
   (items || []).forEach(item => {
     state[item.id] = {
       nome: item.nome,
+      nome_ja: item.nome_ja,
+      desc_pt: item.desc_pt,
+      desc_ja: item.desc_ja,
       preco_padrao: item.preco_padrao,
+      foto_url: item.foto_url,
       categoria_id: item.categoria_id,
       ordem: item.ordem,
       popular: item.popular,
+      alergenicos_texto_pt: item.alergenicos_texto_pt || [],
+      alergenicos_texto_ja: item.alergenicos_texto_ja || [],
+      ativo_no_catalogo: item.ativo_no_catalogo,
       checked: false,
       preco_atual: item.preco_padrao
     };
   });
 
   if (templateId) {
-    // Editing a template: load template items
-    $pageTitle.textContent = "Editar Template";
+    // Editing a template: load template info + items
+    const { data: tmpl } = await sb
+      .from("event_templates")
+      .select("nome")
+      .eq("id", templateId)
+      .single();
+
+    $pageTitle.textContent = tmpl ? tmpl.nome : "Editar Template";
+    document.title = (tmpl ? tmpl.nome : "Template") + " - Admin";
+
+    // Hide pedidos/sair in template edit mode
+    if ($navPedidos) $navPedidos.style.display = "none";
+    if ($btnLogout) $btnLogout.style.display = "none";
+
+    // Show "Usar Este" button
+    $btnUsarEste.hidden = false;
+
     const { data: tItems } = await sb
       .from("event_template_items")
       .select("item_id, preco_override, ativo, ordem")
@@ -100,11 +141,23 @@ async function loadMenu() {
   }
 
   $loading.hidden = true;
-  renderMenu(cats || []);
+  populateCategorySelect();
+  renderMenu();
+  markClean();
 }
 
-function renderMenu(cats) {
-  const items = Object.entries(state).map(([id, s]) => ({ id, ...s }));
+function populateCategorySelect() {
+  const $sel = document.getElementById("item-categoria");
+  $sel.innerHTML = '<option value="">Sem categoria</option>';
+  categorias.forEach(cat => {
+    $sel.innerHTML += `<option value="${cat.id}">${cat.emoji || ""} ${escapeHtml(cat.nome_pt)}</option>`;
+  });
+}
+
+function renderMenu() {
+  const items = Object.entries(state)
+    .filter(([, s]) => s.ativo_no_catalogo)
+    .map(([id, s]) => ({ id, ...s }));
 
   // Group by category
   const byCat = {};
@@ -120,29 +173,30 @@ function renderMenu(cats) {
 
   let html = "";
 
-  // Active items section
-  const activeItems = items.filter(i => i.checked);
-  const inactiveItems = items.filter(i => !i.checked);
+  // Render each category
+  categorias.forEach(cat => {
+    const catItems = byCat[cat.id];
+    if (!catItems || catItems.length === 0) return;
+    catItems.sort((a, b) => (a.ordem || 0) - (b.ordem || 0));
 
-  html += '<div class="menu-section">';
-  html += '<div class="menu-section-title">Ativos no Menu (' + activeItems.length + ')</div>';
-  if (activeItems.length === 0) {
-    html += '<p style="color:#666;padding:0.5rem;">Nenhum item ativo</p>';
-  }
-  activeItems.sort((a, b) => a.ordem - b.ordem).forEach(item => {
-    html += renderItemRow(item);
+    html += '<div class="menu-section">';
+    html += `<div class="menu-section-title">${cat.emoji || ""} ${escapeHtml(cat.nome_pt)}</div>`;
+    catItems.forEach(item => { html += renderItemRow(item); });
+    html += '</div>';
   });
-  html += '</div>';
 
-  html += '<div class="menu-section">';
-  html += '<div class="menu-section-title">Disponiveis (' + inactiveItems.length + ')</div>';
-  if (inactiveItems.length === 0) {
-    html += '<p style="color:#666;padding:0.5rem;">Todos os items estao ativos</p>';
+  // Items without category
+  if (noCat.length > 0) {
+    noCat.sort((a, b) => (a.ordem || 0) - (b.ordem || 0));
+    html += '<div class="menu-section">';
+    html += '<div class="menu-section-title">Outros</div>';
+    noCat.forEach(item => { html += renderItemRow(item); });
+    html += '</div>';
   }
-  inactiveItems.sort((a, b) => a.ordem - b.ordem).forEach(item => {
-    html += renderItemRow(item);
-  });
-  html += '</div>';
+
+  if (items.length === 0) {
+    html = '<p style="text-align:center;color:#888;padding:2rem;">Nenhum item no catalogo.</p>';
+  }
 
   $menuContainer.innerHTML = html;
 
@@ -150,7 +204,8 @@ function renderMenu(cats) {
   $menuContainer.querySelectorAll("input[type=checkbox]").forEach(cb => {
     cb.addEventListener("change", () => {
       state[cb.dataset.id].checked = cb.checked;
-      renderMenu(cats);
+      markDirty();
+      renderMenu();
     });
   });
 
@@ -158,19 +213,28 @@ function renderMenu(cats) {
   $menuContainer.querySelectorAll(".btn-edit-preco").forEach(btn => {
     btn.addEventListener("click", () => openPrecoModal(btn.dataset.id));
   });
+
+  // Bind edit item buttons
+  $menuContainer.querySelectorAll(".btn-edit-item").forEach(btn => {
+    btn.addEventListener("click", () => openItemModal(btn.dataset.id));
+  });
 }
 
 function renderItemRow(item) {
   const cls = item.checked ? "" : " inactive";
+  const precoChanged = item.preco_atual !== item.preco_padrao;
+  const precoClass = precoChanged ? " preco-changed" : "";
   return `
     <div class="menu-item-row${cls}">
       <input type="checkbox" data-id="${item.id}" ${item.checked ? "checked" : ""}>
-      <span class="item-nome">${escapeHtml(item.nome)}${item.popular ? ' <small style="color:#fde047;">Popular</small>' : ''}</span>
-      <span class="item-preco">&yen;${item.preco_atual.toLocaleString()}</span>
-      <button type="button" class="btn-edit-preco" data-id="${item.id}">Preco</button>
+      <span class="item-nome">${escapeHtml(item.nome)}${item.popular ? ' <small class="badge-pop">Popular</small>' : ''}</span>
+      <span class="item-preco${precoClass}">&yen;${item.preco_atual.toLocaleString()}</span>
+      <button type="button" class="btn-edit-preco" data-id="${item.id}" title="Alterar o preco deste item">Preco</button>
+      <button type="button" class="btn-edit-item" data-id="${item.id}" title="Editar nome, foto, descricao e alergenicos">Editar</button>
     </div>`;
 }
 
+// -- Price Modal --
 function openPrecoModal(itemId) {
   editingItemId = itemId;
   const item = state[itemId];
@@ -194,19 +258,104 @@ function savePreco() {
   }
   state[editingItemId].preco_atual = val;
   closePrecoModal();
-  // Re-render
-  loadCatsAndRender();
+  markDirty();
+  renderMenu();
 }
 
-async function loadCatsAndRender() {
+// -- Item Editor Modal --
+function openItemModal(itemId) {
+  editingCatalogItemId = itemId || null;
+  const isNew = !itemId;
+  document.getElementById("modal-item-titulo").textContent = isNew ? "Novo Item" : "Editar Item";
+
+  if (isNew) {
+    document.getElementById("item-nome").value = "";
+    document.getElementById("item-nome-ja").value = "";
+    document.getElementById("item-desc-pt").value = "";
+    document.getElementById("item-desc-ja").value = "";
+    document.getElementById("item-preco").value = "";
+    document.getElementById("item-foto").value = "";
+    document.getElementById("item-categoria").value = "";
+    document.getElementById("item-alergenicos-pt").value = "";
+    document.getElementById("item-alergenicos-ja").value = "";
+    document.getElementById("item-popular").checked = false;
+  } else {
+    const item = state[itemId];
+    document.getElementById("item-nome").value = item.nome || "";
+    document.getElementById("item-nome-ja").value = item.nome_ja || "";
+    document.getElementById("item-desc-pt").value = item.desc_pt || "";
+    document.getElementById("item-desc-ja").value = item.desc_ja || "";
+    document.getElementById("item-preco").value = item.preco_padrao || "";
+    document.getElementById("item-foto").value = item.foto_url || "";
+    document.getElementById("item-categoria").value = item.categoria_id || "";
+    document.getElementById("item-alergenicos-pt").value = (item.alergenicos_texto_pt || []).join(", ");
+    document.getElementById("item-alergenicos-ja").value = (item.alergenicos_texto_ja || []).join(", ");
+    document.getElementById("item-popular").checked = item.popular || false;
+  }
+
+  $modalItem.classList.remove("hidden");
+  document.getElementById("item-nome").focus();
+}
+
+function closeItemModal() {
+  $modalItem.classList.add("hidden");
+  editingCatalogItemId = null;
+}
+
+async function saveItem() {
+  const nome = document.getElementById("item-nome").value.trim();
+  if (!nome) { alert("Nome e obrigatorio."); return; }
+  const preco = parseInt(document.getElementById("item-preco").value, 10);
+  if (!preco || preco <= 0) { alert("Preco e obrigatorio e deve ser maior que zero."); return; }
+
+  const itemData = {
+    nome,
+    nome_ja: document.getElementById("item-nome-ja").value.trim() || null,
+    desc_pt: document.getElementById("item-desc-pt").value.trim() || null,
+    desc_ja: document.getElementById("item-desc-ja").value.trim() || null,
+    preco_padrao: preco,
+    foto_url: document.getElementById("item-foto").value.trim() || null,
+    categoria_id: document.getElementById("item-categoria").value || null,
+    alergenicos_texto_pt: parseCommaList(document.getElementById("item-alergenicos-pt").value),
+    alergenicos_texto_ja: parseCommaList(document.getElementById("item-alergenicos-ja").value),
+    popular: document.getElementById("item-popular").checked,
+    ativo_no_catalogo: true
+  };
+
   const sb = getSupabase();
-  const { data: cats } = await sb
-    .from("categorias")
-    .select("id, nome_pt, emoji, ordem")
-    .order("ordem", { ascending: true });
-  renderMenu(cats || []);
+
+  if (editingCatalogItemId) {
+    // Update existing
+    const { error } = await sb.from("menu_items").update(itemData).eq("id", editingCatalogItemId);
+    if (error) { showMsg("Erro: " + error.message, "error"); return; }
+    // Update local state
+    Object.assign(state[editingCatalogItemId], itemData);
+    state[editingCatalogItemId].preco_atual = preco;
+    showMsg("Item atualizado!", "success");
+  } else {
+    // Create new
+    const { data: newItem, error } = await sb.from("menu_items").insert(itemData).select().single();
+    if (error) { showMsg("Erro: " + error.message, "error"); return; }
+    // Add to local state
+    state[newItem.id] = {
+      ...itemData,
+      checked: false,
+      preco_atual: preco
+    };
+    showMsg("Item criado!", "success");
+  }
+
+  closeItemModal();
+  markDirty();
+  renderMenu();
 }
 
+function parseCommaList(str) {
+  if (!str) return [];
+  return str.split(",").map(s => s.trim()).filter(Boolean);
+}
+
+// -- Save --
 async function salvar() {
   const sb = getSupabase();
 
@@ -214,13 +363,15 @@ async function salvar() {
     // Save to template
     await sb.from("event_template_items").delete().eq("template_id", templateId);
 
-    const rows = Object.entries(state).map(([itemId, s]) => ({
-      template_id: templateId,
-      item_id: itemId,
-      preco_override: s.preco_atual !== s.preco_padrao ? s.preco_atual : null,
-      ativo: s.checked,
-      ordem: s.ordem
-    }));
+    const rows = Object.entries(state)
+      .filter(([, s]) => s.ativo_no_catalogo)
+      .map(([itemId, s]) => ({
+        template_id: templateId,
+        item_id: itemId,
+        preco_override: s.preco_atual !== s.preco_padrao ? s.preco_atual : null,
+        ativo: s.checked,
+        ordem: s.ordem
+      }));
 
     if (rows.length > 0) {
       const { error } = await sb.from("event_template_items").insert(rows);
@@ -229,15 +380,13 @@ async function salvar() {
         return;
       }
     }
-    showMsg("Template salvo com sucesso!", "success");
+    showMsg("Template salvo!", "success");
   } else {
     // Save to active_menu
-    // Delete all existing
     await sb.from("active_menu").delete().neq("id", "00000000-0000-0000-0000-000000000000");
 
-    // Insert checked items
     const rows = Object.entries(state)
-      .filter(([, s]) => s.checked)
+      .filter(([, s]) => s.checked && s.ativo_no_catalogo)
       .map(([itemId, s]) => ({
         item_id: itemId,
         preco_atual: s.preco_atual,
@@ -252,87 +401,88 @@ async function salvar() {
         return;
       }
     }
-    showMsg("Menu ativo salvo! " + rows.length + " items ativos.", "success");
+    showMsg("Menu salvo! " + rows.length + " items ativos.", "success");
   }
+  markClean();
 }
 
-function openTemplateModal() {
-  $modalTemplate.classList.remove("hidden");
-  document.getElementById("input-template-nome").value = "";
-  document.getElementById("input-template-desc").value = "";
-  document.getElementById("input-template-nome").focus();
-}
+// -- Usar Este (activate template to active_menu) --
+async function usarEste() {
+  if (!confirm("Ativar este template como menu do cliente? O menu atual sera substituido.")) return;
 
-function closeTemplateModal() {
-  $modalTemplate.classList.add("hidden");
-}
+  // Save template first
+  await salvar();
 
-async function salvarComoTemplate() {
-  const nome = document.getElementById("input-template-nome").value.trim();
-  if (!nome) {
-    alert("Digite um nome para o template.");
-    return;
-  }
-  const desc = document.getElementById("input-template-desc").value.trim();
   const sb = getSupabase();
 
-  const { data: newTmpl, error: errT } = await sb
-    .from("event_templates")
-    .insert({ nome, descricao: desc || null })
-    .select()
-    .single();
+  // Get template name
+  const { data: tmpl } = await sb.from("event_templates").select("nome, usado_count").eq("id", templateId).single();
+  const templateNome = tmpl?.nome || "";
 
-  if (errT) {
-    showMsg("Erro: " + errT.message, "error");
-    return;
-  }
+  // Clear active_menu
+  await sb.from("active_menu").delete().neq("id", "00000000-0000-0000-0000-000000000000");
 
-  // Insert items
-  const rows = Object.entries(state).map(([itemId, s]) => ({
-    template_id: newTmpl.id,
-    item_id: itemId,
-    preco_override: s.preco_atual !== s.preco_padrao ? s.preco_atual : null,
-    ativo: s.checked,
-    ordem: s.ordem
-  }));
+  // Insert active items from current state
+  const rows = Object.entries(state)
+    .filter(([, s]) => s.checked && s.ativo_no_catalogo)
+    .map(([itemId, s]) => ({
+      item_id: itemId,
+      preco_atual: s.preco_atual,
+      ativo: true,
+      template_origem: templateNome,
+      data_ativacao: new Date().toISOString()
+    }));
 
   if (rows.length > 0) {
-    await sb.from("event_template_items").insert(rows);
+    const { error } = await sb.from("active_menu").insert(rows);
+    if (error) {
+      showMsg("Erro ao ativar: " + error.message, "error");
+      return;
+    }
   }
 
-  closeTemplateModal();
-  showMsg("Template '" + nome + "' criado com sucesso!", "success");
+  // Update usage count
+  await sb.from("event_templates").update({
+    usado_count: (tmpl?.usado_count || 0) + 1,
+    ultima_uso: new Date().toISOString()
+  }).eq("id", templateId);
+
+  showMsg("Template ativado! " + rows.length + " items no menu.", "success");
 }
 
-// Mass actions
+// -- Mass actions --
 document.getElementById("btn-marcar-todos").addEventListener("click", () => {
-  Object.values(state).forEach(s => { s.checked = true; });
-  loadCatsAndRender();
+  Object.values(state).forEach(s => { if (s.ativo_no_catalogo) s.checked = true; });
+  markDirty();
+  renderMenu();
 });
 
 document.getElementById("btn-desmarcar-todos").addEventListener("click", () => {
   Object.values(state).forEach(s => { s.checked = false; });
-  loadCatsAndRender();
+  markDirty();
+  renderMenu();
 });
 
 document.getElementById("btn-restaurar-precos").addEventListener("click", () => {
   Object.values(state).forEach(s => { s.preco_atual = s.preco_padrao; });
-  loadCatsAndRender();
+  markDirty();
+  renderMenu();
   showMsg("Precos restaurados ao padrao.", "success");
 });
 
 // Buttons
-document.getElementById("btn-logout").addEventListener("click", logout);
-document.getElementById("btn-salvar").addEventListener("click", salvar);
-document.getElementById("btn-salvar-template").addEventListener("click", openTemplateModal);
+$btnLogout.addEventListener("click", logout);
+$btnSalvar.addEventListener("click", salvar);
+$btnUsarEste.addEventListener("click", usarEste);
+document.getElementById("btn-add-item").addEventListener("click", () => openItemModal(null));
 document.getElementById("btn-preco-cancel").addEventListener("click", closePrecoModal);
 document.getElementById("btn-preco-save").addEventListener("click", savePreco);
-document.getElementById("btn-tmpl-cancel").addEventListener("click", closeTemplateModal);
-document.getElementById("btn-tmpl-save").addEventListener("click", salvarComoTemplate);
+document.getElementById("btn-item-cancel").addEventListener("click", closeItemModal);
+document.getElementById("btn-item-save").addEventListener("click", saveItem);
 
 // Close modals on overlay click
 $modalPreco.addEventListener("click", (e) => { if (e.target === $modalPreco) closePrecoModal(); });
-$modalTemplate.addEventListener("click", (e) => { if (e.target === $modalTemplate) closeTemplateModal(); });
+$modalItem.addEventListener("click", (e) => { if (e.target === $modalItem) closeItemModal(); });
 
 // Init
 (async function init() {

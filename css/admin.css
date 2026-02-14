@@ -7,6 +7,7 @@
 .admin-panel h1 {
   font-size: 1.25rem;
   margin-bottom: 0.5rem;
+  color: #1a3d0a;
 }
 
 #admin-secret {
@@ -14,10 +15,10 @@
   padding: 0.75rem;
   margin: 1rem 0;
   font-size: 1rem;
-  border: 1px solid #444;
+  border: 1px solid #c5b99a;
   border-radius: 6px;
-  background: #222;
-  color: #eee;
+  background: #fff;
+  color: #2c2c2c;
 }
 
 #btn-admin-login,
@@ -26,14 +27,14 @@
   font-size: 1rem;
   border: none;
   border-radius: 6px;
-  background: #333;
+  background: #3d6b1e;
   color: #fff;
   cursor: pointer;
 }
 
 #btn-admin-logout {
   margin-top: 0.5rem;
-  background: #555;
+  background: #666;
 }
 
 .admin-header {
@@ -42,7 +43,7 @@
 
 .admin-header p {
   margin: 0.25rem 0;
-  color: #aaa;
+  color: #666;
   font-size: 0.9rem;
 }
 
@@ -53,39 +54,40 @@
 }
 
 .order-card {
-  background: #252535;
+  background: #fff;
   border-radius: 8px;
   padding: 1rem;
   margin-bottom: 0.75rem;
-  border-left: 4px solid #4ade80;
+  border-left: 4px solid #3d6b1e;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.08);
 }
 
 .order-card.pronto {
-  border-left-color: #888;
-  opacity: 0.85;
+  border-left-color: #aaa;
+  opacity: 0.7;
 }
 
 .order-card .order-num {
   font-size: 1.25rem;
   font-weight: 700;
-  color: #4ade80;
+  color: #3d6b1e;
   margin-bottom: 0.25rem;
 }
 
 .order-card .order-items {
   font-size: 0.95rem;
-  color: #ccc;
+  color: #444;
   margin: 0.5rem 0;
 }
 
 .order-card .order-time {
   font-size: 0.8rem;
-  color: #666;
+  color: #888;
 }
 
 .order-card .order-agendado {
   font-size: 0.8rem;
-  color: #86efac;
+  color: #2d5016;
   margin-top: 0.25rem;
 }
 
@@ -95,8 +97,8 @@
   font-size: 0.9rem;
   border: none;
   border-radius: 6px;
-  background: #4ade80;
-  color: #1a1a2e;
+  background: #3d6b1e;
+  color: #fff;
   cursor: pointer;
   font-weight: 600;
 }
@@ -106,7 +108,7 @@
 }
 
 .order-card .btn-ready:disabled {
-  background: #444;
+  background: #bbb;
   color: #888;
   cursor: not-allowed;
 }
@@ -125,21 +127,21 @@
 }
 
 .admin-feedback.success {
-  background: #163a1e;
-  color: #86efac;
-  border: 1px solid #22c55e;
+  background: #e8f5e9;
+  color: #2d5016;
+  border: 1px solid #81c784;
 }
 
 .admin-feedback.warning {
-  background: #3d3520;
-  color: #fde047;
-  border: 1px solid #eab308;
+  background: #fff8e1;
+  color: #6d5c00;
+  border: 1px solid #fdd835;
 }
 
 .admin-feedback.error {
-  background: #3d2020;
-  color: #fca5a5;
-  border: 1px solid #ef4444;
+  background: #ffebee;
+  color: #b71c1c;
+  border: 1px solid #ef5350;
 }
 
 /* ============================================================
@@ -151,24 +153,25 @@
   gap: 0.5rem;
   align-items: center;
   flex-wrap: wrap;
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.75rem;
 }
 
 .admin-nav a,
 .admin-nav button {
   padding: 0.4rem 0.8rem;
   font-size: 0.85rem;
-  border: none;
+  border: 1px solid #c5b99a;
   border-radius: 6px;
-  background: #333;
-  color: #ccc;
+  background: #fff;
+  color: #3d6b1e;
   cursor: pointer;
   text-decoration: none;
+  font-weight: 600;
 }
 
 .admin-nav a:hover,
 .admin-nav button:hover {
-  background: #444;
+  background: #3d6b1e;
   color: #fff;
 }
 
@@ -177,12 +180,13 @@
   align-items: center;
   justify-content: space-between;
   gap: 0.5rem;
-  margin-bottom: 1rem;
+  margin-bottom: 0.5rem;
 }
 
 .admin-header-row h1 {
   margin: 0;
   font-size: 1.25rem;
+  color: #1a3d0a;
 }
 
 /* Action buttons row */
@@ -198,30 +202,37 @@
   font-size: 0.9rem;
   border: none;
   border-radius: 8px;
-  background: #4ade80;
-  color: #1a1a2e;
+  background: #3d6b1e;
+  color: #fff;
   cursor: pointer;
   font-weight: 600;
+  transition: background 0.2s;
 }
 
 .btn-primary:hover {
-  background: #22c55e;
+  background: #2d5016;
+}
+
+.btn-primary:disabled {
+  background: #bbb;
+  color: #888;
+  cursor: default;
 }
 
 .btn-secondary {
   padding: 0.6rem 1.2rem;
   font-size: 0.9rem;
-  border: 1px solid #555;
+  border: 1px solid #c5b99a;
   border-radius: 8px;
-  background: #2a2a3a;
-  color: #ccc;
+  background: #fff;
+  color: #555;
   cursor: pointer;
   font-weight: 500;
 }
 
 .btn-secondary:hover {
-  background: #333;
-  color: #fff;
+  background: #ede8dc;
+  color: #333;
 }
 
 .btn-danger {
@@ -252,28 +263,29 @@
 }
 
 .template-card {
-  background: #252535;
+  background: #fff;
   border-radius: 10px;
   padding: 1rem;
-  border-left: 4px solid #4ade80;
+  border-left: 4px solid #3d6b1e;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.08);
 }
 
 .template-card .template-nome {
   font-size: 1.1rem;
   font-weight: 700;
-  color: #fff;
+  color: #1a3d0a;
   margin-bottom: 0.25rem;
 }
 
 .template-card .template-desc {
   font-size: 0.85rem;
-  color: #aaa;
+  color: #666;
   margin-bottom: 0.5rem;
 }
 
 .template-card .template-meta {
   font-size: 0.8rem;
-  color: #777;
+  color: #999;
   margin-bottom: 0.75rem;
 }
 
@@ -286,7 +298,7 @@
 .template-empty {
   text-align: center;
   padding: 2rem;
-  color: #666;
+  color: #888;
   font-size: 0.95rem;
 }
 
@@ -297,11 +309,13 @@
 
 .menu-section-title {
   font-size: 1rem;
-  font-weight: 600;
-  color: #4ade80;
+  font-weight: 700;
+  color: #1a3d0a;
   margin-bottom: 0.5rem;
-  padding-bottom: 0.25rem;
-  border-bottom: 1px solid #333;
+  padding: 0.4rem 0.5rem;
+  background: #e8f5e9;
+  border-radius: 6px;
+  border-left: 3px solid #3d6b1e;
 }
 
 .menu-item-row {
@@ -309,7 +323,7 @@
   align-items: center;
   gap: 0.5rem;
   padding: 0.6rem 0.5rem;
-  border-bottom: 1px solid #2a2a3a;
+  border-bottom: 1px solid #e0dcd3;
 }
 
 .menu-item-row:last-child {
@@ -319,41 +333,58 @@
 .menu-item-row input[type="checkbox"] {
   width: 20px;
   height: 20px;
-  accent-color: #4ade80;
+  accent-color: #3d6b1e;
   flex-shrink: 0;
 }
 
 .menu-item-row .item-nome {
   flex: 1;
   font-size: 0.95rem;
-  color: #ddd;
+  color: #2c2c2c;
+  font-weight: 500;
 }
 
 .menu-item-row .item-preco {
   font-size: 0.9rem;
-  font-weight: 600;
-  color: #4ade80;
-  min-width: 60px;
+  font-weight: 700;
+  color: #2d5016;
+  min-width: 55px;
   text-align: right;
 }
 
-.menu-item-row .btn-edit-preco {
+.menu-item-row .item-preco.preco-changed {
+  color: #c0392b;
+}
+
+.menu-item-row .btn-edit-preco,
+.menu-item-row .btn-edit-item {
   padding: 0.25rem 0.5rem;
   font-size: 0.75rem;
-  border: 1px solid #555;
+  border: 1px solid #c5b99a;
   border-radius: 4px;
-  background: transparent;
-  color: #aaa;
+  background: #fff;
+  color: #555;
   cursor: pointer;
 }
 
-.menu-item-row .btn-edit-preco:hover {
-  background: #333;
+.menu-item-row .btn-edit-preco:hover,
+.menu-item-row .btn-edit-item:hover {
+  background: #3d6b1e;
   color: #fff;
 }
 
 .menu-item-row.inactive {
-  opacity: 0.5;
+  opacity: 0.45;
+}
+
+.badge-pop {
+  background: #fff3cd;
+  color: #856404;
+  padding: 1px 6px;
+  border-radius: 4px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  vertical-align: middle;
 }
 
 /* Modals */
@@ -363,7 +394,7 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.7);
+  background: rgba(0, 0, 0, 0.5);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -375,37 +406,46 @@
 }
 
 .modal-box {
-  background: #1e1e2e;
+  background: #fff;
   border-radius: 12px;
   padding: 1.5rem;
   width: 90%;
   max-width: 400px;
-  border: 1px solid #333;
+  border: 1px solid #ddd;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+}
+
+.modal-box-large {
+  max-width: 500px;
+  max-height: 85vh;
+  overflow-y: auto;
 }
 
 .modal-box h2 {
   font-size: 1.1rem;
   margin: 0 0 1rem;
-  color: #fff;
+  color: #1a3d0a;
 }
 
 .modal-box label {
   display: block;
   font-size: 0.85rem;
-  color: #aaa;
+  color: #555;
   margin-bottom: 0.25rem;
+  font-weight: 600;
 }
 
 .modal-box input[type="text"],
 .modal-box input[type="number"],
-.modal-box textarea {
+.modal-box textarea,
+.modal-box select {
   width: 100%;
   padding: 0.6rem;
   font-size: 1rem;
-  border: 1px solid #444;
+  border: 1px solid #c5b99a;
   border-radius: 6px;
-  background: #222;
-  color: #eee;
+  background: #fff;
+  color: #2c2c2c;
   margin-bottom: 0.75rem;
   box-sizing: border-box;
 }
@@ -413,6 +453,28 @@
 .modal-box textarea {
   resize: vertical;
   min-height: 60px;
+}
+
+.modal-box select {
+  cursor: pointer;
+}
+
+.modal-checkbox-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.modal-checkbox-row input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  accent-color: #3d6b1e;
+}
+
+.modal-checkbox-row label {
+  margin-bottom: 0;
+  font-weight: 500;
 }
 
 .modal-buttons {
@@ -429,9 +491,9 @@
   flex-wrap: wrap;
   margin-bottom: 1rem;
   padding: 0.5rem;
-  background: #1e1e2e;
+  background: #fff;
   border-radius: 8px;
-  border: 1px solid #333;
+  border: 1px solid #e0dcd3;
 }
 
 /* Loading spinner */

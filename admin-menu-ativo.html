@@ -13,16 +13,17 @@
       <div class="admin-header-row">
         <h1 id="page-title">Menu Ativo</h1>
       </div>
-      <nav class="admin-nav">
-        <a href="admin-dashboard.html">Templates</a>
-        <a href="admin.html">Pedidos</a>
-        <button type="button" id="btn-logout">Sair</button>
+      <nav class="admin-nav" id="nav-bar">
+        <a href="admin-dashboard.html" title="Voltar para a lista de templates salvos">Templates</a>
+        <a href="admin.html" id="nav-pedidos" title="Ver e gerenciar pedidos dos clientes">Pedidos</a>
+        <button type="button" id="btn-logout" title="Sair da conta admin">Sair</button>
       </nav>
 
       <div class="mass-actions">
-        <button type="button" class="btn-secondary btn-sm" id="btn-marcar-todos">Marcar Todos</button>
-        <button type="button" class="btn-secondary btn-sm" id="btn-desmarcar-todos">Desmarcar Todos</button>
-        <button type="button" class="btn-secondary btn-sm" id="btn-restaurar-precos">Restaurar Precos</button>
+        <button type="button" class="btn-secondary btn-sm" id="btn-marcar-todos" title="Ativar todos os items do catalogo">Marcar Todos</button>
+        <button type="button" class="btn-secondary btn-sm" id="btn-desmarcar-todos" title="Desativar todos os items">Desmarcar Todos</button>
+        <button type="button" class="btn-secondary btn-sm" id="btn-restaurar-precos" title="Restaurar todos os precos ao valor padrao do catalogo">Restaurar Precos</button>
+        <button type="button" class="btn-secondary btn-sm" id="btn-add-item" title="Criar um novo item no catalogo">+ Novo Item</button>
       </div>
 
       <div id="loading" class="admin-loading">Carregando...</div>
@@ -31,8 +32,8 @@
       <div id="menu-container"></div>
 
       <div class="admin-actions" style="margin-top:1rem;">
-        <button type="button" class="btn-primary" id="btn-salvar">Salvar Menu Ativo</button>
-        <button type="button" class="btn-secondary" id="btn-salvar-template">Salvar como Template</button>
+        <button type="button" class="btn-primary" id="btn-salvar" disabled title="Salvar as alteracoes feitas">Salvar</button>
+        <button type="button" class="btn-primary" id="btn-usar-este" hidden title="Ativar este template como menu do cliente">Usar Este</button>
       </div>
     </div>
   </div>
@@ -50,17 +51,46 @@
     </div>
   </div>
 
-  <!-- Modal Salvar como Template -->
-  <div id="modal-template" class="modal-overlay hidden">
-    <div class="modal-box">
-      <h2>Salvar como Template</h2>
-      <label for="input-template-nome">Nome do Template</label>
-      <input type="text" id="input-template-nome" placeholder="Ex: Festival de Verao">
-      <label for="input-template-desc">Descricao (opcional)</label>
-      <textarea id="input-template-desc" placeholder="Descricao"></textarea>
+  <!-- Modal Editar/Criar Item -->
+  <div id="modal-item" class="modal-overlay hidden">
+    <div class="modal-box modal-box-large">
+      <h2 id="modal-item-titulo">Novo Item</h2>
+
+      <label for="item-nome">Nome (PT)</label>
+      <input type="text" id="item-nome" placeholder="Ex: Pastel de Carne">
+
+      <label for="item-nome-ja">Nome (JA)</label>
+      <input type="text" id="item-nome-ja" placeholder="Ex: 牛肉パステル">
+
+      <label for="item-desc-pt">Descricao (PT)</label>
+      <textarea id="item-desc-pt" placeholder="Descricao em portugues"></textarea>
+
+      <label for="item-desc-ja">Descricao (JA)</label>
+      <textarea id="item-desc-ja" placeholder="Descricao em japones"></textarea>
+
+      <label for="item-preco">Preco padrao (yen)</label>
+      <input type="number" id="item-preco" min="1" step="1" placeholder="500">
+
+      <label for="item-foto">URL da foto</label>
+      <input type="text" id="item-foto" placeholder="img/pastel-carne.png">
+
+      <label for="item-categoria">Categoria</label>
+      <select id="item-categoria"></select>
+
+      <label for="item-alergenicos-pt">Alergenicos (PT, separados por virgula)</label>
+      <input type="text" id="item-alergenicos-pt" placeholder="Gluten, Leite">
+
+      <label for="item-alergenicos-ja">Alergenicos (JA, separados por virgula)</label>
+      <input type="text" id="item-alergenicos-ja" placeholder="小麦, 乳">
+
+      <div class="modal-checkbox-row">
+        <input type="checkbox" id="item-popular">
+        <label for="item-popular">Marcar como Popular</label>
+      </div>
+
       <div class="modal-buttons">
-        <button type="button" class="btn-secondary" id="btn-tmpl-cancel">Cancelar</button>
-        <button type="button" class="btn-primary" id="btn-tmpl-save">Salvar</button>
+        <button type="button" class="btn-secondary" id="btn-item-cancel">Cancelar</button>
+        <button type="button" class="btn-primary" id="btn-item-save">Salvar Item</button>
       </div>
     </div>
   </div>
