@@ -555,7 +555,11 @@ body {
 }
 
 .menu-item-row .item-preco.preco-changed {
-  color: #c0392b;
+  /* Antes: vermelho forte. Isso confundia como "erro".
+     Mantemos a indicação sem mudar a cor base. */
+  color: #2d5016;
+  text-decoration: underline dotted;
+  text-underline-offset: 2px;
 }
 
 .menu-item-row .btn-edit-preco,

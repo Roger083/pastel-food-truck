@@ -182,9 +182,19 @@ async function loadMenu() {
   } else {
     const { data: active } = await sb
       .from("active_menu")
-      .select("item_id, preco_atual, ativo");
+      .select("item_id, preco_atual, ativo, template_origem")
+      .order("data_ativacao", { ascending: false });
 
     if (active) {
+      const origem = active.find(a => a.template_origem && String(a.template_origem).trim())?.template_origem;
+      if (origem) {
+        $pageTitle.textContent = "Menu Ativo — " + origem;
+        document.title = "Menu Ativo — " + origem + " - Admin";
+      } else {
+        $pageTitle.textContent = "Menu Ativo";
+        document.title = "Menu Ativo - Admin";
+      }
+
       active.forEach(a => {
         if (state[a.item_id]) {
           state[a.item_id].checked = a.ativo;
