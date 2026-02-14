@@ -4,10 +4,7 @@ const $loading = document.getElementById("loading");
 const $feedback = document.getElementById("feedback");
 const $menuContainer = document.getElementById("menu-container");
 const $pageTitle = document.getElementById("page-title");
-const $modalPreco = document.getElementById("modal-preco");
 const $modalItem = document.getElementById("modal-item");
-const $inputPreco = document.getElementById("input-preco");
-const $modalPrecoNome = document.getElementById("modal-preco-nome");
 const $btnSalvar = document.getElementById("btn-salvar");
 const $btnUsarEste = document.getElementById("btn-usar-este");
 const $navPedidos = document.getElementById("nav-pedidos");
@@ -16,12 +13,29 @@ const $btnLogout = document.getElementById("btn-logout");
 const params = new URLSearchParams(window.location.search);
 const templateId = params.get("template");
 
+// 8 alergenicos obrigatorios no Japao + recomendados relevantes
+const ALLERGENS = [
+  { id: "shrimp", pt: "Camarao", ja: "えび", mandatory: true },
+  { id: "crab", pt: "Caranguejo", ja: "かに", mandatory: true },
+  { id: "walnut", pt: "Noz", ja: "くるみ", mandatory: true },
+  { id: "wheat", pt: "Trigo (Gluten)", ja: "小麦", mandatory: true },
+  { id: "buckwheat", pt: "Trigo sarraceno", ja: "そば", mandatory: true },
+  { id: "egg", pt: "Ovo", ja: "卵", mandatory: true },
+  { id: "milk", pt: "Leite", ja: "乳", mandatory: true },
+  { id: "peanut", pt: "Amendoim", ja: "落花生", mandatory: true },
+  { id: "soy", pt: "Soja", ja: "大豆", mandatory: false },
+  { id: "sesame", pt: "Gergelim", ja: "ごま", mandatory: false },
+  { id: "pork", pt: "Carne de porco", ja: "豚肉", mandatory: false },
+  { id: "chicken", pt: "Frango", ja: "鶏肉", mandatory: false },
+  { id: "beef", pt: "Carne bovina", ja: "牛肉", mandatory: false },
+];
+
 // State
 let state = {};
 let categorias = [];
-let editingItemId = null;
-let editingCatalogItemId = null; // for item editor modal
+let editingCatalogItemId = null;
 let isDirty = false;
+let pendingFotoFile = null;
 
 function markDirty() {
   isDirty = true;
@@ -48,11 +62,54 @@ function escapeHtml(s) {
   return d.innerHTML;
 }
 
+// -- Allergen grid --
+function renderAllergenGrid(selectedPt) {
+  const $grid = document.getElementById("allergen-grid");
+  const selSet = new Set((selectedPt || []).map(s => s.toLowerCase()));
+
+  $grid.innerHTML = ALLERGENS.map(a => {
+    const checked = selSet.has(a.pt.toLowerCase()) ? "checked" : "";
+    const star = a.mandatory ? " *" : "";
+    return `<label class="allergen-item">
+      <input type="checkbox" data-id="${a.id}" ${checked}>
+      <span>${a.pt}${star}<br><small>${a.ja}</small></span>
+    </label>`;
+  }).join("");
+}
+
+function getSelectedAllergens() {
+  const pt = [];
+  const ja = [];
+  document.querySelectorAll("#allergen-grid input[type=checkbox]:checked").forEach(cb => {
+    const a = ALLERGENS.find(x => x.id === cb.dataset.id);
+    if (a) { pt.push(a.pt); ja.push(a.ja); }
+  });
+  return { pt, ja };
+}
+
+// -- Photo upload --
+async function uploadFoto(file) {
+  const sb = getSupabase();
+  const ext = file.name.split(".").pop().toLowerCase();
+  const fileName = Date.now() + "-" + Math.random().toString(36).slice(2, 8) + "." + ext;
+  const path = "items/" + fileName;
+
+  const { error } = await sb.storage.from("menu-images").upload(path, file, {
+    cacheControl: "3600",
+    upsert: false
+  });
+
+  if (error) throw error;
+
+  const { data } = sb.storage.from("menu-images").getPublicUrl(path);
+  return data.publicUrl;
+}
+
+// -- Load --
 async function loadMenu() {
   const sb = getSupabase();
   $loading.hidden = false;
 
-  // Load all catalog items (including inactive for editing)
   const { data: items, error: errItems } = await sb
     .from("menu_items")
     .select("*")
@@ -63,14 +120,12 @@ async function loadMenu() {
     return;
   }
 
-  // Load categories
   const { data: cats } = await sb
     .from("categorias")
     .select("id, nome_pt, emoji, ordem")
     .order("ordem", { ascending: true });
   categorias = cats || [];
 
-  // Initialize state from catalog
   state = {};
   (items || []).forEach(item => {
     state[item.id] = {
@@ -78,6 +133,8 @@ async function loadMenu() {
       nome_ja: item.nome_ja,
       desc_pt: item.desc_pt,
       desc_ja: item.desc_ja,
+      ingredientes_pt: item.ingredientes_pt || [],
+      ingredientes_ja: item.ingredientes_ja || [],
       preco_padrao: item.preco_padrao,
       foto_url: item.foto_url,
       categoria_id: item.categoria_id,
@@ -92,7 +149,6 @@ async function loadMenu() {
   });
 
   if (templateId) {
-    // Editing a template: load template info + items
     const { data: tmpl } = await sb
       .from("event_templates")
       .select("nome")
@@ -102,12 +158,9 @@ async function loadMenu() {
     $pageTitle.textContent = tmpl ? tmpl.nome : "Editar Template";
     document.title = (tmpl ? tmpl.nome : "Template") + " - Admin";
 
-    // Hide pedidos/sair in template edit mode, show rename
     if ($navPedidos) $navPedidos.style.display = "none";
     if ($btnLogout) $btnLogout.style.display = "none";
     document.getElementById("btn-renomear").hidden = false;
-
-    // Show "Usar Este" button
     $btnUsarEste.hidden = false;
 
     const { data: tItems } = await sb
@@ -126,7 +179,6 @@ async function loadMenu() {
       });
     }
   } else {
-    // Load active_menu
     const { data: active } = await sb
       .from("active_menu")
       .select("item_id, preco_atual, ativo");
@@ -160,7 +212,6 @@ function renderMenu() {
     .filter(([, s]) => s.ativo_no_catalogo)
     .map(([id, s]) => ({ id, ...s }));
 
-  // Group by category
   const byCat = {};
   const noCat = [];
   items.forEach(item => {
@@ -174,7 +225,6 @@ function renderMenu() {
 
   let html = "";
 
-  // Render each category
   categorias.forEach(cat => {
     const catItems = byCat[cat.id];
     if (!catItems || catItems.length === 0) return;
@@ -186,7 +236,6 @@ function renderMenu() {
     html += '</div>';
   });
 
-  // Items without category
   if (noCat.length > 0) {
     noCat.sort((a, b) => (a.ordem || 0) - (b.ordem || 0));
     html += '<div class="menu-section">';
@@ -201,7 +250,6 @@ function renderMenu() {
 
   $menuContainer.innerHTML = html;
 
-  // Bind checkboxes
   $menuContainer.querySelectorAll("input[type=checkbox]").forEach(cb => {
     cb.addEventListener("change", () => {
       state[cb.dataset.id].checked = cb.checked;
@@ -210,14 +258,12 @@ function renderMenu() {
     });
   });
 
-  // Bind edit price buttons
-  $menuContainer.querySelectorAll(".btn-edit-preco").forEach(btn => {
-    btn.addEventListener("click", () => openPrecoModal(btn.dataset.id));
-  });
-
-  // Bind edit item buttons
   $menuContainer.querySelectorAll(".btn-edit-item").forEach(btn => {
     btn.addEventListener("click", () => openItemModal(btn.dataset.id));
+  });
+
+  $menuContainer.querySelectorAll(".btn-excluir-item").forEach(btn => {
+    btn.addEventListener("click", () => excluirItem(btn.dataset.id));
   });
 }
 
@@ -230,68 +276,71 @@ function renderItemRow(item) {
       <input type="checkbox" data-id="${item.id}" ${item.checked ? "checked" : ""}>
       <span class="item-nome">${escapeHtml(item.nome)}${item.popular ? ' <small class="badge-pop">Popular</small>' : ''}</span>
       <span class="item-preco${precoClass}">&yen;${item.preco_atual.toLocaleString()}</span>
-      <button type="button" class="btn-edit-preco" data-id="${item.id}" title="Alterar o preco deste item">Preco</button>
-      <button type="button" class="btn-edit-item" data-id="${item.id}" title="Editar nome, foto, descricao e alergenicos">Editar</button>
+      <button type="button" class="btn-edit-item" data-id="${item.id}" title="Editar nome, foto, preco, descricao e alergenicos">Editar</button>
+      <button type="button" class="btn-excluir-item" data-id="${item.id}" title="Remover item do catalogo">Excluir</button>
     </div>`;
 }
 
-// -- Price Modal --
-function openPrecoModal(itemId) {
-  editingItemId = itemId;
+// -- Excluir item --
+async function excluirItem(itemId) {
   const item = state[itemId];
-  $modalPrecoNome.textContent = item.nome;
-  $inputPreco.value = item.preco_atual;
-  $modalPreco.classList.remove("hidden");
-  $inputPreco.focus();
-  $inputPreco.select();
-}
-
-function closePrecoModal() {
-  $modalPreco.classList.add("hidden");
-  editingItemId = null;
-}
-
-function savePreco() {
-  const val = parseInt($inputPreco.value, 10);
-  if (!val || val <= 0) {
-    alert("Digite um preco valido.");
+  if (!confirm("Excluir '" + item.nome + "' do catalogo?")) return;
+  const sb = getSupabase();
+  const { error } = await sb.from("menu_items").update({ ativo_no_catalogo: false }).eq("id", itemId);
+  if (error) {
+    showMsg("Erro: " + error.message, "error");
     return;
   }
-  state[editingItemId].preco_atual = val;
-  closePrecoModal();
+  state[itemId].ativo_no_catalogo = false;
+  state[itemId].checked = false;
   markDirty();
   renderMenu();
+  showMsg("Item removido do catalogo.", "success");
 }
 
 // -- Item Editor Modal --
 function openItemModal(itemId) {
   editingCatalogItemId = itemId || null;
+  pendingFotoFile = null;
   const isNew = !itemId;
   document.getElementById("modal-item-titulo").textContent = isNew ? "Novo Item" : "Editar Item";
+
+  const $preview = document.getElementById("item-foto-preview");
+  const $fotoNome = document.getElementById("foto-nome");
 
   if (isNew) {
     document.getElementById("item-nome").value = "";
     document.getElementById("item-nome-ja").value = "";
     document.getElementById("item-desc-pt").value = "";
     document.getElementById("item-desc-ja").value = "";
+    document.getElementById("item-ing-pt").value = "";
+    document.getElementById("item-ing-ja").value = "";
     document.getElementById("item-preco").value = "";
-    document.getElementById("item-foto").value = "";
     document.getElementById("item-categoria").value = "";
-    document.getElementById("item-alergenicos-pt").value = "";
-    document.getElementById("item-alergenicos-ja").value = "";
     document.getElementById("item-popular").checked = false;
+    $preview.hidden = true;
+    $fotoNome.textContent = "";
+    renderAllergenGrid([]);
   } else {
     const item = state[itemId];
     document.getElementById("item-nome").value = item.nome || "";
     document.getElementById("item-nome-ja").value = item.nome_ja || "";
     document.getElementById("item-desc-pt").value = item.desc_pt || "";
     document.getElementById("item-desc-ja").value = item.desc_ja || "";
+    document.getElementById("item-ing-pt").value = (item.ingredientes_pt || []).join(", ");
+    document.getElementById("item-ing-ja").value = (item.ingredientes_ja || []).join(", ");
     document.getElementById("item-preco").value = item.preco_padrao || "";
-    document.getElementById("item-foto").value = item.foto_url || "";
     document.getElementById("item-categoria").value = item.categoria_id || "";
-    document.getElementById("item-alergenicos-pt").value = (item.alergenicos_texto_pt || []).join(", ");
-    document.getElementById("item-alergenicos-ja").value = (item.alergenicos_texto_ja || []).join(", ");
     document.getElementById("item-popular").checked = item.popular || false;
+    if (item.foto_url) {
+      $preview.src = item.foto_url;
+      $preview.hidden = false;
+      $fotoNome.textContent = "";
+    } else {
+      $preview.hidden = true;
+      $fotoNome.textContent = "";
+    }
+    renderAllergenGrid(item.alergenicos_texto_pt || []);
   }
 
   $modalItem.classList.remove("hidden");
@@ -301,6 +350,7 @@ function openItemModal(itemId) {
 function closeItemModal() {
   $modalItem.classList.add("hidden");
   editingCatalogItemId = null;
+  pendingFotoFile = null;
 }
 
 async function saveItem() {
@@ -309,16 +359,38 @@ async function saveItem() {
   const preco = parseInt(document.getElementById("item-preco").value, 10);
   if (!preco || preco <= 0) { alert("Preco e obrigatorio e deve ser maior que zero."); return; }
 
+  const allergens = getSelectedAllergens();
+
+  let fotoUrl = editingCatalogItemId ? (state[editingCatalogItemId].foto_url || null) : null;
+
+  // Upload photo if pending
+  if (pendingFotoFile) {
+    try {
+      document.getElementById("btn-item-save").disabled = true;
+      document.getElementById("btn-item-save").textContent = "Enviando foto...";
+      fotoUrl = await uploadFoto(pendingFotoFile);
+    } catch (err) {
+      showMsg("Erro ao enviar foto: " + (err.message || err), "error");
+      document.getElementById("btn-item-save").disabled = false;
+      document.getElementById("btn-item-save").textContent = "Salvar Item";
+      return;
+    }
+    document.getElementById("btn-item-save").disabled = false;
+    document.getElementById("btn-item-save").textContent = "Salvar Item";
+  }
+
   const itemData = {
     nome,
     nome_ja: document.getElementById("item-nome-ja").value.trim() || null,
     desc_pt: document.getElementById("item-desc-pt").value.trim() || null,
     desc_ja: document.getElementById("item-desc-ja").value.trim() || null,
+    ingredientes_pt: parseCommaList(document.getElementById("item-ing-pt").value),
+    ingredientes_ja: parseCommaList(document.getElementById("item-ing-ja").value),
     preco_padrao: preco,
-    foto_url: document.getElementById("item-foto").value.trim() || null,
+    foto_url: fotoUrl,
     categoria_id: document.getElementById("item-categoria").value || null,
-    alergenicos_texto_pt: parseCommaList(document.getElementById("item-alergenicos-pt").value),
-    alergenicos_texto_ja: parseCommaList(document.getElementById("item-alergenicos-ja").value),
+    alergenicos_texto_pt: allergens.pt,
+    alergenicos_texto_ja: allergens.ja,
     popular: document.getElementById("item-popular").checked,
     ativo_no_catalogo: true
   };
@@ -326,23 +398,15 @@ async function saveItem() {
   const sb = getSupabase();
 
   if (editingCatalogItemId) {
-    // Update existing
     const { error } = await sb.from("menu_items").update(itemData).eq("id", editingCatalogItemId);
     if (error) { showMsg("Erro: " + error.message, "error"); return; }
-    // Update local state
     Object.assign(state[editingCatalogItemId], itemData);
     state[editingCatalogItemId].preco_atual = preco;
     showMsg("Item atualizado!", "success");
   } else {
-    // Create new
     const { data: newItem, error } = await sb.from("menu_items").insert(itemData).select().single();
     if (error) { showMsg("Erro: " + error.message, "error"); return; }
-    // Add to local state
-    state[newItem.id] = {
-      ...itemData,
-      checked: false,
-      preco_atual: preco
-    };
+    state[newItem.id] = { ...itemData, checked: false, preco_atual: preco };
     showMsg("Item criado!", "success");
   }
 
@@ -361,7 +425,6 @@ async function salvar() {
   const sb = getSupabase();
 
   if (templateId) {
-    // Save to template
     await sb.from("event_template_items").delete().eq("template_id", templateId);
 
     const rows = Object.entries(state)
@@ -383,7 +446,6 @@ async function salvar() {
     }
     showMsg("Template salvo!", "success");
   } else {
-    // Save to active_menu
     await sb.from("active_menu").delete().neq("id", "00000000-0000-0000-0000-000000000000");
 
     const rows = Object.entries(state)
@@ -407,23 +469,18 @@ async function salvar() {
   markClean();
 }
 
-// -- Usar Este (activate template to active_menu) --
+// -- Usar Este --
 async function usarEste() {
   if (!confirm("Ativar este template como menu do cliente? O menu atual sera substituido.")) return;
 
-  // Save template first
   await salvar();
 
   const sb = getSupabase();
-
-  // Get template name
   const { data: tmpl } = await sb.from("event_templates").select("nome, usado_count").eq("id", templateId).single();
   const templateNome = tmpl?.nome || "";
 
-  // Clear active_menu
   await sb.from("active_menu").delete().neq("id", "00000000-0000-0000-0000-000000000000");
 
-  // Insert active items from current state
   const rows = Object.entries(state)
     .filter(([, s]) => s.checked && s.ativo_no_catalogo)
     .map(([itemId, s]) => ({
@@ -442,13 +499,13 @@ async function usarEste() {
     }
   }
 
-  // Update usage count
   await sb.from("event_templates").update({
     usado_count: (tmpl?.usado_count || 0) + 1,
     ultima_uso: new Date().toISOString()
   }).eq("id", templateId);
 
-  showMsg("Template ativado! " + rows.length + " items no menu.", "success");
+  // Redirect back to templates page
+  window.location.href = "admin-dashboard.html";
 }
 
 // -- Rename template --
@@ -486,22 +543,38 @@ document.getElementById("btn-restaurar-precos").addEventListener("click", () => 
   showMsg("Precos restaurados ao padrao.", "success");
 });
 
-// Buttons
+// -- Buttons --
 $btnLogout.addEventListener("click", logout);
 $btnSalvar.addEventListener("click", salvar);
 $btnUsarEste.addEventListener("click", usarEste);
 document.getElementById("btn-renomear").addEventListener("click", renomearTemplate);
 document.getElementById("btn-add-item").addEventListener("click", () => openItemModal(null));
-document.getElementById("btn-preco-cancel").addEventListener("click", closePrecoModal);
-document.getElementById("btn-preco-save").addEventListener("click", savePreco);
 document.getElementById("btn-item-cancel").addEventListener("click", closeItemModal);
 document.getElementById("btn-item-save").addEventListener("click", saveItem);
 
-// Close modals on overlay click
-$modalPreco.addEventListener("click", (e) => { if (e.target === $modalPreco) closePrecoModal(); });
+// Photo file picker
+document.getElementById("btn-upload-foto").addEventListener("click", () => {
+  document.getElementById("item-foto-file").click();
+});
+document.getElementById("item-foto-file").addEventListener("change", (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  pendingFotoFile = file;
+  document.getElementById("foto-nome").textContent = file.name;
+  // Preview
+  const reader = new FileReader();
+  reader.onload = (ev) => {
+    const $preview = document.getElementById("item-foto-preview");
+    $preview.src = ev.target.result;
+    $preview.hidden = false;
+  };
+  reader.readAsDataURL(file);
+});
+
+// Close modal on overlay click
 $modalItem.addEventListener("click", (e) => { if (e.target === $modalItem) closeItemModal(); });
 
-// Init
+// -- Init --
 (async function init() {
   const session = await requireAuth();
   if (!session) return;

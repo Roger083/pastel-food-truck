@@ -128,22 +128,45 @@
     if (item) renderItem();
   }
 
-  function getInfoBySlug(slug) {
-    const info = window.PASTEIS_INFO && window.PASTEIS_INFO[slug] ? window.PASTEIS_INFO[slug] : window.PASTEIS_INFO.carne;
-    return idioma === "ja"
-      ? { desc: info.desc_ja, ing: info.ingredientes_ja, alerg: info.alergenicos_ja || [] }
-      : { desc: info.desc_pt, ing: info.ingredientes_pt, alerg: info.alergenicos_pt || [] };
+  function getInfoForItem(item) {
+    // DB data takes priority, fallback to PASTEIS_INFO
+    const slug = window.slugFromNome ? window.slugFromNome(item.nome) : "";
+    const fallback = (window.PASTEIS_INFO && window.PASTEIS_INFO[slug]) ? window.PASTEIS_INFO[slug] : null;
+
+    if (idioma === "ja") {
+      return {
+        desc: item.desc_ja || (fallback ? fallback.desc_ja : "") || "",
+        ing: (item.ingredientes_ja && item.ingredientes_ja.length > 0) ? item.ingredientes_ja : (fallback ? fallback.ingredientes_ja : []) || [],
+        alerg: (item.alergenicos_texto_ja && item.alergenicos_texto_ja.length > 0) ? item.alergenicos_texto_ja : (fallback ? fallback.alergenicos_ja : []) || [],
+        nome: item.nome_ja || (fallback ? fallback.nome_ja : "") || item.nome,
+        img: item.foto_url || (fallback ? fallback.img : "") || ""
+      };
+    }
+    return {
+      desc: item.desc_pt || (fallback ? fallback.desc_pt : "") || "",
+      ing: (item.ingredientes_pt && item.ingredientes_pt.length > 0) ? item.ingredientes_pt : (fallback ? fallback.ingredientes_pt : []) || [],
+      alerg: (item.alergenicos_texto_pt && item.alergenicos_texto_pt.length > 0) ? item.alergenicos_texto_pt : (fallback ? fallback.alergenicos_pt : []) || [],
+      nome: item.nome,
+      img: item.foto_url || (window.imgParaItem ? window.imgParaItem(item.nome) : "") || ""
+    };
   }
 
   function renderItem() {
     if (!item) return;
-    const slug = window.slugFromNome ? window.slugFromNome(item.nome) : "carne";
-    const info = getInfoBySlug(slug);
-    $itemImg.src = window.imgParaItem ? window.imgParaItem(item.nome) : "img/pastel-carne.png";
+    const info = getInfoForItem(item);
+    $itemImg.src = info.img || "img/pastel-carne.png";
+    if (!info.img) $itemImg.hidden = true;
     $itemImg.alt = item.nome;
-    $itemNome.textContent = item.nome;
+    $itemNome.textContent = info.nome;
     $itemDesc.textContent = info.desc;
-    $itemIng.innerHTML = (info.ing || []).map(function (x) { return '<span class="detalhe-tag">' + escapeHtml(x) + "</span>"; }).join("");
+    if (!info.desc) document.getElementById("itemDesc").style.display = "none";
+    if (info.ing && info.ing.length > 0) {
+      $itemIng.innerHTML = info.ing.map(function (x) { return '<span class="detalhe-tag">' + escapeHtml(x) + "</span>"; }).join("");
+      document.getElementById("labelIng").style.display = "block";
+    } else {
+      $itemIng.innerHTML = "";
+      document.getElementById("labelIng").style.display = "none";
+    }
     // Alérgenos
     const $itemAlerg = document.getElementById("itemAlerg");
     const $alergenosSection = document.getElementById("alergenosSection");
@@ -162,22 +185,24 @@
   async function loadItemById(uuid) {
     const { data: row } = await supabase
       .from("active_menu")
-      .select("preco_atual, menu_items(id, nome)")
+      .select("preco_atual, menu_items(id, nome, nome_ja, desc_pt, desc_ja, ingredientes_pt, ingredientes_ja, alergenicos_texto_pt, alergenicos_texto_ja, foto_url)")
       .eq("item_id", uuid)
       .eq("ativo", true)
       .maybeSingle();
     if (!row || !row.menu_items) return null;
-    return { id: row.menu_items.id, nome: row.menu_items.nome, preco: row.preco_atual };
+    var mi = row.menu_items;
+    return { id: mi.id, nome: mi.nome, nome_ja: mi.nome_ja, preco: row.preco_atual, desc_pt: mi.desc_pt, desc_ja: mi.desc_ja, ingredientes_pt: mi.ingredientes_pt, ingredientes_ja: mi.ingredientes_ja, alergenicos_texto_pt: mi.alergenicos_texto_pt, alergenicos_texto_ja: mi.alergenicos_texto_ja, foto_url: mi.foto_url };
   }
 
   async function loadItemBySlug(slug) {
     const { data: activeItems } = await supabase
       .from("active_menu")
-      .select("preco_atual, menu_items(id, nome)")
+      .select("preco_atual, menu_items(id, nome, nome_ja, desc_pt, desc_ja, ingredientes_pt, ingredientes_ja, alergenicos_texto_pt, alergenicos_texto_ja, foto_url)")
       .eq("ativo", true);
     if (!activeItems || !activeItems.length) return null;
     var itens = activeItems.map(function (a) {
-      return { id: a.menu_items.id, nome: a.menu_items.nome, preco: a.preco_atual };
+      var mi = a.menu_items;
+      return { id: mi.id, nome: mi.nome, nome_ja: mi.nome_ja, preco: a.preco_atual, desc_pt: mi.desc_pt, desc_ja: mi.desc_ja, ingredientes_pt: mi.ingredientes_pt, ingredientes_ja: mi.ingredientes_ja, alergenicos_texto_pt: mi.alergenicos_texto_pt, alergenicos_texto_ja: mi.alergenicos_texto_ja, foto_url: mi.foto_url };
     });
     const s = (slug || "").toLowerCase();
     function match(i) {

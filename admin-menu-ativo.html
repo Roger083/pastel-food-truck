@@ -39,19 +39,6 @@
     </div>
   </div>
 
-  <!-- Modal Editar Preco -->
-  <div id="modal-preco" class="modal-overlay hidden">
-    <div class="modal-box">
-      <h2>Editar Preco</h2>
-      <label id="modal-preco-nome"></label>
-      <input type="number" id="input-preco" min="1" step="1" placeholder="Preco em yen">
-      <div class="modal-buttons">
-        <button type="button" class="btn-secondary" id="btn-preco-cancel">Cancelar</button>
-        <button type="button" class="btn-primary" id="btn-preco-save">Salvar</button>
-      </div>
-    </div>
-  </div>
-
   <!-- Modal Editar/Criar Item -->
   <div id="modal-item" class="modal-overlay hidden">
     <div class="modal-box modal-box-large">
@@ -60,29 +47,37 @@
       <label for="item-nome">Nome (PT)</label>
       <input type="text" id="item-nome" placeholder="Ex: Pastel de Carne">
 
-      <label for="item-nome-ja">Nome (JA)</label>
+      <label for="item-nome-ja">Nome (JA) <small style="color:#999;">opcional</small></label>
       <input type="text" id="item-nome-ja" placeholder="Ex: 牛肉パステル">
 
-      <label for="item-desc-pt">Descricao (PT)</label>
+      <label for="item-desc-pt">Descricao (PT) <small style="color:#999;">opcional</small></label>
       <textarea id="item-desc-pt" placeholder="Descricao em portugues"></textarea>
 
-      <label for="item-desc-ja">Descricao (JA)</label>
+      <label for="item-desc-ja">Descricao (JA) <small style="color:#999;">opcional</small></label>
       <textarea id="item-desc-ja" placeholder="Descricao em japones"></textarea>
+
+      <label for="item-ing-pt">Ingredientes (PT, separados por virgula) <small style="color:#999;">opcional</small></label>
+      <input type="text" id="item-ing-pt" placeholder="Carne moida, Cebola, Temperos">
+
+      <label for="item-ing-ja">Ingredientes (JA, separados por virgula) <small style="color:#999;">opcional</small></label>
+      <input type="text" id="item-ing-ja" placeholder="牛ひき肉, 玉ねぎ, スパイス">
 
       <label for="item-preco">Preco padrao (yen)</label>
       <input type="number" id="item-preco" min="1" step="1" placeholder="500">
 
-      <label for="item-foto">URL da foto</label>
-      <input type="text" id="item-foto" placeholder="img/pastel-carne.png">
+      <label>Foto</label>
+      <div class="foto-upload-row">
+        <img id="item-foto-preview" class="foto-preview" src="" alt="" hidden>
+        <input type="file" id="item-foto-file" accept="image/*" style="display:none;">
+        <button type="button" class="btn-secondary btn-sm" id="btn-upload-foto">Carregar Foto</button>
+        <span id="foto-nome" style="font-size:0.8rem;color:#888;"></span>
+      </div>
 
       <label for="item-categoria">Categoria</label>
       <select id="item-categoria"></select>
 
-      <label for="item-alergenicos-pt">Alergenicos (PT, separados por virgula)</label>
-      <input type="text" id="item-alergenicos-pt" placeholder="Gluten, Leite">
-
-      <label for="item-alergenicos-ja">Alergenicos (JA, separados por virgula)</label>
-      <input type="text" id="item-alergenicos-ja" placeholder="小麦, 乳">
+      <label>Alergenicos (obrigatorios no Japao marcados com *)</label>
+      <div class="allergen-grid" id="allergen-grid"></div>
 
       <div class="modal-checkbox-row">
         <input type="checkbox" id="item-popular">

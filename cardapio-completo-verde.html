@@ -238,9 +238,10 @@
 
   function renderCard(item, infoBySlug, t) {
     const slug = window.slugFromNome ? window.slugFromNome(item.nome) : "carne";
-    const info = infoBySlug[slug] || infoBySlug.carne || {};
-    const img = window.imgParaItem ? window.imgParaItem(item.nome) : "img/pastel-carne.png";
-    const nomeExibir = idioma === "ja" && info.nome_ja ? info.nome_ja : escapeHtml(item.nome);
+    const info = infoBySlug[slug] || {};
+    // Use foto_url from DB first, then fallback to PASTEIS_INFO, then placeholder
+    const img = item.foto_url || (window.imgParaItem ? window.imgParaItem(item.nome) : "") || "img/pastel-carne.png";
+    const nomeExibir = idioma === "ja" && (item.nome_ja || info.nome_ja) ? (item.nome_ja || info.nome_ja) : escapeHtml(item.nome);
     const precoStr = formatPrice(item.preco);
     const isPopular = item.popular === true;
 
@@ -295,7 +296,7 @@
     // Buscar items do active_menu + menu_items
     const { data: activeItems, error: errA } = await supabase
       .from("active_menu")
-      .select("item_id, preco_atual, menu_items(id, nome, preco_padrao, categoria_id, ordem, popular, foto_url)")
+      .select("item_id, preco_atual, menu_items(id, nome, nome_ja, preco_padrao, categoria_id, ordem, popular, foto_url)")
       .eq("ativo", true);
 
     if (errA || !activeItems || activeItems.length === 0) {
@@ -310,6 +311,7 @@
       return {
         id: mi.id,
         nome: mi.nome,
+        nome_ja: mi.nome_ja,
         preco: a.preco_atual,
         categoria_id: mi.categoria_id,
         ordem: mi.ordem,
