@@ -170,7 +170,7 @@ async function loadOrders() {
     });
   });
 
-  $btnZerar.hidden = orders.length === 0;
+  $btnZerar.hidden = false;
 }
 
 async function markReady(pedidoId) {
