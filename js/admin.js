@@ -108,7 +108,9 @@ async function loadOrders() {
   $ordersList.innerHTML = orders
     .map(function (p, index) {
       const itens = p.pedido_itens || [];
-      const itemsText = itens.map((i) => i.nome + " x" + i.quantidade).join(", ");
+      const itemsHtml = itens.length
+        ? itens.map((i) => '<div class="order-item-row"><span class="item-qty">' + i.quantidade + 'x</span><span class="item-name">' + i.nome + '</span></div>').join("")
+        : '<div class="order-item-row"><span class="item-name">(Sem itens)</span></div>';
       const time = p.criado_em
         ? new Date(p.criado_em).toLocaleTimeString("pt-BR", {
             hour: "2-digit",
@@ -126,7 +128,7 @@ async function loadOrders() {
         : "";
       const isPronto = p.status === "pronto";
       const isPrimeiroPendente = index === 0 && !isPronto;
-      
+
       return (
         '<li class="order-card' +
         (isPronto ? " pronto" : "") +
@@ -134,17 +136,18 @@ async function loadOrders() {
         '" data-id="' +
         p.id +
         '">' +
-        '<div class="order-num">' +
-        formatoNumeroPedido(p.numero) +
-        "</div>" +
-        '<div class="order-items">' +
-        (itemsText || "(Sem itens)") +
-        "</div>" +
-        '<div class="order-time">' +
-        time +
-        "</div>" +
+        '<div class="order-header">' +
+          '<div class="order-num">' + formatoNumeroPedido(p.numero) + '</div>' +
+          '<div class="order-header-right">' +
+            '<div class="order-time">⏱️ ' + time + '</div>' +
+            (isPrimeiroPendente
+              ? '<span class="badge-fazer-este">FAZER ESTE!</span>'
+              : "") +
+          '</div>' +
+        '</div>' +
         (agendadoStr ? '<div class="order-agendado">' + agendadoStr + "</div>" : "") +
-        (!isPronto
+        '<div class="order-items">' + itemsHtml + '</div>' +
+        (isPrimeiroPendente
           ? '<button type="button" class="btn-ready" data-id="' +
             p.id +
             '">Marcar pronto</button>'
