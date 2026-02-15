@@ -339,18 +339,15 @@ body {
 }
 
 .btn-zerar-pedidos {
-  margin-top: 2rem;
-  padding: 0.6rem 1.2rem;
-  font-size: 0.85rem;
-  border: 2px solid #c62828;
-  border-radius: 8px;
+  padding: 0.4rem 0.7rem;
+  font-size: 0.8rem;
+  border: 1.5px solid #c62828;
+  border-radius: 6px;
   background: transparent;
   color: #c62828;
   cursor: pointer;
   font-weight: 700;
   transition: all 0.2s ease;
-  display: block;
-  width: 100%;
 }
 
 .btn-zerar-pedidos:hover {

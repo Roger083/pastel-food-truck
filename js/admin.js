@@ -235,7 +235,7 @@ $btnLogin.addEventListener("click", async function () {
 
 $btnZerar.addEventListener("click", async function () {
   if (!currentEventoId) return;
-  if (!confirm("Tem certeza que deseja ZERAR todos os pedidos deste evento? Esta ação não pode ser desfeita.")) return;
+  if (!confirm("Tem certeza que deseja APAGAR todos os pedidos e zerar a contagem? Esta ação não pode ser desfeita.")) return;
 
   const sb = getSupabase();
   const { data: { session } } = await sb.auth.getSession();
@@ -244,33 +244,13 @@ $btnZerar.addEventListener("click", async function () {
     return;
   }
 
-  // Primeiro deleta os itens dos pedidos deste evento
-  const { data: pedidos } = await sb
-    .from("pedidos")
-    .select("id")
-    .eq("evento_id", currentEventoId);
-
-  if (pedidos && pedidos.length > 0) {
-    const ids = pedidos.map((p) => p.id);
-    const { error: errItens } = await sb
-      .from("pedido_itens")
-      .delete()
-      .in("pedido_id", ids);
-
-    if (errItens) {
-      alert("Falha ao apagar itens: " + (errItens.message || errItens));
-      return;
-    }
-  }
-
-  // Depois deleta os pedidos
-  const { error: errPedidos } = await sb
+  const { error } = await sb
     .from("pedidos")
     .delete()
     .eq("evento_id", currentEventoId);
 
-  if (errPedidos) {
-    alert("Falha ao apagar pedidos: " + (errPedidos.message || errPedidos));
+  if (error) {
+    alert("Falha ao apagar pedidos: " + (error.message || error));
     return;
   }
 
