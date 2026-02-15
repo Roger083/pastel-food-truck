@@ -338,6 +338,26 @@ body {
   cursor: not-allowed;
 }
 
+.btn-zerar-pedidos {
+  margin-top: 2rem;
+  padding: 0.6rem 1.2rem;
+  font-size: 0.85rem;
+  border: 2px solid #c62828;
+  border-radius: 8px;
+  background: transparent;
+  color: #c62828;
+  cursor: pointer;
+  font-weight: 700;
+  transition: all 0.2s ease;
+  display: block;
+  width: 100%;
+}
+
+.btn-zerar-pedidos:hover {
+  background: #c62828;
+  color: #fff;
+}
+
 #orders-loading {
   text-align: center;
   padding: 2rem;

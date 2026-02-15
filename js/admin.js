@@ -12,6 +12,9 @@ const $btnLogout = document.getElementById("btn-admin-logout");
 const $ordersLoading = document.getElementById("orders-loading");
 const $ordersList = document.getElementById("orders-list");
 const $feedback = document.getElementById("admin-feedback");
+const $btnZerar = document.getElementById("btn-zerar-pedidos");
+
+let currentEventoId = null;
 
 /** Formato do número do pedido: A-001, A-002, ... */
 function formatoNumeroPedido(num) {
@@ -70,8 +73,12 @@ async function loadOrders() {
     $eventName.textContent = "(Nenhum evento ativo)";
     $ordersList.innerHTML = "";
     $ordersLoading.hidden = true;
+    $btnZerar.hidden = true;
+    currentEventoId = null;
     return;
   }
+
+  currentEventoId = evento.id;
 
   // Pedidos na hora: sempre. Agendados: só entram na fila 15 min antes do horário.
   const cutoffAgendado = new Date(Date.now() + 15 * 60 * 1000).toISOString();
@@ -162,6 +169,8 @@ async function loadOrders() {
       markReady(btn.dataset.id);
     });
   });
+
+  $btnZerar.hidden = orders.length === 0;
 }
 
 async function markReady(pedidoId) {
@@ -222,6 +231,50 @@ $btnLogin.addEventListener("click", async function () {
   }
   $loginError.hidden = true;
   showDashboard();
+});
+
+$btnZerar.addEventListener("click", async function () {
+  if (!currentEventoId) return;
+  if (!confirm("Tem certeza que deseja ZERAR todos os pedidos deste evento? Esta ação não pode ser desfeita.")) return;
+
+  const sb = getSupabase();
+  const { data: { session } } = await sb.auth.getSession();
+  if (!session) {
+    showLogin("Sessão expirada. Faça login novamente.");
+    return;
+  }
+
+  // Primeiro deleta os itens dos pedidos deste evento
+  const { data: pedidos } = await sb
+    .from("pedidos")
+    .select("id")
+    .eq("evento_id", currentEventoId);
+
+  if (pedidos && pedidos.length > 0) {
+    const ids = pedidos.map((p) => p.id);
+    const { error: errItens } = await sb
+      .from("pedido_itens")
+      .delete()
+      .in("pedido_id", ids);
+
+    if (errItens) {
+      alert("Falha ao apagar itens: " + (errItens.message || errItens));
+      return;
+    }
+  }
+
+  // Depois deleta os pedidos
+  const { error: errPedidos } = await sb
+    .from("pedidos")
+    .delete()
+    .eq("evento_id", currentEventoId);
+
+  if (errPedidos) {
+    alert("Falha ao apagar pedidos: " + (errPedidos.message || errPedidos));
+    return;
+  }
+
+  loadOrders();
 });
 
 $btnLogout.addEventListener("click", async function () {
