@@ -1,0 +1,4 @@
+interface:
+  display_name: "Foodtruck Deploy Ops"
+  short_description: "Push, deploy e checks operacionais do projeto."
+  default_prompt: "Prepare e execute publicacao deste projeto com o menor risco operacional."

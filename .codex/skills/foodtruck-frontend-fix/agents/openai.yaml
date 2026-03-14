@@ -1,0 +1,4 @@
+interface:
+  display_name: "Foodtruck Frontend Fix"
+  short_description: "Corrige fluxo cliente, carrinho e UI LIFF com mudancas pequenas."
+  default_prompt: "Corrija bugs do frontend cliente deste projeto com a menor mudanca segura."

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Foodtruck Supabase Change"
+  short_description: "Ajusta migrations, RPCs e RLS do projeto."
+  default_prompt: "Implemente mudancas de banco e backend Supabase alinhadas ao codigo atual."

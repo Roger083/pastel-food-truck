@@ -1,0 +1,4 @@
+interface:
+  display_name: "Foodtruck Doc Sync"
+  short_description: "Mantem README e docs coerentes com o repo."
+  default_prompt: "Atualize a documentacao deste projeto sem reintroduzir fluxo legado."
