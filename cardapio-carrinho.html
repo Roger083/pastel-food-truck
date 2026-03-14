@@ -68,9 +68,9 @@
     <section id="success-section" class="success-section" hidden>
       <div class="success-popup-card" id="successPopupCard">
         <h2 id="successTitle">Pedido recebido!</h2>
-        <p class="order-number">Número: <strong id="order-number">-</strong></p>
+        <p class="order-number"><span id="successNumeroLabel">Número: </span><strong id="order-number">-</strong></p>
         <p class="order-msg" id="order-msg"></p>
-        <a href="index.html" class="back-link">← Voltar ao início</a>
+        <a href="index.html" class="back-link" id="successBackLink">← Voltar ao início</a>
       </div>
     </section>
   </div>
@@ -96,6 +96,8 @@
   const $successSection = document.getElementById("success-section");
   const $successPopupCard = document.getElementById("successPopupCard");
   const $successTitle = document.getElementById("successTitle");
+  const $successNumeroLabel = document.getElementById("successNumeroLabel");
+  const $successBackLink = document.getElementById("successBackLink");
   const $orderNumber = document.getElementById("order-number");
   const $orderMsg = document.getElementById("order-msg");
 
@@ -111,8 +113,8 @@
 
   function textos() {
     return idioma === "ja"
-      ? { voltar: "← 戻る", titulo: "カート", idioma: "🇧🇷 PT", tipo: "受け取り方法", agora: "今すぐ", agendar: "予約", confirmar: "注文を確定", empty: "カートは空です。", linkCardapio: "メニューを見る", success: "注文を受け付けました。", msg: "準備ができたらLINEでお知らせします。" }
-      : { voltar: "← Voltar", titulo: "Carrinho", idioma: "JP 日本語", tipo: "Como deseja retirar?", agora: "Pedir na hora", agendar: "Agendar", confirmar: "Confirmar pedido", empty: "Carrinho vazio.", linkCardapio: "Ver cardápio", success: "Pedido recebido!", msg: "Quando estiver pronto você receberá notificação no LINE." };
+      ? { voltar: "← 戻る", titulo: "カート", idioma: "🇧🇷 PT", tipo: "受け取り方法", agora: "今すぐ", agendar: "予約", confirmar: "注文を確定", empty: "カートは空です。", linkCardapio: "メニューを見る", success: "注文を受け付けました。", msg: "準備ができたらLINEでお知らせします。", numeroLabel: "番号: ", backLink: "← トップへ戻る" }
+      : { voltar: "← Voltar", titulo: "Carrinho", idioma: "JP 日本語", tipo: "Como deseja retirar?", agora: "Pedir na hora", agendar: "Agendar", confirmar: "Confirmar pedido", empty: "Carrinho vazio.", linkCardapio: "Ver cardápio", success: "Pedido recebido!", msg: "Quando estiver pronto você receberá notificação no LINE.", numeroLabel: "Número: ", backLink: "← Voltar ao início" };
   }
 
   function atualizarUI() {
@@ -214,8 +216,12 @@
     $main.hidden = true;
     $empty.hidden = true;
     $successSection.hidden = false;
+    const t = textos();
+    if ($successTitle) $successTitle.textContent = t.success;
+    if ($successNumeroLabel) $successNumeroLabel.textContent = t.numeroLabel;
+    if ($successBackLink) $successBackLink.textContent = t.backLink;
     $orderNumber.textContent = formatNumero(numero);
-    $orderMsg.textContent = textos().msg;
+    $orderMsg.textContent = t.msg;
     if ($successPopupCard) {
       $successPopupCard.style.animation = "none";
       void $successPopupCard.offsetWidth;
