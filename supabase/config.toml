@@ -6,3 +6,6 @@
 # é rejeitado pelo gateway (ex.: expirado ou algoritmo diferente).
 [functions.mark-order-ready]
 verify_jwt = false
+
+[functions.line-webhook]
+verify_jwt = false
