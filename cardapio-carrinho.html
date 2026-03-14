@@ -66,8 +66,8 @@
     </div>
 
     <section id="success-section" class="success-section" hidden>
-      <div class="success-popup-card">
-        <h2>Pedido recebido!</h2>
+      <div class="success-popup-card" id="successPopupCard">
+        <h2 id="successTitle">Pedido recebido!</h2>
         <p class="order-number">Número: <strong id="order-number">-</strong></p>
         <p class="order-msg" id="order-msg"></p>
         <a href="index.html" class="back-link">← Voltar ao início</a>
@@ -94,6 +94,8 @@
   const $btnConfirmar = document.getElementById("btnConfirmar");
   const $agendarCampos = document.getElementById("agendarCampos");
   const $successSection = document.getElementById("success-section");
+  const $successPopupCard = document.getElementById("successPopupCard");
+  const $successTitle = document.getElementById("successTitle");
   const $orderNumber = document.getElementById("order-number");
   const $orderMsg = document.getElementById("order-msg");
 
@@ -102,6 +104,7 @@
 
   function hideLoading() { $loading.hidden = true; }
   function showError(msg) { $error.textContent = msg; $error.hidden = false; }
+  function clearError() { $error.textContent = ""; $error.hidden = true; }
 
   function formatPrice(v) { return "¥" + Math.round(Number(v)).toLocaleString(); }
   function formatNumero(n) { return "A-" + String(n).padStart(3, "0"); }
@@ -123,6 +126,10 @@
     document.getElementById("btnConfirmar").textContent = t.confirmar;
     document.getElementById("emptyMsg").textContent = t.empty;
     document.getElementById("linkCardapio").textContent = t.linkCardapio;
+    $successTitle.textContent = t.success;
+    if (!$successSection.hidden) {
+      $orderMsg.textContent = t.msg;
+    }
   }
 
   function renderCart() {
@@ -161,7 +168,59 @@
   function escapeHtml(s) { const d = document.createElement("div"); d.textContent = s; return d.innerHTML; }
 
   function initSupabase() {
+    if (!CONFIG?.supabaseUrl || !CONFIG?.supabaseAnonKey || !window.supabase) return null;
     supabase = window.supabase.createClient(CONFIG.supabaseUrl, CONFIG.supabaseAnonKey);
+    return supabase;
+  }
+
+  function ensureSupabase() {
+    if (supabase) return supabase;
+    return initSupabase();
+  }
+
+  async function createPedido(params) {
+    const sb = ensureSupabase();
+    if (!sb) {
+      return { data: null, error: { message: "Configure o Supabase em js/config.js antes de finalizar o pedido." } };
+    }
+
+    let result = await sb.rpc("criar_pedido", params);
+    if (!result.error) return result;
+
+    const msg = String(result.error.message || "");
+    const missingIdioma = msg.includes("p_idioma");
+    const missingAgendado = msg.includes("p_agendado_para");
+    const missingSignature = msg.includes("Could not find the function") || msg.includes("function public.criar_pedido");
+
+    if (missingIdioma || missingSignature) {
+      const fallbackParams = { p_evento_id: params.p_evento_id, p_line_user_id: params.p_line_user_id, p_itens: params.p_itens };
+      if (params.p_agendado_para) fallbackParams.p_agendado_para = params.p_agendado_para;
+      result = await sb.rpc("criar_pedido", fallbackParams);
+      if (!result.error) return result;
+    }
+
+    if (missingAgendado || missingSignature) {
+      result = await sb.rpc("criar_pedido", {
+        p_evento_id: params.p_evento_id,
+        p_line_user_id: params.p_line_user_id,
+        p_itens: params.p_itens
+      });
+    }
+
+    return result;
+  }
+
+  function abrirPopupSucesso(numero) {
+    $main.hidden = true;
+    $empty.hidden = true;
+    $successSection.hidden = false;
+    $orderNumber.textContent = formatNumero(numero);
+    $orderMsg.textContent = textos().msg;
+    if ($successPopupCard) {
+      $successPopupCard.style.animation = "none";
+      void $successPopupCard.offsetWidth;
+      $successPopupCard.style.animation = "";
+    }
   }
 
   document.getElementById("btnIdioma").addEventListener("click", function () {
@@ -181,6 +240,7 @@
   });
 
   document.getElementById("btnConfirmar").addEventListener("click", async function () {
+    clearError();
     var cart = getCart().filter(function (x) { return x.quantidade > 0; });
     if (cart.length === 0) return;
     var eventoId = localStorage.getItem(EVENTO_KEY);
@@ -201,7 +261,7 @@
     });
     var params = { p_evento_id: eventoId, p_line_user_id: lineUserId || null, p_itens: itens, p_idioma: idioma };
     if (agendadoPara) params.p_agendado_para = agendadoPara;
-    var { data: pedido, error } = await supabase.rpc("criar_pedido", params);
+    var { data: pedido, error } = await createPedido(params);
     if (error) {
       showError(error.message || "Falha ao enviar.");
       $btnConfirmar.disabled = false;
@@ -209,19 +269,21 @@
       return;
     }
     setCart([]);
-    $main.hidden = true;
-    $successSection.hidden = false;
-    $orderNumber.textContent = formatNumero(pedido.numero);
-    $orderMsg.textContent = textos().msg;
+    abrirPopupSucesso(pedido.numero);
     $btnConfirmar.disabled = false;
     $btnConfirmar.textContent = textos().confirmar;
   });
 
   async function init() {
-    if (!CONFIG?.supabaseUrl || !CONFIG?.supabaseAnonKey) { showError("Configure config.js."); hideLoading(); return; }
-    initSupabase();
     atualizarUI();
-    if (window.liff && CONFIG.liffId) {
+    renderCart();
+    hideLoading();
+
+    if (CONFIG?.supabaseUrl && CONFIG?.supabaseAnonKey) {
+      initSupabase();
+    }
+
+    if (window.liff && CONFIG?.liffId) {
       try {
         await window.liff.init({ liffId: CONFIG.liffId });
         if (window.liff.isLoggedIn()) {
@@ -232,8 +294,6 @@
         }
       } catch (e) { console.warn("LIFF init:", e); }
     }
-    renderCart();
-    hideLoading();
   }
 
   init();

@@ -1,110 +1,39 @@
-# Edge Functions – explicado do zero
+# Edge Functions e webhook
 
-## Em uma frase
+Este arquivo foi reduzido para evitar conflito com a documentacao atual.
 
-**Edge Functions** são dois programinhas que ficam no Supabase.  
-Um **mostra a lista de pedidos** no iPad. O outro **marca o pedido como pronto** e **manda a mensagem no LINE** para o cliente.
+## Estado atual
 
-Você **não precisa** entender o código. Só precisa **publicar** esses programas (rodando uns comandos) e **configurar duas “senhas”** (uma para o admin, outra para o LINE).
+O projeto pode operar de duas formas para notificar o cliente quando o pedido fica pronto:
 
----
+1. Edge Function do Supabase: `supabase/functions/mark-order-ready/`
+2. Webhook HTTP: `api/notify-line.js`
 
-## Por que não dá pra fazer tudo no navegador?
+O painel admin atual nao depende de `list-orders` nem de `ADMIN_SECRET` para login. Ele usa Supabase Auth com email e senha.
 
-- A **lista de pedidos** e o **“marcar como pronto”** precisam de uma **senha de admin** (para não qualquer um ver ou mudar pedidos).
-- Para **mandar a mensagem no LINE** (“Pedido #3 está pronto”), o sistema precisa do **token do LINE**. Esse token **não pode** ficar no site (qualquer um poderia ver). Por isso ele fica só no Supabase, dentro da Edge Function.
+## Quando usar Edge Function
 
-Resumindo: o iPad chama o Supabase; o Supabase verifica a senha, atualiza o pedido e, se tiver o token do LINE, manda a mensagem. Tudo isso são as Edge Functions.
+Use a Edge Function se voce quer manter o fluxo de notificacao dentro do Supabase.
 
----
-
-## O que você precisa fazer (só 4 coisas)
-
-### 1. Login no Supabase (uma vez)
-
-No terminal, na pasta do projeto:
+Comandos base:
 
 ```bash
-cd /home/roger/projetos/food-truck
-npx supabase login
+supabase link --project-ref SEU_PROJECT_REF
+supabase functions deploy mark-order-ready
+supabase secrets set CHANNEL_ACCESS_TOKEN=seu_token
 ```
 
-Vai abrir o navegador. Entre na sua conta Supabase e autorize. Quando voltar ao terminal, pode seguir.
+## Quando usar webhook HTTP
 
----
+Use o webhook se voce prefere disparar a notificacao por um endpoint externo, por exemplo na Vercel.
 
-### 2. Ligar o projeto ao seu banco (uma vez)
+Nesse caso:
 
-O Supabase precisa saber em qual “projeto” publicar. O seu projeto tem este **ID**: `ejzaaoyqeeqyuoiozfxn`.
+- publique `api/notify-line.js`
+- configure `CHANNEL_ACCESS_TOKEN`
+- configure `WEBHOOK_SECRET`
+- crie o gatilho no banco conforme `NOTIFICACAO_LINE_WEBHOOK.md`
 
-Rode:
+## Recomendacao
 
-```bash
-npx supabase link --project-ref ejzaaoyqeeqyuoiozfxn
-```
-
-Vai pedir a **senha do banco** (a que você definiu quando criou o projeto no Supabase). Digite e aperte Enter.
-
----
-
-### 3. Definir as duas “senhas” (uma vez)
-
-**3.1 – Senha do painel (iPad)**  
-Escolha uma senha que só você vai saber. O dono do truck vai digitar essa senha quando abrir o `admin.html` no iPad.
-
-No terminal (troque `MINHA_SENHA_SEGREDO` pela senha que você escolheu):
-
-```bash
-npx supabase secrets set ADMIN_SECRET=MINHA_SENHA_SEGREDO
-```
-
-Exemplo: se a senha for `pastel2025`:
-
-```bash
-npx supabase secrets set ADMIN_SECRET=pastel2025
-```
-
-**3.2 – Token do LINE (obrigatório para notificação “pedido pronto”)**  
-Use o token do canal **Messaging API** (ex.: “Roger”), **não** do canal LINE Login (Pastel Pedidos).  
-No [LINE Developers](https://developers.line.biz) → canal **Messaging API** → aba **Messaging API** → **Channel access token** → **Issue** ou **Reissue** → copie o token.
-
-No terminal, **cole o token no lugar de COLE_O_TOKEN_AQUI** (tudo numa linha, sem espaço no meio):
-
-```bash
-npx supabase secrets set CHANNEL_ACCESS_TOKEN=COLE_O_TOKEN_AQUI
-```
-
----
-
-### 4. Publicar os dois programinhas (uma vez)
-
-Rode um comando, espere terminar. Depois rode o outro.
-
-```bash
-npx supabase functions deploy list-orders
-```
-
-Quando acabar:
-
-```bash
-npx supabase functions deploy mark-order-ready
-```
-
-Se aparecer algo como “Deployed” ou “Success”, está feito.
-
----
-
-## Resumo
-
-| Passo | O que faz |
-|-------|-----------|
-| 1 | `npx supabase login` → você entra na conta Supabase |
-| 2 | `npx supabase link --project-ref ejzaaoyqeeqyuoiozfxn` → liga a pasta do projeto ao seu banco (pede a senha do banco) |
-| 3 | `npx supabase secrets set ADMIN_SECRET=sua_senha` → define a senha do admin no iPad |
-| 3 | `npx supabase secrets set CHANNEL_ACCESS_TOKEN=token_do_line` → guarda o token do LINE no Supabase |
-| 4 | `npx supabase functions deploy list-orders` → publica o programa da lista de pedidos |
-| 4 | `npx supabase functions deploy mark-order-ready` → publica o programa que marca pronto e manda mensagem no LINE |
-
-Depois disso, no **admin (iPad)** você usa a **mesma senha** que colocou em `ADMIN_SECRET` quando o site pedir “合言葉”.
-
-Se travar em algum passo (por exemplo: “não acho o token do LINE” ou “o deploy deu erro”), diga qual passo e o que apareceu na tela que eu te guio no próximo movimento.
+Padronize apenas um fluxo por ambiente. Manter os dois ativos sem convencao clara aumenta risco de operacao duplicada ou documentacao divergente.
