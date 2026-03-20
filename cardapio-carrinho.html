@@ -52,7 +52,7 @@
           <button type="button" class="tipo-btn" data-tipo="agendar" id="btnAgendar">Agendar</button>
         </div>
         <div class="agendar-campos" id="agendarCampos" hidden>
-          <input type="date" id="agendarData">
+          <label id="labelAgendar" style="font-size:0.9rem;color:#555;margin-top:8px;display:block;">Selecione o horário:</label>
           <input type="time" id="agendarHora">
         </div>
       </div>
@@ -70,6 +70,7 @@
         <h2 id="successTitle">Pedido recebido!</h2>
         <p class="order-number"><span id="successNumeroLabel">Número: </span><strong id="order-number">-</strong></p>
         <p class="order-msg" id="order-msg"></p>
+        <p class="success-payment" id="successPayment"></p>
         <a href="index.html" class="back-link" id="successBackLink">← Voltar ao início</a>
       </div>
     </section>
@@ -109,12 +110,36 @@
   function clearError() { $error.textContent = ""; $error.hidden = true; }
 
   function formatPrice(v) { return "¥" + Math.round(Number(v)).toLocaleString(); }
-  function formatNumero(n) { return "A-" + String(n).padStart(3, "0"); }
+  function formatNumero(n, prefixo) { return (prefixo || "A") + "-" + String(n).padStart(3, "0"); }
 
   function textos() {
-    return idioma === "ja"
-      ? { voltar: "← 戻る", titulo: "カート", idioma: "🇧🇷 PT", tipo: "受け取り方法", agora: "今すぐ", agendar: "予約", confirmar: "注文を確定", empty: "カートは空です。", linkCardapio: "メニューを見る", success: "注文を受け付けました。", msg: "準備ができたらLINEでお知らせします。", numeroLabel: "番号: ", backLink: "← トップへ戻る" }
-      : { voltar: "← Voltar", titulo: "Carrinho", idioma: "JP 日本語", tipo: "Como deseja retirar?", agora: "Pedir na hora", agendar: "Agendar", confirmar: "Confirmar pedido", empty: "Carrinho vazio.", linkCardapio: "Ver cardápio", success: "Pedido recebido!", msg: "Quando estiver pronto você receberá notificação no LINE.", numeroLabel: "Número: ", backLink: "← Voltar ao início" };
+    if (idioma === "ja") return {
+      voltar: "← 戻る", titulo: "カート", idioma: "EN", tipo: "受け取り方法",
+      agora: "今すぐ", agendar: "予約", confirmar: "注文を確定",
+      empty: "カートは空です。", linkCardapio: "メニューを見る",
+      success: "注文を受け付けました。", msg: "準備ができたらLINEでお知らせします。",
+      numeroLabel: "番号: ", backLink: "← トップへ戻る",
+      pagamento: "💴 お支払いはカウンターでお願いします。",
+      agendarLabel: "受け取り時間を選択:"
+    };
+    if (idioma === "en") return {
+      voltar: "← Back", titulo: "Cart", idioma: "PT",  tipo: "How to receive?",
+      agora: "Order now", agendar: "Schedule", confirmar: "Confirm order",
+      empty: "Cart is empty.", linkCardapio: "View menu",
+      success: "Order received!", msg: "You'll get a LINE notification when ready.",
+      numeroLabel: "Number: ", backLink: "← Back to home",
+      pagamento: "💴 Please pay at the counter.",
+      agendarLabel: "Select pickup time:"
+    };
+    return {
+      voltar: "← Voltar", titulo: "Carrinho", idioma: "JP 日本語", tipo: "Como deseja retirar?",
+      agora: "Pedir na hora", agendar: "Agendar", confirmar: "Confirmar pedido",
+      empty: "Carrinho vazio.", linkCardapio: "Ver cardápio",
+      success: "Pedido recebido!", msg: "Quando estiver pronto você receberá notificação no LINE.",
+      numeroLabel: "Número: ", backLink: "← Voltar ao início",
+      pagamento: "💴 Efetue o pagamento no balcão.",
+      agendarLabel: "Selecione o horário:"
+    };
   }
 
   function atualizarUI() {
@@ -128,6 +153,7 @@
     document.getElementById("btnConfirmar").textContent = t.confirmar;
     document.getElementById("emptyMsg").textContent = t.empty;
     document.getElementById("linkCardapio").textContent = t.linkCardapio;
+    document.getElementById("labelAgendar").textContent = t.agendarLabel;
     $successTitle.textContent = t.success;
     if (!$successSection.hidden) {
       $orderMsg.textContent = t.msg;
@@ -212,7 +238,7 @@
     return result;
   }
 
-  function abrirPopupSucesso(numero) {
+  function abrirPopupSucesso(numero, prefixo) {
     $main.hidden = true;
     $empty.hidden = true;
     $successSection.hidden = false;
@@ -220,7 +246,9 @@
     if ($successTitle) $successTitle.textContent = t.success;
     if ($successNumeroLabel) $successNumeroLabel.textContent = t.numeroLabel;
     if ($successBackLink) $successBackLink.textContent = t.backLink;
-    $orderNumber.textContent = formatNumero(numero);
+    const $successPayment = document.getElementById("successPayment");
+    if ($successPayment) $successPayment.textContent = t.pagamento;
+    $orderNumber.textContent = formatNumero(numero, prefixo);
     $orderMsg.textContent = t.msg;
     if ($successPopupCard) {
       $successPopupCard.style.animation = "none";
@@ -230,7 +258,7 @@
   }
 
   document.getElementById("btnIdioma").addEventListener("click", function () {
-    idioma = idioma === "ja" ? "pt" : "ja";
+    idioma = idioma === "pt" ? "ja" : idioma === "ja" ? "en" : "pt";
     localStorage.setItem("idioma", idioma);
     atualizarUI();
   });
@@ -242,7 +270,6 @@
   document.getElementById("btnAgendar").addEventListener("click", function () {
     document.querySelectorAll(".tipo-btn").forEach(function (b) { b.classList.toggle("ativo", b.dataset.tipo === "agendar"); });
     $agendarCampos.hidden = false;
-    var d = document.getElementById("agendarData"); if (!d.min) d.min = new Date().toISOString().slice(0, 10);
   });
 
   document.getElementById("btnConfirmar").addEventListener("click", async function () {
@@ -254,11 +281,15 @@
     var tipoAgendar = document.getElementById("btnAgendar").classList.contains("ativo");
     var agendadoPara = null;
     if (tipoAgendar) {
-      var data = document.getElementById("agendarData").value;
       var hora = document.getElementById("agendarHora").value;
-      if (!data || !hora) { alert(idioma === "ja" ? "日付と時刻を入力してください。" : "Informe data e horário."); return; }
-      agendadoPara = new Date(data + "T" + hora + ":00").toISOString();
+      if (!hora) { alert(idioma === "ja" ? "時刻を入力してください。" : idioma === "en" ? "Please select a time." : "Informe o horário."); return; }
+      var now = new Date();
+      var partes = hora.split(":").map(Number);
+      var scheduled = new Date(now.getFullYear(), now.getMonth(), now.getDate(), partes[0], partes[1], 0);
+      if (scheduled <= now) scheduled.setDate(scheduled.getDate() + 1);
+      agendadoPara = scheduled.toISOString();
     }
+    var prefixo = cart.length > 0 ? (cart[0].nome || "A")[0].toUpperCase() : "A";
     $btnConfirmar.disabled = true;
     $btnConfirmar.textContent = idioma === "ja" ? "送信中..." : "Enviando...";
     var itens = cart.map(function (i) {
@@ -275,7 +306,7 @@
       return;
     }
     setCart([]);
-    abrirPopupSucesso(pedido.numero);
+    abrirPopupSucesso(pedido.numero, prefixo);
     $btnConfirmar.disabled = false;
     $btnConfirmar.textContent = textos().confirmar;
   });

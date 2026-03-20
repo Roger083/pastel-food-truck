@@ -16,10 +16,11 @@ const $btnZerar = document.getElementById("btn-zerar-pedidos");
 
 let currentEventoId = null;
 
-/** Formato do número do pedido: A-001, A-002, ... */
-function formatoNumeroPedido(num) {
+/** Formato do número do pedido: P-001, C-002, ... (prefixo = 1ª letra do 1º item) */
+function formatoNumeroPedido(num, itens) {
   const n = num == null ? 0 : Number(num);
-  return "A-" + String(n).padStart(3, "0");
+  const prefixo = itens && itens.length > 0 && itens[0].nome ? itens[0].nome[0].toUpperCase() : "A";
+  return prefixo + "-" + String(n).padStart(3, "0");
 }
 
 let pollInterval = null;
@@ -80,8 +81,8 @@ async function loadOrders() {
 
   currentEventoId = evento.id;
 
-  // Pedidos na hora: sempre. Agendados: só entram na fila 15 min antes do horário.
-  const cutoffAgendado = new Date(Date.now() + 15 * 60 * 1000).toISOString();
+  // Pedidos na hora: sempre. Agendados: só entram na fila 30 min antes do horário.
+  const cutoffAgendado = new Date(Date.now() + 30 * 60 * 1000).toISOString();
   
   // Buscar pedidos separados: pendentes (ASC - mais antigo primeiro) e prontos (DESC - mais recente primeiro)
   const { data: pedidosPendentes, error: errPendentes } = await sb
@@ -118,6 +119,8 @@ async function loadOrders() {
       const itemsHtml = itens.length
         ? itens.map((i) => '<div class="order-item-row"><span class="item-qty">' + i.quantidade + 'x</span><span class="item-name">' + i.nome + '</span></div>').join("")
         : '<div class="order-item-row"><span class="item-name">(Sem itens)</span></div>';
+      const total = itens.reduce((s, i) => s + Number(i.preco || 0) * i.quantidade, 0);
+      const totalStr = total > 0 ? "¥" + Math.round(total).toLocaleString() : "";
       const time = p.criado_em
         ? new Date(p.criado_em).toLocaleTimeString("pt-BR", {
             hour: "2-digit",
@@ -144,7 +147,7 @@ async function loadOrders() {
         p.id +
         '">' +
         '<div class="order-header">' +
-          '<div class="order-num">' + formatoNumeroPedido(p.numero) + '</div>' +
+          '<div class="order-num">' + formatoNumeroPedido(p.numero, itens) + '</div>' +
           '<div class="order-header-right">' +
             '<div class="order-time">⏱️ ' + time + '</div>' +
             (isPrimeiroPendente
@@ -154,6 +157,7 @@ async function loadOrders() {
         '</div>' +
         (agendadoStr ? '<div class="order-agendado">' + agendadoStr + "</div>" : "") +
         '<div class="order-items">' + itemsHtml + '</div>' +
+        (totalStr ? '<div class="order-total">💴 Total: <strong>' + totalStr + '</strong></div>' : '') +
         (isPrimeiroPendente
           ? '<button type="button" class="btn-ready" data-id="' +
             p.id +

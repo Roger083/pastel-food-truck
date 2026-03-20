@@ -273,6 +273,17 @@ body.cardapio-verde {
   margin-top: 1rem;
 }
 
+.cardapio-verde .success-payment {
+  margin-top: 0.75rem;
+  padding: 0.6rem 1rem;
+  background: #fff8e1;
+  border: 2px solid #ffe082;
+  border-radius: 10px;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #795548;
+}
+
 .cardapio-verde .back-link {
   display: inline-block;
   margin-top: 1.5rem;
