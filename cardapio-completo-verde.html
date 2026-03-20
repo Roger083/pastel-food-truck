@@ -13,7 +13,10 @@
     .cardapio-verde .header-verde { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
     .cardapio-verde .header-verde .titulo-centro { flex: 1; text-align: center; font-size: 1rem; margin: 0; display: flex; align-items: center; justify-content: center; gap: 6px; }
     .cardapio-verde .header-verde .titulo-centro .titulo-icone { font-size: 1.1rem; }
-    .cardapio-verde .header-verde .btn-voltar, .cardapio-verde .header-verde .btn-idioma { flex-shrink: 0; background: rgba(255,255,255,0.25); border: 2px solid rgba(255,255,255,0.5); color: white; padding: 8px 14px; border-radius: 12px; font-size: 13px; font-weight: 700; cursor: pointer; text-decoration: none; }
+    .cardapio-verde .header-verde .btn-voltar { flex-shrink: 0; background: rgba(255,255,255,0.25); border: 2px solid rgba(255,255,255,0.5); color: white; padding: 8px 14px; border-radius: 12px; font-size: 13px; font-weight: 700; cursor: pointer; text-decoration: none; }
+    .cardapio-verde .idioma-btns { display: flex; gap: 4px; flex-shrink: 0; }
+    .cardapio-verde .btn-idioma-opt { background: rgba(255,255,255,0.2); border: 2px solid rgba(255,255,255,0.4); color: white; padding: 6px 10px; border-radius: 8px; font-size: 12px; font-weight: 700; cursor: pointer; }
+    .cardapio-verde .btn-idioma-opt.ativo { background: white; color: #0d7541; border-color: white; }
     .cardapio-verde .header-verde .btn-carrinho { flex-shrink: 0; background: rgba(255,255,255,0.25); border: 2px solid rgba(255,255,255,0.5); color: white; padding: 8px 14px; border-radius: 12px; font-size: 13px; font-weight: 700; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; }
     .cardapio-verde .section-title { text-align: center; color: #1a3d0a; font-size: 0.95rem; margin: 0 0 1rem; font-weight: 600; }
   </style>
@@ -27,7 +30,11 @@
       <header class="header-verde">
         <a href="index.html" class="btn-voltar" id="btnVoltar">← Início</a>
         <h1 class="titulo-centro" id="titulo"><span class="titulo-icone" id="tituloIcone">🔥</span> <span id="tituloTexto">Cardápio do Dia</span></h1>
-        <button type="button" class="btn-idioma" id="btnIdioma">JP 日本語</button>
+        <div class="idioma-btns">
+          <button type="button" class="btn-idioma-opt ativo" data-lang="pt">PT</button>
+          <button type="button" class="btn-idioma-opt" data-lang="ja">JP</button>
+          <button type="button" class="btn-idioma-opt" data-lang="en">EN</button>
+        </div>
       </header>
 
       <p class="section-title" id="subtitulo">Comida tradicional brasileira «Pastel»</p>
@@ -61,7 +68,7 @@
   const $error = document.getElementById("error");
   const $main = document.getElementById("main");
   const $categoriasContainer = document.getElementById("categorias-container");
-  const $btnIdioma = document.getElementById("btnIdioma");
+  const $btnIdioma = null; // substituído por .btn-idioma-opt
   const $subtitulo = document.getElementById("subtitulo");
   const $btnVoltar = document.getElementById("btnVoltar");
   const $carrinhoFlutuante = document.getElementById("carrinho-flutuante");
@@ -129,9 +136,9 @@
   }
 
   function textos() {
-    return idioma === "ja"
-      ? { titulo: "本日のメニュー", subtitulo: "ブラジルの伝統料理「パステル」", voltar: "← ホーム", idioma: "🇧🇷 PT", verCarrinho: "カートを見る", popular: "人気" }
-      : { titulo: "Cardápio do Dia", subtitulo: "Comida tradicional brasileira «Pastel»", voltar: "← Início", idioma: "JP 日本語", verCarrinho: "Ver carrinho", popular: "Popular" };
+    if (idioma === "ja") return { titulo: "本日のメニュー", subtitulo: "ブラジルの伝統料理「パステル」", voltar: "← ホーム", verCarrinho: "カートを見る", popular: "人気" };
+    if (idioma === "en") return { titulo: "Today's Menu", subtitulo: "Traditional Brazilian food «Pastel»", voltar: "← Home", verCarrinho: "View cart", popular: "Popular" };
+    return { titulo: "Cardápio do Dia", subtitulo: "Comida tradicional brasileira «Pastel»", voltar: "← Início", verCarrinho: "Ver carrinho", popular: "Popular" };
   }
 
   function formatPrice(preco) {
@@ -144,16 +151,20 @@
     if (tituloEl) tituloEl.textContent = t.titulo;
     $subtitulo.textContent = t.subtitulo;
     $btnVoltar.textContent = t.voltar;
-    $btnIdioma.textContent = t.idioma;
     $btnVerCarrinho.textContent = t.verCarrinho + " →";
+    document.querySelectorAll(".btn-idioma-opt").forEach(function(btn) {
+      btn.classList.toggle("ativo", btn.dataset.lang === idioma);
+    });
   }
 
-  $btnIdioma.addEventListener("click", function () {
-    idioma = idioma === "ja" ? "pt" : "ja";
-    localStorage.setItem("idioma", idioma);
-    atualizarUI();
-    if (ultimosItens.length) renderCategoriasECards(categorias, ultimosItens);
-    updateFloatingCart();
+  document.querySelectorAll(".btn-idioma-opt").forEach(function(btn) {
+    btn.addEventListener("click", function() {
+      idioma = btn.dataset.lang;
+      localStorage.setItem("idioma", idioma);
+      atualizarUI();
+      if (ultimosItens.length) renderCategoriasECards(categorias, ultimosItens);
+      updateFloatingCart();
+    });
   });
 
   function renderCategoriasECards(cats, itens) {
@@ -300,7 +311,7 @@
       .eq("ativo", true);
 
     if (errA || !activeItems || activeItems.length === 0) {
-      showError(idioma === "ja" ? "メニューがありません。" : "Nenhum item no menu ativo.");
+      showError(idioma === "ja" ? "メニューがありません。" : idioma === "en" ? "No items on the menu." : "Nenhum item no menu ativo.");
       hideLoading();
       return;
     }
