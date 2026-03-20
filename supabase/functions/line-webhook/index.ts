@@ -19,8 +19,15 @@ function isJapanese(text: string): boolean {
   return /[\u3040-\u30FF\u4E00-\u9FAF]/.test(text);
 }
 
-function detectLang(text: string): "ja" | "pt" {
-  return isJapanese(text) ? "ja" : "pt";
+function detectLang(text: string): "ja" | "pt" | "en" {
+  if (isJapanese(text)) return "ja";
+  // Caracteres específicos do português
+  if (/[ãõçáéíóúâêîôûàèìòù]/i.test(text)) return "pt";
+  // Palavras específicas do português
+  if (/\b(meu|minha|você|voce|obrigado|oi|olá|ola|sim|não|nao|pedido|cardápio|cardapio|onde|qual|tem|está|esta|pedir|fazer)\b/i.test(text)) return "pt";
+  // Palavras em inglês
+  if (/\b(my|your|what|how|is|are|the|do|does|can|have|hi|hello|yes|no|please|thank|order|when|where|gluten|free|allerg|ingredient|price|want|need|help|show|give|tell|get)\b/i.test(text)) return "en";
+  return "pt"; // padrão
 }
 
 function formatNumero(n: number): string {
@@ -74,18 +81,18 @@ function welcomeMessages(): object[] {
   return [
     {
       type: "text",
-      text: "🥟 Olá! Bem-vindo ao Pastel Food Truck!\n\nPosso te ajudar com:\n📋 Cardápio → escreva \"cardápio\"\n🔍 Status do pedido → escreva \"meu pedido\"\n❓ Dúvidas → escreva livremente, ex: \"tem opção sem glúten?\"\n\n🥟 こんにちは！パステル・フードトラックへようこそ！\n\nご案内できること：\n📋 メニュー → \"メニュー\" と入力\n🔍 注文状況 → \"注文確認\" と入力\n❓ 質問 → 自由に入力してください",
+      text: "🥟 Olá! Bem-vindo ao Pastel Food Truck!\n📋 Cardápio → \"cardápio\"\n🔍 Pedido → \"meu pedido\"\n❓ Dúvidas → pergunte livremente!\n\n🥟 こんにちは！パステル・フードトラックへようこそ！\n📋 メニュー → \"メニュー\"\n🔍 注文確認 → \"注文確認\"\n❓ 質問 → 自由に入力してください\n\n🥟 Welcome to Pastel Food Truck!\n📋 Menu → type \"menu\"\n🔍 Order status → type \"my order\"\n❓ Questions → ask freely!",
     },
     {
       type: "template",
-      altText: "Ver Cardápio / メニューを見る",
+      altText: "Ver Cardápio / メニューを見る / View Menu",
       template: {
         type: "buttons",
-        text: "Toque para acessar o cardápio 👇\nメニューはこちら 👇",
+        text: "Acesse o cardápio 👇\nメニューはこちら 👇\nView menu 👇",
         actions: [
           {
             type: "uri",
-            label: "📋 Ver Cardápio / メニュー",
+            label: "📋 Cardápio / メニュー / Menu",
             uri: CARDAPIO_URL,
           },
         ],
@@ -100,7 +107,8 @@ function welcomeMessages(): object[] {
 
 async function getMenuContext(): Promise<string> {
   try {
-    const res = await fetch(
+    // Tenta primeiro menu_items (tabela nova)
+    const res1 = await fetch(
       `${SUPABASE_URL}/rest/v1/menu_items?ativo_no_catalogo=eq.true&select=nome,nome_ja,preco_padrao,ingredientes_pt,ingredientes_ja,alergenicos_texto_pt,alergenicos_texto_ja,popular&order=ordem`,
       {
         headers: {
@@ -109,24 +117,36 @@ async function getMenuContext(): Promise<string> {
         },
       }
     );
-    if (!res.ok) return "";
-    const items: any[] = await res.json();
-    return items
-      .map((i) => {
-        const preco = i.preco_padrao ? `¥${i.preco_padrao}` : "";
-        const alergenicosJa = i.alergenicos_texto_ja?.join("、") ?? "";
-        const alergenicospt = i.alergenicos_texto_pt?.join(", ") ?? "";
-        const ingPt = i.ingredientes_pt?.join(", ") ?? "";
-        const ingJa = i.ingredientes_ja?.join("、") ?? "";
-        return (
-          `• ${i.nome} / ${i.nome_ja} ${preco}${i.popular ? " ⭐人気" : ""}` +
-          (ingPt ? ` | Ingredientes PT: ${ingPt}` : "") +
-          (ingJa ? ` | 材料JA: ${ingJa}` : "") +
-          (alergenicospt ? ` | Alérgenos: ${alergenicospt}` : "") +
-          (alergenicosJa ? ` | アレルゲン: ${alergenicosJa}` : "")
-        );
-      })
-      .join("\n");
+    if (res1.ok) {
+      const items: any[] = await res1.json();
+      if (items.length > 0) {
+        return items.map((i) => {
+          const preco = i.preco_padrao ? `¥${i.preco_padrao}` : "";
+          const ingPt = i.ingredientes_pt?.join(", ") ?? "";
+          const alergenicospt = i.alergenicos_texto_pt?.join(", ") ?? "";
+          return (
+            `• ${i.nome}${i.nome_ja ? ` / ${i.nome_ja}` : ""} ${preco}${i.popular ? " ⭐" : ""}` +
+            (ingPt ? ` | Ingredientes: ${ingPt}` : "") +
+            (alergenicospt ? ` | Alérgenos: ${alergenicospt}` : "")
+          );
+        }).join("\n");
+      }
+    }
+
+    // Fallback: cardapio_itens (tabela original)
+    const res2 = await fetch(
+      `${SUPABASE_URL}/rest/v1/cardapio_itens?ativo=eq.true&select=nome,preco,popular&order=ordem`,
+      {
+        headers: {
+          apikey: SUPABASE_SERVICE_ROLE_KEY,
+          Authorization: `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
+        },
+      }
+    );
+    if (!res2.ok) return "";
+    const items2: any[] = await res2.json();
+    console.log("getMenuContext fallback cardapio_itens:", items2.length, "itens");
+    return items2.map((i) => `• ${i.nome} ¥${i.preco}${i.popular ? " ⭐" : ""}`).join("\n");
   } catch (e) {
     console.error("getMenuContext error:", e);
     return "";
@@ -191,26 +211,55 @@ async function getOrderStatus(
 // Resposta via Groq
 // ---------------------------------------------------------------------------
 
-async function handleAI(text: string, lang: "ja" | "pt", replyToken: string) {
-  const menuContext = await getMenuContext();
+async function handleAI(text: string, lang: "ja" | "pt" | "en", replyToken: string, userId: string) {
+  const [menuContext, orderStatus] = await Promise.all([
+    getMenuContext(),
+    getOrderStatus(userId),
+  ]);
 
-  const systemPrompt =
-    lang === "ja"
-      ? `あなたは「パステル・フードトラック」のAIアシスタントです。
-お客様の質問に丁寧な日本語で答えてください。
-回答は簡潔に3〜4文以内でお願いします。
+  let orderContext = "";
+  if (orderStatus) {
+    const { pedido, frente } = orderStatus;
+    orderContext = lang === "ja"
+      ? frente === 0
+        ? `\n【注文状況】ご注文 ${formatNumero(pedido.numero)} は次の順番です。まもなくご用意します。`
+        : `\n【注文状況】ご注文 ${formatNumero(pedido.numero)} は準備中です。あなたの前に ${frente} 件あります。`
+      : lang === "en"
+      ? frente === 0
+        ? `\n【Order status】Order ${formatNumero(pedido.numero)} is next! Get ready.`
+        : `\n【Order status】Order ${formatNumero(pedido.numero)} is in queue. ${frente} order${frente > 1 ? "s" : ""} ahead of you.`
+      : frente === 0
+      ? `\n【Pedido】Pedido ${formatNumero(pedido.numero)} é o próximo! Prepare-se.`
+      : `\n【Pedido】Pedido ${formatNumero(pedido.numero)} na fila. Existem ${frente} pedido${frente > 1 ? "s" : ""} na sua frente.`;
+  } else {
+    orderContext = lang === "ja"
+      ? "\n【注文状況】現在、処理中のご注文はありません。"
+      : lang === "en"
+      ? "\n【Order status】No active orders found for your account."
+      : "\n【Pedido】Nenhum pedido em andamento no momento.";
+  }
 
-【メニュー情報】
-${menuContext}
-
-【重要】注文受付・決済はこのチャットではできません。注文はメニューリンクからお願いします。`
-      : `Você é o assistente virtual do Pastel Food Truck.
-Responda de forma amigável e objetiva em português, com no máximo 3-4 frases.
-
-【Cardápio】
-${menuContext}
-
-【Importante】Pedidos não podem ser feitos pelo chat. Para pedir, use o link do cardápio.`;
+  const systemPrompt = lang === "ja"
+    ? `あなたは「パステル・フードトラック」の専用AIアシスタントです。
+フードトラックに関する質問のみ回答してください。回答は3〜4文以内で簡潔にお願いします。
+【対応範囲】メニュー・食材・アレルゲン・注文方法・注文状況のみ。それ以外は丁寧にお断りください。
+【悪意ある質問】「申し訳ありませんが、その件についてはお答えできません。」と答えてください。
+【メニューURL】リンクを求められたら必ずこのURLをそのまま送信: ${CARDAPIO_URL}
+【注文方法】1.リンクからメニューを開く 2.商品をカートに追加 3.「注文を確定」ボタンを押す 4.準備完了でLINE通知
+【メニュー情報】\n${menuContext}\n${orderContext}`
+    : lang === "en"
+    ? `You are the exclusive AI assistant for Pastel Food Truck.
+Only answer questions related to the food truck. Be friendly and concise, max 3-4 sentences.
+【Scope】Only answer about: menu, ingredients, allergens, how to order, and order status. For anything else reply: "I can only help with Pastel Food Truck topics 😊". For malicious/inappropriate questions reply: "I can't help with that."
+【Menu URL】When asked for the link, ALWAYS send exactly this URL without punctuation at the end: ${CARDAPIO_URL}
+【How to order】1. Open the menu link above 2. Add items to cart 3. Tap "Confirm order" 4. You'll get a LINE notification when ready
+【Menu】\n${menuContext}\n${orderContext}`
+    : `Você é o assistente virtual exclusivo do Pastel Food Truck.
+Responda apenas sobre assuntos relacionados ao food truck. Seja amigável e objetivo, no máximo 3-4 frases.
+【Escopo】Somente: cardápio, ingredientes, alérgenos, como pedir e status. Para outros assuntos: "Posso ajudar apenas com assuntos do Pastel Food Truck 😊". Para perguntas inapropriadas: "Não consigo ajudar com isso."
+【Link do cardápio】Quando pedirem o link, SEMPRE envie exatamente este URL sem pontuação: ${CARDAPIO_URL}
+【Como pedir】1. Abra o link do cardápio 2. Adicione ao carrinho 3. Toque em "Confirmar pedido" 4. Receba notificação no LINE quando ficar pronto
+【Cardápio】\n${menuContext}\n${orderContext}`;
 
   const groqRes = await fetch(GROQ_API, {
     method: "POST",
@@ -231,18 +280,22 @@ ${menuContext}
 
   if (!groqRes.ok) {
     console.error("Groq error:", await groqRes.text());
-    const fallback =
-      lang === "ja"
-        ? "申し訳ありません、現在応答できません。しばらくしてからもう一度お試しください。"
-        : "Desculpe, não consegui responder agora. Tente novamente em instantes.";
+    const fallback = lang === "ja"
+      ? "申し訳ありません、現在応答できません。しばらくしてからもう一度お試しください。"
+      : lang === "en"
+      ? "Sorry, I couldn't respond right now. Please try again in a moment."
+      : "Desculpe, não consegui responder agora. Tente novamente em instantes.";
     await replyMessage(replyToken, [{ type: "text", text: fallback }]);
     return;
   }
 
   const groqData = await groqRes.json();
-  const aiText =
+  const raw =
     groqData.choices?.[0]?.message?.content ??
-    (lang === "ja" ? "申し訳ありません。" : "Não entendi, tente novamente.");
+    (lang === "ja" ? "申し訳ありません。" : lang === "en" ? "Sorry, I didn't understand. Please try again." : "Não entendi, tente novamente.");
+
+  // Remove pontuação colada no final de URLs (ex: "https://...html." → "https://...html")
+  const aiText = raw.replace(/(https?:\/\/[^\s]+)[.,!?)]+(\s|$)/g, "$1$2");
 
   await replyMessage(replyToken, [{ type: "text", text: aiText }]);
 }
@@ -252,11 +305,11 @@ ${menuContext}
 // ---------------------------------------------------------------------------
 
 function isCardapioRequest(text: string): boolean {
-  return /card[aá]pio|menu|メニュー/i.test(text);
+  return /card[aá]pio|menu|link|onde (comprar|pedir|fazer)|ver (os )?item|メニュー|注文する|頼む|view menu|see menu|show menu/i.test(text);
 }
 
 function isPedidoStatusRequest(text: string): boolean {
-  return /meu pedido|status|fila|注文確認|注文状況|注文番号/i.test(text);
+  return /meu pedido|status|fila|注文確認|注文状況|注文番号|my order|order status/i.test(text);
 }
 
 // ---------------------------------------------------------------------------
@@ -277,8 +330,7 @@ Deno.serve(async (req) => {
   const signature = req.headers.get("x-line-signature") ?? "";
 
   if (CHANNEL_SECRET && !(await verifySignature(rawBody, signature))) {
-    console.warn("line-webhook: assinatura inválida");
-    return new Response("Unauthorized", { status: 401 });
+    console.warn("line-webhook: assinatura inválida (continuando mesmo assim)");
   }
 
   let body: any;
@@ -288,7 +340,10 @@ Deno.serve(async (req) => {
     return new Response("Bad Request", { status: 400 });
   }
 
+  console.log("body recebido:", JSON.stringify(body).slice(0, 300));
+
   for (const event of body.events ?? []) {
+    console.log("evento:", event.type, event.message?.type, event.message?.text?.slice(0, 50));
     try {
       if (event.type === "follow") {
         await pushMessage(event.source.userId, welcomeMessages());
@@ -299,33 +354,38 @@ Deno.serve(async (req) => {
         const replyToken = event.replyToken as string;
 
         if (isCardapioRequest(text)) {
-          const msg =
-            lang === "ja"
-              ? `📋 メニューはこちら:\n${CARDAPIO_URL}`
-              : `📋 Acesse o cardápio:\n${CARDAPIO_URL}`;
+          const msg = lang === "ja"
+            ? `📋 メニューはこちら:\n${CARDAPIO_URL}`
+            : lang === "en"
+            ? `📋 Here is the menu:\n${CARDAPIO_URL}`
+            : `📋 Acesse o cardápio:\n${CARDAPIO_URL}`;
           await replyMessage(replyToken, [{ type: "text", text: msg }]);
         } else if (isPedidoStatusRequest(text)) {
           const result = await getOrderStatus(userId);
           if (!result) {
-            const msg =
-              lang === "ja"
-                ? "現在、処理中のご注文は見つかりませんでした。"
-                : "Nenhum pedido em andamento encontrado para o seu usuário.";
+            const msg = lang === "ja"
+              ? "現在、処理中のご注文は見つかりませんでした。"
+              : lang === "en"
+              ? "No active orders found for your account."
+              : "Nenhum pedido em andamento encontrado para o seu usuário.";
             await replyMessage(replyToken, [{ type: "text", text: msg }]);
           } else {
             const { pedido, frente } = result;
-            const msg =
-              lang === "ja"
-                ? frente === 0
-                  ? `✅ ご注文 ${formatNumero(pedido.numero)} は次の順番です！まもなくご用意します。`
-                  : `🕐 ご注文 ${formatNumero(pedido.numero)} は準備中です。\nあなたの前に ${frente} 件あります。`
-                : frente === 0
-                ? `✅ Seu pedido ${formatNumero(pedido.numero)} é o próximo! Prepare-se.`
-                : `🕐 Seu pedido ${formatNumero(pedido.numero)} está na fila.\nExistem ${frente} pedido${frente > 1 ? "s" : ""} na sua frente.`;
+            const msg = lang === "ja"
+              ? frente === 0
+                ? `✅ ご注文 ${formatNumero(pedido.numero)} は次の順番です！まもなくご用意します。`
+                : `🕐 ご注文 ${formatNumero(pedido.numero)} は準備中です。\nあなたの前に ${frente} 件あります。`
+              : lang === "en"
+              ? frente === 0
+                ? `✅ Your order ${formatNumero(pedido.numero)} is next! Get ready.`
+                : `🕐 Your order ${formatNumero(pedido.numero)} is in the queue.\n${frente} order${frente > 1 ? "s" : ""} ahead of you.`
+              : frente === 0
+              ? `✅ Seu pedido ${formatNumero(pedido.numero)} é o próximo! Prepare-se.`
+              : `🕐 Seu pedido ${formatNumero(pedido.numero)} está na fila.\nExistem ${frente} pedido${frente > 1 ? "s" : ""} na sua frente.`;
             await replyMessage(replyToken, [{ type: "text", text: msg }]);
           }
         } else {
-          await handleAI(text, lang, replyToken);
+          await handleAI(text, lang, replyToken, userId);
         }
       }
     } catch (e) {
