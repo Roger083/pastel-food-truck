@@ -12,7 +12,10 @@
   <style>
     .cardapio-verde .header-verde { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
     .cardapio-verde .header-verde .titulo-centro { flex: 1; text-align: center; font-size: 1rem; margin: 0; }
-    .cardapio-verde .header-verde .btn-voltar, .cardapio-verde .header-verde .btn-idioma { flex-shrink: 0; background: rgba(255,255,255,0.25); border: 2px solid rgba(255,255,255,0.5); color: white; padding: 8px 14px; border-radius: 12px; font-size: 13px; font-weight: 700; cursor: pointer; text-decoration: none; }
+    .cardapio-verde .header-verde .btn-voltar { flex-shrink: 0; background: rgba(255,255,255,0.25); border: 2px solid rgba(255,255,255,0.5); color: white; padding: 8px 14px; border-radius: 12px; font-size: 13px; font-weight: 700; cursor: pointer; text-decoration: none; }
+    .cardapio-verde .idioma-btns { display: flex; gap: 4px; flex-shrink: 0; }
+    .cardapio-verde .btn-idioma-opt { background: rgba(255,255,255,0.2); border: 2px solid rgba(255,255,255,0.4); color: white; padding: 6px 10px; border-radius: 8px; font-size: 12px; font-weight: 700; cursor: pointer; }
+    .cardapio-verde .btn-idioma-opt.ativo { background: white; color: #0d7541; border-color: white; }
     .carrinho-lista { margin: 1rem 0; }
     .carrinho-item { background: white; border-radius: 12px; padding: 12px 1rem; margin-bottom: 8px; border: 2px solid #a8e6cf; display: flex; justify-content: space-between; align-items: center; gap: 10px; }
     .carrinho-item .item-info { flex: 1; }
@@ -39,7 +42,11 @@
       <header class="header-verde">
         <a href="cardapio-completo-verde.html" class="btn-voltar" id="btnVoltar">← Voltar</a>
         <h1 class="titulo-centro" id="titulo">Carrinho</h1>
-        <button type="button" class="btn-idioma" id="btnIdioma">JP 日本語</button>
+        <div class="idioma-btns">
+          <button type="button" class="btn-idioma-opt ativo" data-lang="pt">PT</button>
+          <button type="button" class="btn-idioma-opt" data-lang="ja">JP</button>
+          <button type="button" class="btn-idioma-opt" data-lang="en">EN</button>
+        </div>
       </header>
 
       <div class="carrinho-lista" id="carrinhoLista"></div>
@@ -146,7 +153,9 @@
     const t = textos();
     document.getElementById("btnVoltar").textContent = t.voltar;
     document.getElementById("titulo").textContent = t.titulo;
-    document.getElementById("btnIdioma").textContent = t.idioma;
+    document.querySelectorAll(".btn-idioma-opt").forEach(function(btn) {
+      btn.classList.toggle("ativo", btn.dataset.lang === idioma);
+    });
     document.getElementById("labelTipo").textContent = t.tipo;
     document.getElementById("btnAgora").textContent = t.agora;
     document.getElementById("btnAgendar").textContent = t.agendar;
@@ -257,10 +266,12 @@
     }
   }
 
-  document.getElementById("btnIdioma").addEventListener("click", function () {
-    idioma = idioma === "pt" ? "ja" : idioma === "ja" ? "en" : "pt";
-    localStorage.setItem("idioma", idioma);
-    atualizarUI();
+  document.querySelectorAll(".btn-idioma-opt").forEach(function(btn) {
+    btn.addEventListener("click", function() {
+      idioma = btn.dataset.lang;
+      localStorage.setItem("idioma", idioma);
+      atualizarUI();
+    });
   });
 
   document.getElementById("btnAgora").addEventListener("click", function () {
