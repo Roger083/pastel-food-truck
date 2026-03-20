@@ -12,7 +12,10 @@
   <style>
     .cardapio-verde .header-verde { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
     .cardapio-verde .header-verde .titulo-centro { flex: 1; text-align: center; font-size: 1rem; margin: 0; }
-    .cardapio-verde .header-verde .btn-voltar, .cardapio-verde .header-verde .btn-idioma { flex-shrink: 0; background: rgba(255,255,255,0.25); border: 2px solid rgba(255,255,255,0.5); color: white; padding: 8px 14px; border-radius: 12px; font-size: 13px; font-weight: 700; cursor: pointer; text-decoration: none; }
+    .cardapio-verde .header-verde .btn-voltar { flex-shrink: 0; background: rgba(255,255,255,0.25); border: 2px solid rgba(255,255,255,0.5); color: white; padding: 8px 14px; border-radius: 12px; font-size: 13px; font-weight: 700; cursor: pointer; text-decoration: none; }
+    .cardapio-verde .idioma-btns { display: flex; gap: 4px; flex-shrink: 0; }
+    .cardapio-verde .btn-idioma-opt { background: rgba(255,255,255,0.2); border: 2px solid rgba(255,255,255,0.4); color: white; padding: 6px 10px; border-radius: 8px; font-size: 12px; font-weight: 700; cursor: pointer; }
+    .cardapio-verde .btn-idioma-opt.ativo { background: white; color: #0d7541; border-color: white; }
     .detalhe-card { background: white; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 14px rgba(13,117,65,0.15); border: 2px solid #a8e6cf; margin: 1rem 0; }
     .detalhe-card img { width: 100%; height: 220px; object-fit: cover; display: block; }
     .detalhe-card .detalhe-body { padding: 1rem 1.25rem; }
@@ -45,7 +48,11 @@
       <header class="header-verde">
         <a href="cardapio-completo-verde.html" class="btn-voltar" id="btnVoltar">← Início</a>
         <h1 class="titulo-centro" id="titulo">Cardápio do Dia</h1>
-        <button type="button" class="btn-idioma" id="btnIdioma">JP 日本語</button>
+        <div class="idioma-btns">
+          <button type="button" class="btn-idioma-opt" data-lang="pt">PT</button>
+          <button type="button" class="btn-idioma-opt" data-lang="ja">JP</button>
+          <button type="button" class="btn-idioma-opt" data-lang="en">EN</button>
+        </div>
       </header>
 
       <div class="detalhe-card" id="detalheCard">
@@ -110,16 +117,18 @@
   function formatPrice(v) { return "¥" + Math.round(Number(v)).toLocaleString(); }
 
   function textos() {
-    return idioma === "ja"
-      ? { voltar: "← ホーム", titulo: "本日のメニュー", idioma: "🇧🇷 PT", ing: "材料", alerg: "⚠️ アレルゲン", qty: "数量", add: "カートに追加", verCarrinho: "カートを見る" }
-      : { voltar: "← Início", titulo: "Cardápio do Dia", idioma: "JP 日本語", ing: "Ingredientes", alerg: "⚠️ Alérgenos", qty: "Quantidade", add: "Adicionar ao Carrinho", verCarrinho: "Ver carrinho →" };
+    if (idioma === "ja") return { voltar: "← ホーム", titulo: "本日のメニュー", ing: "材料", alerg: "⚠️ アレルゲン", qty: "数量", add: "カートに追加", verCarrinho: "カートを見る →" };
+    if (idioma === "en") return { voltar: "← Home", titulo: "Today's Menu", ing: "Ingredients", alerg: "⚠️ Allergens", qty: "Quantity", add: "Add to Cart", verCarrinho: "View cart →" };
+    return { voltar: "← Início", titulo: "Cardápio do Dia", ing: "Ingredientes", alerg: "⚠️ Alérgenos", qty: "Quantidade", add: "Adicionar ao Carrinho", verCarrinho: "Ver carrinho →" };
   }
 
   function atualizarUI() {
     const t = textos();
     document.getElementById("btnVoltar").textContent = t.voltar;
     document.getElementById("titulo").textContent = t.titulo;
-    document.getElementById("btnIdioma").textContent = t.idioma;
+    document.querySelectorAll(".btn-idioma-opt").forEach(function(btn) {
+      btn.classList.toggle("ativo", btn.dataset.lang === idioma);
+    });
     document.getElementById("labelIng").textContent = t.ing;
     document.getElementById("labelAlerg").textContent = t.alerg;
     document.getElementById("labelQty").textContent = t.qty;
@@ -142,6 +151,7 @@
         img: item.foto_url || (fallback ? fallback.img : "") || ""
       };
     }
+    // EN usa dados em PT (sem versão EN no banco)
     return {
       desc: item.desc_pt || (fallback ? fallback.desc_pt : "") || "",
       ing: (item.ingredientes_pt && item.ingredientes_pt.length > 0) ? item.ingredientes_pt : (fallback ? fallback.ingredientes_pt : []) || [],
@@ -220,10 +230,12 @@
   function getCart() { try { return JSON.parse(localStorage.getItem(CART_KEY) || "[]"); } catch (_) { return []; } }
   function setCart(arr) { localStorage.setItem(CART_KEY, JSON.stringify(arr)); }
 
-  document.getElementById("btnIdioma").addEventListener("click", function () {
-    idioma = idioma === "ja" ? "pt" : "ja";
-    localStorage.setItem("idioma", idioma);
-    atualizarUI();
+  document.querySelectorAll(".btn-idioma-opt").forEach(function(btn) {
+    btn.addEventListener("click", function() {
+      idioma = btn.dataset.lang;
+      localStorage.setItem("idioma", idioma);
+      atualizarUI();
+    });
   });
 
   document.getElementById("btnMinus").addEventListener("click", function () { qty = Math.max(1, qty - 1); $qtyVal.textContent = qty; });
@@ -235,7 +247,7 @@
     var existing = cart.find(function (x) { return x.id === item.id; });
     if (existing) existing.quantidade += qty; else cart.push({ id: item.id, nome: item.nome, preco: item.preco, quantidade: qty });
     setCart(cart);
-    alert(idioma === "ja" ? "カートに追加しました。" : "Adicionado ao carrinho!");
+    alert(idioma === "ja" ? "カートに追加しました。" : idioma === "en" ? "Added to cart!" : "Adicionado ao carrinho!");
     // Voltar para o cardápio
     window.location.href = "cardapio-completo-verde.html";
   });
@@ -247,7 +259,7 @@
 
     if (idParam) item = await loadItemById(idParam);
     else if (slugParam) item = await loadItemBySlug(slugParam);
-    if (!item) { showError(idioma === "ja" ? "商品が見つかりません。" : "Item não encontrado."); hideLoading(); return; }
+    if (!item) { showError(idioma === "ja" ? "商品が見つかりません。" : idioma === "en" ? "Item not found." : "Item não encontrado."); hideLoading(); return; }
 
     renderItem();
     $main.hidden = false;
