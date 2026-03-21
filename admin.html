@@ -30,6 +30,24 @@
         </nav>
       </header>
       <div id="orders-loading">Carregando...</div>
+      <div id="admin-stats" class="admin-stats" hidden>
+        <div class="stat-item">
+          <span class="stat-value" id="stat-pendentes">0</span>
+          <span class="stat-label">Na fila</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-value" id="stat-prontos">0</span>
+          <span class="stat-label">Prontos</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-value" id="stat-total">0</span>
+          <span class="stat-label">Total</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-value" id="stat-tempo-medio">—</span>
+          <span class="stat-label">Tempo médio</span>
+        </div>
+      </div>
       <p id="admin-feedback" class="admin-feedback" hidden></p>
       <ul id="orders-list"></ul>
     </div>

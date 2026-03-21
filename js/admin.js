@@ -13,6 +13,11 @@ const $ordersLoading = document.getElementById("orders-loading");
 const $ordersList = document.getElementById("orders-list");
 const $feedback = document.getElementById("admin-feedback");
 const $btnZerar = document.getElementById("btn-zerar-pedidos");
+const $stats = document.getElementById("admin-stats");
+const $statPendentes = document.getElementById("stat-pendentes");
+const $statProntos = document.getElementById("stat-prontos");
+const $statTotal = document.getElementById("stat-total");
+const $statTempoMedio = document.getElementById("stat-tempo-medio");
 
 let currentEventoId = null;
 
@@ -23,10 +28,31 @@ function formatoNumeroPedido(num, itens) {
   return prefixo + "-" + String(n).padStart(3, "0");
 }
 
-let pollInterval = null;
+let realtimeChannel = null;
+let realtimeEventoId = null;
 
 function getSupabase() {
   return getSharedSupabase();
+}
+
+function startRealtime(eventoId) {
+  if (realtimeEventoId === eventoId && realtimeChannel) return;
+  stopRealtime();
+  const sb = getSupabase();
+  if (!sb) return;
+  realtimeChannel = sb
+    .channel("admin-pedidos-" + eventoId)
+    .on("postgres_changes", { event: "*", schema: "public", table: "pedidos", filter: `evento_id=eq.${eventoId}` }, () => loadOrders())
+    .subscribe();
+  realtimeEventoId = eventoId;
+}
+
+function stopRealtime() {
+  if (!realtimeChannel) return;
+  const sb = getSupabase();
+  if (sb) sb.removeChannel(realtimeChannel);
+  realtimeChannel = null;
+  realtimeEventoId = null;
 }
 
 function functionsUrl(path) {
@@ -39,10 +65,8 @@ function showLogin(err) {
   $login.hidden = false;
   $loginError.textContent = err || "";
   $loginError.hidden = !err;
-  if (pollInterval) {
-    clearInterval(pollInterval);
-    pollInterval = null;
-  }
+  stopRealtime();
+  if ($stats) $stats.hidden = true;
 }
 
 function showDashboard() {
@@ -50,7 +74,6 @@ function showDashboard() {
   $dashboard.hidden = false;
   $loginError.hidden = true;
   loadOrders();
-  pollInterval = setInterval(loadOrders, 5000);
 }
 
 async function loadOrders() {
@@ -80,6 +103,7 @@ async function loadOrders() {
   }
 
   currentEventoId = evento.id;
+  startRealtime(evento.id);
 
   // Pedidos na hora: sempre. Agendados: só entram na fila 30 min antes do horário.
   const cutoffAgendado = new Date(Date.now() + 30 * 60 * 1000).toISOString();
@@ -107,11 +131,26 @@ async function loadOrders() {
 
   $ordersLoading.hidden = true;
   $eventName.textContent = evento.nome || "(Sem nome)";
-  
+
+  // Estatísticas
+  const totalPendentes = (pedidosPendentes || []).length;
+  const totalProntos = (pedidosProntos || []).length;
+  const prontoComTempo = (pedidosProntos || []).filter(p => p.pronto_em && p.criado_em);
+  let tempoMedioMin = null;
+  if (prontoComTempo.length > 0) {
+    const avgMs = prontoComTempo.reduce((s, p) => s + (new Date(p.pronto_em) - new Date(p.criado_em)), 0) / prontoComTempo.length;
+    tempoMedioMin = Math.round(avgMs / 60000);
+  }
+  if ($stats) {
+    $statPendentes.textContent = totalPendentes;
+    $statProntos.textContent = totalProntos;
+    $statTotal.textContent = totalPendentes + totalProntos;
+    $statTempoMedio.textContent = tempoMedioMin != null ? tempoMedioMin + " min" : "—";
+    $stats.hidden = false;
+  }
+
   // Combinar: pendentes primeiro (mais antigo no topo), depois prontos
   const orders = [...(pedidosPendentes || []), ...(pedidosProntos || [])];
-  
-  const totalPendentes = (pedidosPendentes || []).length;
 
   $ordersList.innerHTML = orders
     .map(function (p, index) {
@@ -150,6 +189,9 @@ async function loadOrders() {
           '<div class="order-num">' + formatoNumeroPedido(p.numero, itens) + '</div>' +
           '<div class="order-header-right">' +
             '<div class="order-time">⏱️ ' + time + '</div>' +
+            (!isPronto && !isPrimeiroPendente
+              ? '<span class="badge-fila">' + (index + 1) + 'º' + (tempoMedioMin ? ' · ~' + (index + 1) * tempoMedioMin + 'min' : '') + '</span>'
+              : "") +
             (isPrimeiroPendente
               ? '<span class="badge-fazer-este">FAZER ESTE!</span>'
               : "") +
