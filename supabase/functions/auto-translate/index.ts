@@ -32,6 +32,36 @@ async function verifyAuth(req: Request): Promise<boolean> {
   return false;
 }
 
+// Termos que devem ser preservados na tradução
+const PROTECTED_TERMS: { pt: string; ja: string; en: string }[] = [
+  { pt: "Pastel",      ja: "パステル",       en: "Pastel"      },
+  { pt: "Pastelzinho", ja: "パステルジーニョ", en: "Pastelzinho" },
+  { pt: "Coxinha",     ja: "コシーニャ",      en: "Coxinha"     },
+  { pt: "Pão de Queijo", ja: "ポンデケージョ", en: "Pão de Queijo" },
+];
+
+function protectTerms(text: string): { protected: string; map: { placeholder: string; ja: string; en: string }[] } {
+  let result = text;
+  const map: { placeholder: string; ja: string; en: string }[] = [];
+  PROTECTED_TERMS.forEach((term, i) => {
+    const placeholder = `__TERM${i}__`;
+    const regex = new RegExp(term.pt, "gi");
+    if (regex.test(result)) {
+      result = result.replace(new RegExp(term.pt, "gi"), placeholder);
+      map.push({ placeholder, ja: term.ja, en: term.en });
+    }
+  });
+  return { protected: result, map };
+}
+
+function restoreTerms(text: string, map: { placeholder: string; ja: string; en: string }[], lang: "ja" | "en"): string {
+  let result = text;
+  map.forEach(({ placeholder, ja, en }) => {
+    result = result.replace(new RegExp(placeholder, "gi"), lang === "ja" ? ja : en);
+  });
+  return result;
+}
+
 async function deepLTranslate(texts: string[], targetLang: string): Promise<string[]> {
   const nonEmpty = texts.filter(t => t.trim());
   if (nonEmpty.length === 0) return texts.map(() => "");
@@ -74,24 +104,29 @@ Deno.serve(async (req) => {
   const { nome_pt, desc_pt, ingredientes_pt } = body;
   if (!nome_pt) return jsonResponse({ error: "nome_pt é obrigatório" }, 400);
 
-  const texts = [nome_pt, desc_pt || "", ingredientes_pt || ""];
+  const rawTexts = [nome_pt, desc_pt || "", ingredientes_pt || ""];
+
+  // Protege termos específicos antes de traduzir
+  const processed = rawTexts.map(t => protectTerms(t));
+  const textsToSend = processed.map(p => p.protected);
 
   // Traduz para JA e EN em paralelo
   const [jaResults, enResults] = await Promise.all([
-    deepLTranslate(texts, "JA"),
-    deepLTranslate(texts, "EN-US"),
+    deepLTranslate(textsToSend, "JA"),
+    deepLTranslate(textsToSend, "EN-US"),
   ]);
 
+  // Restaura os termos protegidos
   const toArray = (s: string) =>
     s ? s.split(",").map(x => x.trim()).filter(Boolean) : [];
 
   return jsonResponse({
     ok: true,
-    nome_ja: jaResults[0],
-    desc_ja: jaResults[1],
-    ingredientes_ja: toArray(jaResults[2]),
-    nome_en: enResults[0],
-    desc_en: enResults[1],
-    ingredientes_en: toArray(enResults[2]),
+    nome_ja: restoreTerms(jaResults[0], processed[0].map, "ja"),
+    desc_ja: restoreTerms(jaResults[1], processed[1].map, "ja"),
+    ingredientes_ja: toArray(restoreTerms(jaResults[2], processed[2].map, "ja")),
+    nome_en: restoreTerms(enResults[0], processed[0].map, "en"),
+    desc_en: restoreTerms(enResults[1], processed[1].map, "en"),
+    ingredientes_en: toArray(restoreTerms(enResults[2], processed[2].map, "en")),
   });
 });
