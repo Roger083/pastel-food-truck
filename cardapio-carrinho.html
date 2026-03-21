@@ -184,7 +184,7 @@
     const total = cart.reduce(function (s, i) { return s + Number(i.preco) * i.quantidade; }, 0);
     $carrinhoLista.innerHTML = cart.map(function (i, index) {
       return '<div class="carrinho-item">' +
-        '<span class="item-info">' + escapeHtml(idioma === "ja" && i.nome_ja ? i.nome_ja : i.nome) + " x" + i.quantidade + " – " + formatPrice(Number(i.preco) * i.quantidade) + '</span>' +
+        '<span class="item-info">' + escapeHtml(idioma === "ja" && i.nome_ja ? i.nome_ja : idioma === "en" && i.nome_en ? i.nome_en : i.nome) + " x" + i.quantidade + " – " + formatPrice(Number(i.preco) * i.quantidade) + '</span>' +
         '<button type="button" class="btn-remover" data-index="' + index + '">✕</button>' +
         "</div>";
     }).join("");

@@ -126,6 +126,7 @@
         id: item.id,
         nome: item.nome,
         nome_ja: item.nome_ja || infoFallback.nome_ja || "",
+        nome_en: item.nome_en || "",
         preco: item.preco,
         quantidade: 1
       });
@@ -260,7 +261,11 @@
     const info = infoBySlug[slug] || {};
     // Use foto_url from DB first, then fallback to PASTEIS_INFO, then placeholder
     const img = item.foto_url || (window.imgParaItem ? window.imgParaItem(item.nome) : "") || "img/pastel-carne.png";
-    const nomeExibir = idioma === "ja" && (item.nome_ja || info.nome_ja) ? (item.nome_ja || info.nome_ja) : escapeHtml(item.nome);
+    const nomeExibir = idioma === "ja" && (item.nome_ja || info.nome_ja)
+      ? (item.nome_ja || info.nome_ja)
+      : idioma === "en" && item.nome_en
+      ? item.nome_en
+      : escapeHtml(item.nome);
     const precoStr = formatPrice(item.preco);
     const isPopular = item.popular === true;
 
@@ -315,7 +320,7 @@
     // Buscar items do active_menu + menu_items
     const { data: activeItems, error: errA } = await supabase
       .from("active_menu")
-      .select("item_id, preco_atual, menu_items(id, nome, nome_ja, preco_padrao, categoria_id, ordem, popular, foto_url)")
+      .select("item_id, preco_atual, menu_items(id, nome, nome_ja, nome_en, preco_padrao, categoria_id, ordem, popular, foto_url)")
       .eq("ativo", true);
 
     if (errA || !activeItems || activeItems.length === 0) {
@@ -331,6 +336,7 @@
         id: mi.id,
         nome: mi.nome,
         nome_ja: mi.nome_ja,
+        nome_en: mi.nome_en,
         preco: a.preco_atual,
         categoria_id: mi.categoria_id,
         ordem: mi.ordem,

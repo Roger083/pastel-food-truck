@@ -196,7 +196,7 @@
   async function loadItemById(uuid) {
     const { data: row } = await supabase
       .from("active_menu")
-      .select("preco_atual, menu_items(id, nome, nome_ja, desc_pt, desc_ja, ingredientes_pt, ingredientes_ja, alergenicos_texto_pt, alergenicos_texto_ja, foto_url)")
+      .select("preco_atual, menu_items(id, nome, nome_ja, nome_en, desc_pt, desc_ja, ingredientes_pt, ingredientes_ja, alergenicos_texto_pt, alergenicos_texto_ja, foto_url)")
       .eq("item_id", uuid)
       .eq("ativo", true)
       .maybeSingle();
@@ -208,7 +208,7 @@
   async function loadItemBySlug(slug) {
     const { data: activeItems } = await supabase
       .from("active_menu")
-      .select("preco_atual, menu_items(id, nome, nome_ja, desc_pt, desc_ja, ingredientes_pt, ingredientes_ja, alergenicos_texto_pt, alergenicos_texto_ja, foto_url)")
+      .select("preco_atual, menu_items(id, nome, nome_ja, nome_en, desc_pt, desc_ja, ingredientes_pt, ingredientes_ja, alergenicos_texto_pt, alergenicos_texto_ja, foto_url)")
       .eq("ativo", true);
     if (!activeItems || !activeItems.length) return null;
     var itens = activeItems.map(function (a) {
@@ -248,7 +248,7 @@
     var existing = cart.find(function (x) { return x.id === item.id; });
     var slug = window.slugFromNome ? window.slugFromNome(item.nome) : "";
     var infoFallback = (window.PASTEIS_INFO && window.PASTEIS_INFO[slug]) ? window.PASTEIS_INFO[slug] : {};
-    if (existing) existing.quantidade += qty; else cart.push({ id: item.id, nome: item.nome, nome_ja: item.nome_ja || infoFallback.nome_ja || "", preco: item.preco, quantidade: qty });
+    if (existing) existing.quantidade += qty; else cart.push({ id: item.id, nome: item.nome, nome_ja: item.nome_ja || infoFallback.nome_ja || "", nome_en: item.nome_en || "", preco: item.preco, quantidade: qty });
     setCart(cart);
     alert(idioma === "ja" ? "カートに追加しました。" : idioma === "en" ? "Added to cart!" : "Adicionado ao carrinho!");
     // Voltar para o cardápio

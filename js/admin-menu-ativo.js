@@ -330,10 +330,13 @@ function openItemModal(itemId) {
   if (isNew) {
     document.getElementById("item-nome").value = "";
     document.getElementById("item-nome-ja").value = "";
+    document.getElementById("item-nome-en").value = "";
     document.getElementById("item-desc-pt").value = "";
     document.getElementById("item-desc-ja").value = "";
+    document.getElementById("item-desc-en").value = "";
     document.getElementById("item-ing-pt").value = "";
     document.getElementById("item-ing-ja").value = "";
+    document.getElementById("item-ing-en").value = "";
     document.getElementById("item-preco").value = "";
     document.getElementById("item-categoria").value = "";
     document.getElementById("item-popular").checked = false;
@@ -344,10 +347,13 @@ function openItemModal(itemId) {
     const item = state[itemId];
     document.getElementById("item-nome").value = item.nome || "";
     document.getElementById("item-nome-ja").value = item.nome_ja || "";
+    document.getElementById("item-nome-en").value = item.nome_en || "";
     document.getElementById("item-desc-pt").value = item.desc_pt || "";
     document.getElementById("item-desc-ja").value = item.desc_ja || "";
+    document.getElementById("item-desc-en").value = item.desc_en || "";
     document.getElementById("item-ing-pt").value = (item.ingredientes_pt || []).join(", ");
     document.getElementById("item-ing-ja").value = (item.ingredientes_ja || []).join(", ");
+    document.getElementById("item-ing-en").value = (item.ingredientes_en || []).join(", ");
     // Important: in template mode, do NOT bind the modal price to menu_items.preco_padrao (global),
     // otherwise changing price here would affect other templates.
     document.getElementById("item-preco").value = (isTemplateMode ? item.preco_atual : item.preco_padrao) || "";
@@ -403,10 +409,13 @@ async function saveItem() {
   const itemDataCommon = {
     nome,
     nome_ja: document.getElementById("item-nome-ja").value.trim() || null,
+    nome_en: document.getElementById("item-nome-en").value.trim() || null,
     desc_pt: document.getElementById("item-desc-pt").value.trim() || null,
     desc_ja: document.getElementById("item-desc-ja").value.trim() || null,
+    desc_en: document.getElementById("item-desc-en").value.trim() || null,
     ingredientes_pt: parseCommaList(document.getElementById("item-ing-pt").value),
     ingredientes_ja: parseCommaList(document.getElementById("item-ing-ja").value),
+    ingredientes_en: parseCommaList(document.getElementById("item-ing-en").value),
     foto_url: fotoUrl,
     categoria_id: document.getElementById("item-categoria").value || null,
     alergenicos_texto_pt: allergens.pt,
@@ -594,6 +603,59 @@ document.getElementById("item-foto-file").addEventListener("change", (e) => {
     $preview.hidden = false;
   };
   reader.readAsDataURL(file);
+});
+
+// Auto-translate button
+document.getElementById("btn-auto-traduzir").addEventListener("click", async () => {
+  const nome_pt = document.getElementById("item-nome").value.trim();
+  if (!nome_pt) { alert("Preencha o Nome (PT) antes de traduzir."); return; }
+
+  const $btn = document.getElementById("btn-auto-traduzir");
+  const $status = document.getElementById("translate-status");
+  $btn.disabled = true;
+  $btn.textContent = "⏳ Traduzindo...";
+  $status.textContent = "";
+  $status.style.display = "block";
+
+  try {
+    const sb = getSupabase();
+    const CONFIG = window.FOOD_TRUCK_CONFIG;
+    const adminSecret = CONFIG?.adminSecret || "";
+    const supabaseUrl = (CONFIG?.supabaseUrl || "").replace(/\/rest\/v1\/?$/, "");
+
+    const res = await fetch(supabaseUrl + "/functions/v1/auto-translate", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-admin-secret": adminSecret,
+        "apikey": CONFIG?.supabaseAnonKey || "",
+      },
+      body: JSON.stringify({
+        nome_pt,
+        desc_pt: document.getElementById("item-desc-pt").value.trim(),
+        ingredientes_pt: document.getElementById("item-ing-pt").value.trim(),
+      }),
+    });
+
+    const data = await res.json();
+    if (!res.ok || !data.ok) throw new Error(data.error || "Erro desconhecido");
+
+    if (data.nome_ja) document.getElementById("item-nome-ja").value = data.nome_ja;
+    if (data.nome_en) document.getElementById("item-nome-en").value = data.nome_en;
+    if (data.desc_ja) document.getElementById("item-desc-ja").value = data.desc_ja;
+    if (data.desc_en) document.getElementById("item-desc-en").value = data.desc_en;
+    if (Array.isArray(data.ingredientes_ja) && data.ingredientes_ja.length) document.getElementById("item-ing-ja").value = data.ingredientes_ja.join(", ");
+    if (Array.isArray(data.ingredientes_en) && data.ingredientes_en.length) document.getElementById("item-ing-en").value = data.ingredientes_en.join(", ");
+
+    $status.textContent = "✅ Tradução concluída! Revise os campos antes de salvar.";
+    $status.style.color = "#0d7541";
+  } catch (err) {
+    $status.textContent = "❌ Erro: " + (err.message || err);
+    $status.style.color = "#c62828";
+  } finally {
+    $btn.disabled = false;
+    $btn.textContent = "🔄 Auto-traduzir para JP e EN";
+  }
 });
 
 // Close modal on overlay click
