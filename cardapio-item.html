@@ -246,7 +246,7 @@
     if (!item) return;
     var cart = getCart();
     var existing = cart.find(function (x) { return x.id === item.id; });
-    if (existing) existing.quantidade += qty; else cart.push({ id: item.id, nome: item.nome, preco: item.preco, quantidade: qty });
+    if (existing) existing.quantidade += qty; else cart.push({ id: item.id, nome: item.nome, nome_ja: item.nome_ja || "", preco: item.preco, quantidade: qty });
     setCart(cart);
     alert(idioma === "ja" ? "カートに追加しました。" : idioma === "en" ? "Added to cart!" : "Adicionado ao carrinho!");
     // Voltar para o cardápio
