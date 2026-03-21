@@ -40,24 +40,25 @@ const PROTECTED_TERMS: { pt: string; ja: string; en: string }[] = [
   { pt: "Pão de Queijo", ja: "ポンデケージョ", en: "Pão de Queijo" },
 ];
 
-function protectTerms(text: string): { protected: string; map: { placeholder: string; ja: string; en: string }[] } {
+function protectTerms(text: string): { protected: string; map: { tag: string; ja: string; en: string }[] } {
   let result = text;
-  const map: { placeholder: string; ja: string; en: string }[] = [];
+  const map: { tag: string; ja: string; en: string }[] = [];
   PROTECTED_TERMS.forEach((term, i) => {
-    const placeholder = `__TERM${i}__`;
-    const regex = new RegExp(term.pt, "gi");
-    if (regex.test(result)) {
-      result = result.replace(new RegExp(term.pt, "gi"), placeholder);
-      map.push({ placeholder, ja: term.ja, en: term.en });
+    const tag = `<t${i}/>`;
+    if (new RegExp(term.pt, "i").test(result)) {
+      result = result.replace(new RegExp(term.pt, "gi"), tag);
+      map.push({ tag, ja: term.ja, en: term.en });
     }
   });
   return { protected: result, map };
 }
 
-function restoreTerms(text: string, map: { placeholder: string; ja: string; en: string }[], lang: "ja" | "en"): string {
+function restoreTerms(text: string, map: { tag: string; ja: string; en: string }[], lang: "ja" | "en"): string {
   let result = text;
-  map.forEach(({ placeholder, ja, en }) => {
-    result = result.replace(new RegExp(placeholder, "gi"), lang === "ja" ? ja : en);
+  map.forEach(({ tag, ja, en }) => {
+    // DeepL pode modificar ligeiramente as tags XML — usar regex tolerante
+    const tagId = tag.replace(/[<>/]/g, "").replace("/", "");
+    result = result.replace(new RegExp(`<${tagId}\\s*/?>`, "gi"), lang === "ja" ? ja : en);
   });
   return result;
 }
@@ -76,6 +77,8 @@ async function deepLTranslate(texts: string[], targetLang: string): Promise<stri
       text: texts,
       source_lang: "PT",
       target_lang: targetLang,
+      tag_handling: "xml",
+      ignore_tags: ["t0", "t1", "t2", "t3", "t4"],
     }),
   });
 
