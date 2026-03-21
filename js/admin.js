@@ -17,7 +17,6 @@ const $stats = document.getElementById("admin-stats");
 const $statPendentes = document.getElementById("stat-pendentes");
 const $statProntos = document.getElementById("stat-prontos");
 const $statTotal = document.getElementById("stat-total");
-const $statTempoMedio = document.getElementById("stat-tempo-medio");
 
 let currentEventoId = null;
 
@@ -30,6 +29,7 @@ function formatoNumeroPedido(num, itens) {
 
 let realtimeChannel = null;
 let realtimeEventoId = null;
+let pollInterval = null;
 
 function getSupabase() {
   return getSharedSupabase();
@@ -55,6 +55,17 @@ function stopRealtime() {
   realtimeEventoId = null;
 }
 
+function startPoll() {
+  if (pollInterval) return;
+  pollInterval = setInterval(loadOrders, 10000);
+}
+
+function stopPoll() {
+  if (!pollInterval) return;
+  clearInterval(pollInterval);
+  pollInterval = null;
+}
+
 function functionsUrl(path) {
   const base = (CONFIG?.supabaseUrl || "").replace(/\/rest\/v1\/?$/, "");
   return base + "/functions/v1" + path;
@@ -66,6 +77,7 @@ function showLogin(err) {
   $loginError.textContent = err || "";
   $loginError.hidden = !err;
   stopRealtime();
+  stopPoll();
   if ($stats) $stats.hidden = true;
 }
 
@@ -74,6 +86,7 @@ function showDashboard() {
   $dashboard.hidden = false;
   $loginError.hidden = true;
   loadOrders();
+  startPoll();
 }
 
 async function loadOrders() {
@@ -145,7 +158,6 @@ async function loadOrders() {
     $statPendentes.textContent = totalPendentes;
     $statProntos.textContent = totalProntos;
     $statTotal.textContent = totalPendentes + totalProntos;
-    $statTempoMedio.textContent = tempoMedioMin != null ? tempoMedioMin + " min" : "—";
     $stats.hidden = false;
   }
 
@@ -185,25 +197,25 @@ async function loadOrders() {
         '" data-id="' +
         p.id +
         '">' +
-        '<div class="order-header">' +
-          '<div class="order-num">' + formatoNumeroPedido(p.numero, itens) + '</div>' +
-          '<div class="order-header-right">' +
-            '<div class="order-time">⏱️ ' + time + '</div>' +
-            (!isPronto && !isPrimeiroPendente
-              ? '<span class="badge-fila">' + (index + 1) + 'º' + (tempoMedioMin ? ' · ~' + (index + 1) * tempoMedioMin + 'min' : '') + '</span>'
-              : "") +
-            (isPrimeiroPendente
-              ? '<span class="badge-fazer-este">FAZER ESTE!</span>'
-              : "") +
+        '<div class="order-card-main">' +
+          '<div class="order-header">' +
+            '<div class="order-num">' + formatoNumeroPedido(p.numero, itens) + '</div>' +
+            '<div class="order-header-right">' +
+              '<div class="order-time">⏱️ ' + time + '</div>' +
+              (!isPronto && !isPrimeiroPendente
+                ? '<span class="badge-fila">' + (index + 1) + 'º' + (tempoMedioMin ? ' · ~' + (index + 1) * tempoMedioMin + 'min' : '') + '</span>'
+                : "") +
+              (isPrimeiroPendente
+                ? '<span class="badge-fazer-este">FAZER ESTE!</span>'
+                : "") +
+            '</div>' +
           '</div>' +
+          (agendadoStr ? '<div class="order-agendado">' + agendadoStr + "</div>" : "") +
+          '<div class="order-items">' + itemsHtml + '</div>' +
+          (totalStr ? '<div class="order-total">💴 Total: <strong>' + totalStr + '</strong></div>' : '') +
         '</div>' +
-        (agendadoStr ? '<div class="order-agendado">' + agendadoStr + "</div>" : "") +
-        '<div class="order-items">' + itemsHtml + '</div>' +
-        (totalStr ? '<div class="order-total">💴 Total: <strong>' + totalStr + '</strong></div>' : '') +
-        (isPrimeiroPendente
-          ? '<button type="button" class="btn-ready" data-id="' +
-            p.id +
-            '">Marcar pronto</button>'
+        (!isPronto
+          ? '<button type="button" class="btn-ready" data-id="' + p.id + '">✓<span>Pronto</span></button>'
           : "") +
         "</li>"
       );
