@@ -370,6 +370,7 @@ function openItemModal(itemId) {
     renderAllergenGrid(item.alergenicos_texto_pt || []);
   }
 
+  resetTabs();
   $modalItem.classList.remove("hidden");
   document.getElementById("item-nome").focus();
 }
@@ -605,6 +606,23 @@ document.getElementById("item-foto-file").addEventListener("change", (e) => {
   reader.readAsDataURL(file);
 });
 
+// Lang tabs
+document.querySelectorAll(".lang-tab").forEach(tab => {
+  tab.addEventListener("click", () => {
+    document.querySelectorAll(".lang-tab").forEach(t => t.classList.remove("ativo"));
+    document.querySelectorAll(".tab-content").forEach(c => c.hidden = true);
+    tab.classList.add("ativo");
+    document.getElementById("tab-" + tab.dataset.tab).hidden = false;
+  });
+});
+
+function resetTabs() {
+  document.querySelectorAll(".lang-tab").forEach(t => t.classList.remove("ativo"));
+  document.querySelectorAll(".tab-content").forEach(c => c.hidden = true);
+  document.querySelector(".lang-tab[data-tab='pt']").classList.add("ativo");
+  document.getElementById("tab-pt").hidden = false;
+}
+
 // Auto-translate button
 document.getElementById("btn-auto-traduzir").addEventListener("click", async () => {
   const nome_pt = document.getElementById("item-nome").value.trim();
@@ -647,8 +665,11 @@ document.getElementById("btn-auto-traduzir").addEventListener("click", async () 
     if (Array.isArray(data.ingredientes_ja) && data.ingredientes_ja.length) document.getElementById("item-ing-ja").value = data.ingredientes_ja.join(", ");
     if (Array.isArray(data.ingredientes_en) && data.ingredientes_en.length) document.getElementById("item-ing-en").value = data.ingredientes_en.join(", ");
 
-    $status.textContent = "✅ Tradução concluída! Revise os campos antes de salvar.";
+    $status.textContent = "✅ Tradução concluída! Verifique as abas JP e EN.";
     $status.style.color = "#0d7541";
+    // Destaca abas traduzidas
+    document.querySelector(".lang-tab[data-tab='ja']").textContent = "🇯🇵 日本語 ✅";
+    document.querySelector(".lang-tab[data-tab='en']").textContent = "🇺🇸 English ✅";
   } catch (err) {
     $status.textContent = "❌ Erro: " + (err.message || err);
     $status.style.color = "#c62828";

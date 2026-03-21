@@ -18,11 +18,8 @@ function jsonResponse(body: unknown, status = 200) {
 }
 
 async function verifyAuth(req: Request): Promise<boolean> {
-  // Admin secret
   const sentSecret = req.headers.get("x-admin-secret") ?? "";
   if (ADMIN_SECRET && sentSecret === ADMIN_SECRET) return true;
-
-  // JWT
   const authHeader = req.headers.get("Authorization") ?? "";
   if (authHeader.startsWith("Bearer ")) {
     const res = await fetch(`${SUPABASE_URL}/auth/v1/user`, {
@@ -30,17 +27,41 @@ async function verifyAuth(req: Request): Promise<boolean> {
     });
     if (res.ok) return true;
   }
-
   return false;
+}
+
+async function groqTranslate(text: string, targetLang: "ja" | "en"): Promise<string> {
+  if (!text.trim()) return "";
+  const langName = targetLang === "ja" ? "Japanese" : "English";
+  const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${GROQ_API_KEY}`,
+    },
+    body: JSON.stringify({
+      model: "llama-3.3-70b-versatile",
+      messages: [
+        {
+          role: "system",
+          content: `You are a professional food translator. Translate food item text from Portuguese to ${langName}. Return ONLY the translated text, nothing else. No explanations, no quotes.`,
+        },
+        { role: "user", content: text },
+      ],
+      max_tokens: 200,
+      temperature: 0.1,
+    }),
+  });
+  if (!res.ok) return "";
+  const data = await res.json();
+  return (data.choices?.[0]?.message?.content ?? "").trim();
 }
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: cors });
   if (req.method !== "POST") return jsonResponse({ error: "Method not allowed" }, 405);
 
-  if (!(await verifyAuth(req))) {
-    return jsonResponse({ error: "Unauthorized" }, 401);
-  }
+  if (!(await verifyAuth(req))) return jsonResponse({ error: "Unauthorized" }, 401);
 
   let body: { nome_pt?: string; desc_pt?: string; ingredientes_pt?: string };
   try {
@@ -52,54 +73,30 @@ Deno.serve(async (req) => {
   const { nome_pt, desc_pt, ingredientes_pt } = body;
   if (!nome_pt) return jsonResponse({ error: "nome_pt é obrigatório" }, 400);
 
-  const prompt = `You are a professional translator for a Brazilian food truck called "Pastel Food Truck" operating in Japan.
-Translate the following food item information from Portuguese to Japanese and English.
-Be accurate with food terminology. Return ONLY a valid JSON object, no extra text.
+  // Traduz cada campo separadamente em paralelo para JA e EN
+  const [
+    nome_ja, nome_en,
+    desc_ja, desc_en,
+    ing_ja_raw, ing_en_raw,
+  ] = await Promise.all([
+    groqTranslate(nome_pt, "ja"),
+    groqTranslate(nome_pt, "en"),
+    groqTranslate(desc_pt || "", "ja"),
+    groqTranslate(desc_pt || "", "en"),
+    groqTranslate(ingredientes_pt || "", "ja"),
+    groqTranslate(ingredientes_pt || "", "en"),
+  ]);
 
-Portuguese name: "${nome_pt}"
-Portuguese description: "${desc_pt || ""}"
-Portuguese ingredients: "${ingredientes_pt || ""}"
+  // Ingredientes vêm como texto separado por vírgula — manter como array
+  const toArray = (s: string) => s ? s.split(",").map(x => x.trim()).filter(Boolean) : [];
 
-Return this exact JSON structure:
-{
-  "nome_ja": "Japanese name",
-  "desc_ja": "Japanese description (empty string if no description)",
-  "ingredientes_ja": ["ingredient1", "ingredient2"],
-  "nome_en": "English name",
-  "desc_en": "English description (empty string if no description)",
-  "ingredientes_en": ["ingredient1", "ingredient2"]
-}`;
-
-  const groqRes = await fetch("https://api.groq.com/openai/v1/chat/completions", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${GROQ_API_KEY}`,
-    },
-    body: JSON.stringify({
-      model: "llama-3.3-70b-versatile",
-      messages: [{ role: "user", content: prompt }],
-      max_tokens: 500,
-      temperature: 0.2,
-      response_format: { type: "json_object" },
-    }),
+  return jsonResponse({
+    ok: true,
+    nome_ja,
+    nome_en,
+    desc_ja,
+    desc_en,
+    ingredientes_ja: toArray(ing_ja_raw),
+    ingredientes_en: toArray(ing_en_raw),
   });
-
-  if (!groqRes.ok) {
-    const err = await groqRes.text();
-    console.error("Groq error:", err);
-    return jsonResponse({ error: "Falha na tradução automática" }, 500);
-  }
-
-  const groqData = await groqRes.json();
-  const content = groqData.choices?.[0]?.message?.content ?? "{}";
-
-  let translated: Record<string, unknown>;
-  try {
-    translated = JSON.parse(content);
-  } catch {
-    return jsonResponse({ error: "Resposta inválida do modelo de IA" }, 500);
-  }
-
-  return jsonResponse({ ok: true, ...translated });
 });

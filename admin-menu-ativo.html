@@ -44,39 +44,48 @@
     <div class="modal-box modal-box-large">
       <h2 id="modal-item-titulo">Novo Item</h2>
 
-      <label for="item-nome">Nome (PT)</label>
-      <input type="text" id="item-nome" placeholder="Ex: Pastel de Carne">
-
-      <label for="item-desc-pt">Descricao (PT) <small style="color:#999;">opcional</small></label>
-      <textarea id="item-desc-pt" placeholder="Descricao em portugues"></textarea>
-
-      <label for="item-ing-pt">Ingredientes (PT, separados por virgula) <small style="color:#999;">opcional</small></label>
-      <input type="text" id="item-ing-pt" placeholder="Carne moida, Cebola, Temperos">
-
-      <div style="text-align:center;margin:0.75rem 0;">
-        <button type="button" id="btn-auto-traduzir" class="btn-primary" style="width:100%;background:linear-gradient(135deg,#7c3aed,#4f46e5);">
-          🔄 Auto-traduzir para JP e EN
-        </button>
-        <p id="translate-status" style="font-size:0.8rem;color:#888;margin-top:4px;display:none;"></p>
+      <!-- Abas de idioma -->
+      <div class="lang-tabs">
+        <button type="button" class="lang-tab ativo" data-tab="pt">🇧🇷 Português</button>
+        <button type="button" class="lang-tab" data-tab="ja">🇯🇵 日本語</button>
+        <button type="button" class="lang-tab" data-tab="en">🇺🇸 English</button>
       </div>
 
-      <label for="item-nome-ja">Nome (JA) <small style="color:#999;">preenchido automaticamente</small></label>
-      <input type="text" id="item-nome-ja" placeholder="Ex: 牛肉パステル">
+      <!-- Aba PT -->
+      <div id="tab-pt" class="tab-content">
+        <label for="item-nome">Nome *</label>
+        <input type="text" id="item-nome" placeholder="Ex: Pastel de Carne">
+        <label for="item-desc-pt">Descrição <small style="color:#999;">opcional</small></label>
+        <textarea id="item-desc-pt" placeholder="Descrição em português"></textarea>
+        <label for="item-ing-pt">Ingredientes <small style="color:#999;">separados por vírgula</small></label>
+        <input type="text" id="item-ing-pt" placeholder="Carne moída, Cebola, Temperos">
+        <button type="button" id="btn-auto-traduzir" class="btn-translate">
+          🔄 Auto-traduzir para JP e EN
+        </button>
+        <p id="translate-status" style="font-size:0.82rem;margin-top:6px;display:none;"></p>
+      </div>
 
-      <label for="item-nome-en">Nome (EN) <small style="color:#999;">preenchido automaticamente</small></label>
-      <input type="text" id="item-nome-en" placeholder="Ex: Beef Pastel">
+      <!-- Aba JA -->
+      <div id="tab-ja" class="tab-content" hidden>
+        <p style="font-size:0.8rem;color:#888;margin-bottom:0.5rem;">Preenchido automaticamente pelo botão de tradução. Você pode editar.</p>
+        <label for="item-nome-ja">Nome</label>
+        <input type="text" id="item-nome-ja" placeholder="Ex: 牛肉パステル">
+        <label for="item-desc-ja">Descrição</label>
+        <textarea id="item-desc-ja" placeholder="説明文"></textarea>
+        <label for="item-ing-ja">Ingredientes</label>
+        <input type="text" id="item-ing-ja" placeholder="牛ひき肉, 玉ねぎ, スパイス">
+      </div>
 
-      <label for="item-desc-ja">Descricao (JA) <small style="color:#999;">opcional</small></label>
-      <textarea id="item-desc-ja" placeholder="Descricao em japones"></textarea>
-
-      <label for="item-desc-en">Descricao (EN) <small style="color:#999;">opcional</small></label>
-      <textarea id="item-desc-en" placeholder="Description in English"></textarea>
-
-      <label for="item-ing-ja">Ingredientes (JA, separados por virgula) <small style="color:#999;">opcional</small></label>
-      <input type="text" id="item-ing-ja" placeholder="牛ひき肉, 玉ねぎ, スパイス">
-
-      <label for="item-ing-en">Ingredientes (EN, separados por virgula) <small style="color:#999;">opcional</small></label>
-      <input type="text" id="item-ing-en" placeholder="Ground beef, Onion, Spices">
+      <!-- Aba EN -->
+      <div id="tab-en" class="tab-content" hidden>
+        <p style="font-size:0.8rem;color:#888;margin-bottom:0.5rem;">Filled automatically by the translate button. You can edit.</p>
+        <label for="item-nome-en">Name</label>
+        <input type="text" id="item-nome-en" placeholder="Ex: Beef Pastel">
+        <label for="item-desc-en">Description</label>
+        <textarea id="item-desc-en" placeholder="Description in English"></textarea>
+        <label for="item-ing-en">Ingredients</label>
+        <input type="text" id="item-ing-en" placeholder="Ground beef, Onion, Spices">
+      </div>
 
       <label for="item-preco">Preco padrao (yen)</label>
       <input type="number" id="item-preco" min="1" step="1" placeholder="500">
