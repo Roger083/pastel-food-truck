@@ -214,8 +214,8 @@ async function loadOrders() {
           '<div class="order-items">' + itemsHtml + '</div>' +
           (totalStr ? '<div class="order-total">💴 Total: <strong>' + totalStr + '</strong></div>' : '') +
         '</div>' +
-        (!isPronto
-          ? '<button type="button" class="btn-ready" data-id="' + p.id + '">✓<span>Pronto</span></button>'
+        (isPrimeiroPendente
+          ? '<button type="button" class="btn-ready" data-id="' + p.id + '">✓<span>Marcar como pronto</span></button>'
           : "") +
         "</li>"
       );

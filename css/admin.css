@@ -310,8 +310,8 @@ body {
 
 .order-card .btn-ready {
   margin: 0;
-  padding: 0;
-  width: 80px;
+  padding: 0 0.5rem;
+  width: 90px;
   flex-shrink: 0;
   border: none;
   border-radius: 0 10px 10px 0;
