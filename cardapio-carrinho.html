@@ -35,7 +35,7 @@
 </head>
 <body class="cardapio-verde">
   <div id="app">
-    <div id="loading">Carregando...</div>
+    <div id="loading">Loading...</div>
     <div id="error" class="error" hidden></div>
 
     <div id="main" hidden>
@@ -94,6 +94,7 @@
   let idioma = localStorage.getItem("idioma") || "pt";
 
   const $loading = document.getElementById("loading");
+  if ($loading) $loading.textContent = idioma === "ja" ? "読み込み中..." : idioma === "en" ? "Loading..." : "Carregando...";
   const $error = document.getElementById("error");
   const $main = document.getElementById("main");
   const $empty = document.getElementById("empty");
@@ -187,7 +188,8 @@
         '<button type="button" class="btn-remover" data-index="' + index + '">✕</button>' +
         "</div>";
     }).join("");
-    $carrinhoTotal.textContent = "Total: " + formatPrice(total);
+    var totalLabel = idioma === "ja" ? "合計: " : "Total: ";
+    $carrinhoTotal.textContent = totalLabel + formatPrice(total);
     $btnConfirmar.disabled = false;
 
     // Event listeners para botões de remover
@@ -302,7 +304,7 @@
     }
     var prefixo = cart.length > 0 ? (cart[0].nome || "A")[0].toUpperCase() : "A";
     $btnConfirmar.disabled = true;
-    $btnConfirmar.textContent = idioma === "ja" ? "送信中..." : "Enviando...";
+    $btnConfirmar.textContent = idioma === "ja" ? "送信中..." : idioma === "en" ? "Sending..." : "Enviando...";
     var itens = cart.map(function (i) {
       // IDs agora vem de menu_items, nao de cardapio_itens - enviar null para o FK
       return { cardapio_item_id: null, nome: i.nome, preco: i.preco, quantidade: i.quantidade };

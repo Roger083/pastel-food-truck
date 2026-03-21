@@ -23,7 +23,7 @@
 </head>
 <body class="cardapio-verde">
   <div id="app">
-    <div id="loading">Carregando...</div>
+    <div id="loading">Loading...</div>
     <div id="error" class="error" hidden></div>
 
     <div id="main" hidden>
@@ -79,6 +79,10 @@
   let idioma = localStorage.getItem("idioma") || "pt";
   let ultimosItens = [];
   let categorias = [];
+
+  // Traduz loading imediatamente
+  const loadingEl = document.getElementById("loading");
+  if (loadingEl) loadingEl.textContent = idioma === "ja" ? "読み込み中..." : idioma === "en" ? "Loading..." : "Carregando...";
 
   function getCart() {
     try {
@@ -173,7 +177,8 @@
 
     // Se não há itens, não renderiza nada
     if (!itens || itens.length === 0) {
-      $categoriasContainer.innerHTML = '<p style="text-align:center;color:#666;padding:2rem;">Nenhum item disponível</p>';
+      var noItemsMsg = idioma === "ja" ? "利用可能なアイテムはありません" : idioma === "en" ? "No items available" : "Nenhum item disponível";
+      $categoriasContainer.innerHTML = '<p style="text-align:center;color:#666;padding:2rem;">' + noItemsMsg + '</p>';
       return;
     }
 
@@ -211,7 +216,7 @@
       const catItens = itensPorCategoria[cat.id] || [];
       if (catItens.length === 0) return;
 
-      const catNome = idioma === "ja" ? cat.nome_ja : cat.nome_pt;
+      const catNome = idioma === "ja" ? (cat.nome_ja || cat.nome_pt) : cat.nome_pt;
 
       html += '<div class="categoria-secao">';
       html += '<div class="categoria-header">';
@@ -232,7 +237,7 @@
       html += '<div class="categoria-secao">';
       html += '<div class="categoria-header">';
       html += '<span class="categoria-emoji">🥟</span>';
-      html += '<h2 class="categoria-nome">' + (idioma === "ja" ? "その他" : "Outros") + '</h2>';
+      html += '<h2 class="categoria-nome">' + (idioma === "ja" ? "その他" : idioma === "en" ? "Others" : "Outros") + '</h2>';
       html += '</div>';
       html += '<div class="lista-cards">';
 

@@ -41,7 +41,7 @@
 </head>
 <body class="cardapio-verde">
   <div id="app">
-    <div id="loading">Carregando...</div>
+    <div id="loading">Loading...</div>
     <div id="error" class="error" hidden></div>
 
     <div id="main" hidden>
@@ -94,6 +94,7 @@
   let idioma = localStorage.getItem("idioma") || "pt";
 
   const $loading = document.getElementById("loading");
+  if ($loading) $loading.textContent = idioma === "ja" ? "読み込み中..." : idioma === "en" ? "Loading..." : "Carregando...";
   const $error = document.getElementById("error");
   const $main = document.getElementById("main");
   const $itemImg = document.getElementById("itemImg");
