@@ -1,9 +1,11 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 
-const GROQ_API_KEY = Deno.env.get("GROQ_API_KEY") ?? "";
+const DEEPL_API_KEY = Deno.env.get("DEEPL_API_KEY") ?? "";
 const ADMIN_SECRET = Deno.env.get("ADMIN_SECRET") ?? "";
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") ?? "";
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
+
+const DEEPL_URL = "https://api-free.deepl.com/v2/translate";
 
 const cors = {
   "Access-Control-Allow-Origin": "*",
@@ -30,31 +32,30 @@ async function verifyAuth(req: Request): Promise<boolean> {
   return false;
 }
 
-async function groqTranslate(text: string, targetLang: "ja" | "en"): Promise<string> {
-  if (!text.trim()) return "";
-  const langName = targetLang === "ja" ? "Japanese" : "English";
-  const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+async function deepLTranslate(texts: string[], targetLang: string): Promise<string[]> {
+  const nonEmpty = texts.filter(t => t.trim());
+  if (nonEmpty.length === 0) return texts.map(() => "");
+
+  const res = await fetch(DEEPL_URL, {
     method: "POST",
     headers: {
+      "Authorization": `DeepL-Auth-Key ${DEEPL_API_KEY}`,
       "Content-Type": "application/json",
-      Authorization: `Bearer ${GROQ_API_KEY}`,
     },
     body: JSON.stringify({
-      model: "llama-3.3-70b-versatile",
-      messages: [
-        {
-          role: "system",
-          content: `You are a professional food translator. Translate food item text from Portuguese to ${langName}. Return ONLY the translated text, nothing else. No explanations, no quotes.`,
-        },
-        { role: "user", content: text },
-      ],
-      max_tokens: 200,
-      temperature: 0.1,
+      text: texts,
+      source_lang: "PT",
+      target_lang: targetLang,
     }),
   });
-  if (!res.ok) return "";
+
+  if (!res.ok) {
+    console.error("DeepL error:", res.status, await res.text());
+    return texts.map(() => "");
+  }
+
   const data = await res.json();
-  return (data.choices?.[0]?.message?.content ?? "").trim();
+  return (data.translations as { text: string }[]).map(t => t.text);
 }
 
 Deno.serve(async (req) => {
@@ -73,30 +74,24 @@ Deno.serve(async (req) => {
   const { nome_pt, desc_pt, ingredientes_pt } = body;
   if (!nome_pt) return jsonResponse({ error: "nome_pt é obrigatório" }, 400);
 
-  // Traduz cada campo separadamente em paralelo para JA e EN
-  const [
-    nome_ja, nome_en,
-    desc_ja, desc_en,
-    ing_ja_raw, ing_en_raw,
-  ] = await Promise.all([
-    groqTranslate(nome_pt, "ja"),
-    groqTranslate(nome_pt, "en"),
-    groqTranslate(desc_pt || "", "ja"),
-    groqTranslate(desc_pt || "", "en"),
-    groqTranslate(ingredientes_pt || "", "ja"),
-    groqTranslate(ingredientes_pt || "", "en"),
+  const texts = [nome_pt, desc_pt || "", ingredientes_pt || ""];
+
+  // Traduz para JA e EN em paralelo
+  const [jaResults, enResults] = await Promise.all([
+    deepLTranslate(texts, "JA"),
+    deepLTranslate(texts, "EN-US"),
   ]);
 
-  // Ingredientes vêm como texto separado por vírgula — manter como array
-  const toArray = (s: string) => s ? s.split(",").map(x => x.trim()).filter(Boolean) : [];
+  const toArray = (s: string) =>
+    s ? s.split(",").map(x => x.trim()).filter(Boolean) : [];
 
   return jsonResponse({
     ok: true,
-    nome_ja,
-    nome_en,
-    desc_ja,
-    desc_en,
-    ingredientes_ja: toArray(ing_ja_raw),
-    ingredientes_en: toArray(ing_en_raw),
+    nome_ja: jaResults[0],
+    desc_ja: jaResults[1],
+    ingredientes_ja: toArray(jaResults[2]),
+    nome_en: enResults[0],
+    desc_en: enResults[1],
+    ingredientes_en: toArray(enResults[2]),
   });
 });
