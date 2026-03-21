@@ -220,7 +220,7 @@
       const catItens = itensPorCategoria[cat.id] || [];
       if (catItens.length === 0) return;
 
-      const catNome = idioma === "ja" ? (cat.nome_ja || cat.nome_pt) : cat.nome_pt;
+      const catNome = idioma === "ja" ? (cat.nome_ja || cat.nome_pt) : idioma === "en" ? (cat.nome_en || cat.nome_pt) : cat.nome_pt;
 
       html += '<div class="categoria-secao">';
       html += '<div class="categoria-header">';
@@ -307,7 +307,7 @@
     try {
       const { data: cats, error: errC } = await supabase
         .from("categorias")
-        .select("id, nome_pt, nome_ja, emoji, ordem")
+        .select("id, nome_pt, nome_ja, nome_en, emoji, ordem")
         .order("ordem", { ascending: true });
 
       if (!errC && cats) {

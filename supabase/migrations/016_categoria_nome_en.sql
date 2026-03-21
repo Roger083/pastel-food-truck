@@ -1,0 +1,1 @@
+ALTER TABLE categorias ADD COLUMN IF NOT EXISTS nome_en TEXT;
