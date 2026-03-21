@@ -30,8 +30,9 @@ function detectLang(text: string): "ja" | "pt" | "en" {
   return "pt"; // padrão
 }
 
-function formatNumero(n: number): string {
-  return "A-" + String(n).padStart(3, "0");
+function formatNumero(n: number, itens?: { nome: string }[]): string {
+  const prefixo = itens && itens.length > 0 && itens[0].nome ? itens[0].nome[0].toUpperCase() : "A";
+  return prefixo + "-" + String(n).padStart(3, "0");
 }
 
 async function verifySignature(body: string, signature: string): Promise<boolean> {
@@ -159,7 +160,7 @@ async function getMenuContext(): Promise<string> {
 
 async function getOrderStatus(
   lineUserId: string
-): Promise<{ pedido: { numero: number; status: string }; frente: number } | null> {
+): Promise<{ pedido: { numero: number; status: string; pedido_itens?: { nome: string }[] }; frente: number } | null> {
   try {
     const evRes = await fetch(
       `${SUPABASE_URL}/rest/v1/eventos?ativo=eq.true&select=id&limit=1`,
@@ -176,7 +177,7 @@ async function getOrderStatus(
     const eventoId = eventos[0].id;
 
     const pedidoRes = await fetch(
-      `${SUPABASE_URL}/rest/v1/pedidos?evento_id=eq.${eventoId}&line_user_id=eq.${lineUserId}&status=neq.pronto&order=criado_em.desc&limit=1&select=id,numero,status`,
+      `${SUPABASE_URL}/rest/v1/pedidos?evento_id=eq.${eventoId}&line_user_id=eq.${lineUserId}&status=neq.pronto&order=criado_em.desc&limit=1&select=id,numero,status,pedido_itens(nome)`,
       {
         headers: {
           apikey: SUPABASE_SERVICE_ROLE_KEY,
@@ -222,15 +223,15 @@ async function handleAI(text: string, lang: "ja" | "pt" | "en", replyToken: stri
     const { pedido, frente } = orderStatus;
     orderContext = lang === "ja"
       ? frente === 0
-        ? `\n【注文状況】ご注文 ${formatNumero(pedido.numero)} は次の順番です。まもなくご用意します。`
-        : `\n【注文状況】ご注文 ${formatNumero(pedido.numero)} は準備中です。あなたの前に ${frente} 件あります。`
+        ? `\n【注文状況】ご注文 ${formatNumero(pedido.numero, pedido.pedido_itens)} は次の順番です。まもなくご用意します。`
+        : `\n【注文状況】ご注文 ${formatNumero(pedido.numero, pedido.pedido_itens)} は準備中です。あなたの前に ${frente} 件あります。`
       : lang === "en"
       ? frente === 0
-        ? `\n【Order status】Order ${formatNumero(pedido.numero)} is next! Get ready.`
-        : `\n【Order status】Order ${formatNumero(pedido.numero)} is in queue. ${frente} order${frente > 1 ? "s" : ""} ahead of you.`
+        ? `\n【Order status】Order ${formatNumero(pedido.numero, pedido.pedido_itens)} is next! Get ready.`
+        : `\n【Order status】Order ${formatNumero(pedido.numero, pedido.pedido_itens)} is in queue. ${frente} order${frente > 1 ? "s" : ""} ahead of you.`
       : frente === 0
-      ? `\n【Pedido】Pedido ${formatNumero(pedido.numero)} é o próximo! Prepare-se.`
-      : `\n【Pedido】Pedido ${formatNumero(pedido.numero)} na fila. Existem ${frente} pedido${frente > 1 ? "s" : ""} na sua frente.`;
+      ? `\n【Pedido】Pedido ${formatNumero(pedido.numero, pedido.pedido_itens)} é o próximo! Prepare-se.`
+      : `\n【Pedido】Pedido ${formatNumero(pedido.numero, pedido.pedido_itens)} na fila. Existem ${frente} pedido${frente > 1 ? "s" : ""} na sua frente.`;
   } else {
     orderContext = lang === "ja"
       ? "\n【注文状況】現在、処理中のご注文はありません。"
@@ -373,15 +374,15 @@ Deno.serve(async (req) => {
             const { pedido, frente } = result;
             const msg = lang === "ja"
               ? frente === 0
-                ? `✅ ご注文 ${formatNumero(pedido.numero)} は次の順番です！まもなくご用意します。`
-                : `🕐 ご注文 ${formatNumero(pedido.numero)} は準備中です。\nあなたの前に ${frente} 件あります。`
+                ? `✅ ご注文 ${formatNumero(pedido.numero, pedido.pedido_itens)} は次の順番です！まもなくご用意します。`
+                : `🕐 ご注文 ${formatNumero(pedido.numero, pedido.pedido_itens)} は準備中です。\nあなたの前に ${frente} 件あります。`
               : lang === "en"
               ? frente === 0
-                ? `✅ Your order ${formatNumero(pedido.numero)} is next! Get ready.`
-                : `🕐 Your order ${formatNumero(pedido.numero)} is in the queue.\n${frente} order${frente > 1 ? "s" : ""} ahead of you.`
+                ? `✅ Your order ${formatNumero(pedido.numero, pedido.pedido_itens)} is next! Get ready.`
+                : `🕐 Your order ${formatNumero(pedido.numero, pedido.pedido_itens)} is in the queue.\n${frente} order${frente > 1 ? "s" : ""} ahead of you.`
               : frente === 0
-              ? `✅ Seu pedido ${formatNumero(pedido.numero)} é o próximo! Prepare-se.`
-              : `🕐 Seu pedido ${formatNumero(pedido.numero)} está na fila.\nExistem ${frente} pedido${frente > 1 ? "s" : ""} na sua frente.`;
+              ? `✅ Seu pedido ${formatNumero(pedido.numero, pedido.pedido_itens)} é o próximo! Prepare-se.`
+              : `🕐 Seu pedido ${formatNumero(pedido.numero, pedido.pedido_itens)} está na fila.\nExistem ${frente} pedido${frente > 1 ? "s" : ""} na sua frente.`;
             await replyMessage(replyToken, [{ type: "text", text: msg }]);
           }
         } else {

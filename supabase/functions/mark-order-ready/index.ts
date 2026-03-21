@@ -5,9 +5,10 @@ const cors = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-admin-secret",
 };
 
-function formatNumeroPedido(num: number | null | undefined): string {
+function formatNumeroPedido(num: number | null | undefined, itens?: { nome: string }[]): string {
   const n = num == null ? 0 : Number(num);
-  return "A-" + String(n).padStart(3, "0");
+  const prefixo = itens && itens.length > 0 && itens[0].nome ? itens[0].nome[0].toUpperCase() : "A";
+  return prefixo + "-" + String(n).padStart(3, "0");
 }
 
 function jsonResponse(body: unknown, status = 200) {
@@ -71,7 +72,7 @@ Deno.serve(async (req) => {
   console.log("mark-order-ready chamado", { pedidoId, hasToken: !!channelToken });
 
   const resGet = await fetch(
-    `${supabaseUrl}/rest/v1/pedidos?id=eq.${pedidoId}&select=id,numero,line_user_id`,
+    `${supabaseUrl}/rest/v1/pedidos?id=eq.${pedidoId}&select=id,numero,line_user_id,pedido_itens(nome)`,
     {
       headers: {
         apikey: serviceRoleKey,
@@ -128,7 +129,7 @@ Deno.serve(async (req) => {
       messages: [
         {
           type: "text",
-          text: `Seu pedido ${formatNumeroPedido(pedido.numero)} está pronto! Venha buscar.`,
+          text: `Seu pedido ${formatNumeroPedido(pedido.numero, pedido.pedido_itens)} está pronto! Venha buscar.`,
         },
       ],
     };
