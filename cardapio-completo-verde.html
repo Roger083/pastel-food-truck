@@ -120,10 +120,12 @@
     if (existing) {
       existing.quantidade += 1;
     } else {
+      var slug = window.slugFromNome ? window.slugFromNome(item.nome) : "";
+      var infoFallback = (window.PASTEIS_INFO && window.PASTEIS_INFO[slug]) ? window.PASTEIS_INFO[slug] : {};
       cart.push({
         id: item.id,
         nome: item.nome,
-        nome_ja: item.nome_ja || "",
+        nome_ja: item.nome_ja || infoFallback.nome_ja || "",
         preco: item.preco,
         quantidade: 1
       });
