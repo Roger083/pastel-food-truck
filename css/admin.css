@@ -160,20 +160,16 @@ body {
   border-bottom: 1px solid rgba(0, 0, 0, 0.08);
 }
 
-.order-card .order-header-left {
-  display: flex;
-  flex-direction: column;
-  gap: 0.1rem;
-}
-
-.order-total-header {
+.order-total-footer {
+  text-align: center;
   font-size: 1.2rem;
   font-weight: 900;
-  color: #fff;
-  letter-spacing: 0.5px;
+  color: #155724;
+  padding: 0.5rem 0.85rem;
+  border-top: 1px dashed rgba(0, 0, 0, 0.1);
 }
 
-.order-card.pronto .order-total-header {
+.order-card.pronto .order-total-footer {
   color: #555;
   font-size: 1rem;
 }

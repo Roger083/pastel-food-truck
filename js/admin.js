@@ -199,10 +199,7 @@ async function loadOrders() {
         '">' +
         '<div class="order-card-main">' +
           '<div class="order-header">' +
-            '<div class="order-header-left">' +
-              '<div class="order-num">' + formatoNumeroPedido(p.numero, itens) + '</div>' +
-              (totalStr ? '<div class="order-total-header">' + totalStr + '</div>' : '') +
-            '</div>' +
+            '<div class="order-num">' + formatoNumeroPedido(p.numero, itens) + '</div>' +
             '<div class="order-header-right">' +
               '<div class="order-time">⏱️ ' + time + '</div>' +
               (!isPronto && !isPrimeiroPendente
@@ -215,6 +212,7 @@ async function loadOrders() {
           '</div>' +
           (agendadoStr ? '<div class="order-agendado">' + agendadoStr + "</div>" : "") +
           '<div class="order-items">' + itemsHtml + '</div>' +
+          (totalStr ? '<div class="order-total-footer">' + totalStr + '</div>' : '') +
           '</div>' +
         (isPrimeiroPendente
           ? '<button type="button" class="btn-ready" data-id="' + p.id + '">✓<span>Marcar como pronto</span></button>'
