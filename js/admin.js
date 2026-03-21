@@ -199,7 +199,10 @@ async function loadOrders() {
         '">' +
         '<div class="order-card-main">' +
           '<div class="order-header">' +
-            '<div class="order-num">' + formatoNumeroPedido(p.numero, itens) + '</div>' +
+            '<div class="order-header-left">' +
+              '<div class="order-num">' + formatoNumeroPedido(p.numero, itens) + '</div>' +
+              (totalStr ? '<div class="order-total-header">' + totalStr + '</div>' : '') +
+            '</div>' +
             '<div class="order-header-right">' +
               '<div class="order-time">⏱️ ' + time + '</div>' +
               (!isPronto && !isPrimeiroPendente
@@ -212,8 +215,7 @@ async function loadOrders() {
           '</div>' +
           (agendadoStr ? '<div class="order-agendado">' + agendadoStr + "</div>" : "") +
           '<div class="order-items">' + itemsHtml + '</div>' +
-          (totalStr ? '<div class="order-total">💴 Total: <strong>' + totalStr + '</strong></div>' : '') +
-        '</div>' +
+          '</div>' +
         (isPrimeiroPendente
           ? '<button type="button" class="btn-ready" data-id="' + p.id + '">✓<span>Marcar como pronto</span></button>'
           : "") +
@@ -231,6 +233,15 @@ async function loadOrders() {
   $btnZerar.hidden = false;
 }
 
+function showMsg(msg, type) {
+  if ($feedback) {
+    $feedback.textContent = msg;
+    $feedback.className = "admin-feedback " + (type || "success");
+    $feedback.hidden = false;
+    setTimeout(function () { $feedback.hidden = true; }, 8000);
+  }
+}
+
 async function markReady(pedidoId) {
   const sb = getSupabase();
   const { data: { session }, error: sessionError } = await sb.auth.getSession();
@@ -239,29 +250,22 @@ async function markReady(pedidoId) {
     return;
   }
 
-  const prontoEm = new Date().toISOString();
-  const { error: updateError } = await sb
-    .from("pedidos")
-    .update({ status: "pronto", pronto_em: prontoEm })
-    .eq("id", pedidoId);
+  const res = await fetch(functionsUrl("/mark-order-ready"), {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": "Bearer " + session.access_token,
+    },
+    body: JSON.stringify({ pedido_id: pedidoId }),
+  });
 
-  if (updateError) {
-    alert("Falha ao atualizar: " + (updateError.message || updateError));
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    alert("Falha ao marcar pronto: " + (err.error || res.status));
     return;
   }
 
-  function showMsg(msg, type) {
-    if ($feedback) {
-      $feedback.textContent = msg;
-      $feedback.className = "admin-feedback " + (type || "success");
-      $feedback.hidden = false;
-      setTimeout(function () {
-        $feedback.hidden = true;
-      }, 8000);
-    }
-  }
-
-  showMsg("Pedido marcado como pronto. A notificação no LINE é enviada automaticamente pelo webhook.", "success");
+  showMsg("Pedido marcado como pronto! Notificação LINE enviada.", "success");
   loadOrders();
 }
 

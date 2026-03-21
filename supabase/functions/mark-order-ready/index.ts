@@ -23,79 +23,68 @@ Deno.serve(async (req) => {
     return new Response(null, { headers: cors });
   }
 
-  // Auth: aceita (1) segredo ADMIN_SECRET no header x-admin-secret OU (2) JWT do Supabase Auth
+  const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+  const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+  const channelToken = Deno.env.get("CHANNEL_ACCESS_TOKEN");
   const adminSecret = Deno.env.get("ADMIN_SECRET");
+
+  // Auth: aceita (1) segredo ADMIN_SECRET no header x-admin-secret OU (2) JWT do Supabase Auth
   const sentSecret = (req.headers.get("x-admin-secret") || "").trim();
+  let authed = false;
+
   if (adminSecret && sentSecret && adminSecret === sentSecret) {
-    // Autenticado por segredo
+    authed = true;
   } else {
-    if (sentSecret) {
-      if (!adminSecret) {
-        console.warn("mark-order-ready: x-admin-secret enviado mas ADMIN_SECRET não está definido no Supabase. Adicione o secret e faça deploy de novo.");
-        return jsonResponse({ error: "Unauthorized", hint: "ADMIN_SECRET não está no Supabase ou a função não foi deployada depois de adicionar. Edge Functions → Secrets → ADMIN_SECRET, depois deploy." }, 401);
-      }
-      console.warn("mark-order-ready: segredo não confere.");
-      return jsonResponse({ error: "Unauthorized", hint: "Segredo (adminSecret no config) não confere com ADMIN_SECRET no Supabase. Mesmo valor nos dois?" }, 401);
-    }
     const authHeader = req.headers.get("Authorization") || "";
-    if (!authHeader.startsWith("Bearer ")) {
-      return jsonResponse({ error: "Unauthorized", hint: "Envie x-admin-secret (adicione adminSecret em config.js) ou faça login no admin." }, 401);
-    }
-    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-    const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    const authRes = await fetch(supabaseUrl + "/auth/v1/user", {
-      headers: {
-        Authorization: authHeader,
-        apikey: serviceRoleKey,
-      },
-    });
-    if (!authRes.ok) {
-      const errText = await authRes.text();
-      console.error("Auth validation failed:", authRes.status, errText);
-      return jsonResponse({ error: "Unauthorized", hint: "JWT rejeitado. Use adminSecret em config.js igual ao ADMIN_SECRET no Supabase." }, 401);
+    if (authHeader.startsWith("Bearer ")) {
+      const authRes = await fetch(supabaseUrl + "/auth/v1/user", {
+        headers: { Authorization: authHeader, apikey: serviceRoleKey },
+      });
+      if (authRes.ok) authed = true;
+      else console.error("Auth validation failed:", authRes.status, await authRes.text());
     }
   }
 
-  let body: { pedido_id?: string };
+  if (!authed) {
+    return jsonResponse({ error: "Unauthorized", hint: "Envie x-admin-secret ou faça login no admin." }, 401);
+  }
+
+  let body: any;
   try {
     body = await req.json();
   } catch {
     return jsonResponse({ error: "Invalid JSON" }, 400);
   }
 
-  const pedidoId = body.pedido_id;
+  // Suporta { pedido_id } e formato de webhook Supabase { record: { id } }
+  const pedidoId = body.pedido_id || body.record?.id;
   if (!pedidoId) {
     return jsonResponse({ error: "pedido_id required" }, 400);
   }
 
-  const channelToken = Deno.env.get("CHANNEL_ACCESS_TOKEN");
   console.log("mark-order-ready chamado", { pedidoId, hasToken: !!channelToken });
 
+  // Busca pedido
   const resGet = await fetch(
-    `${supabaseUrl}/rest/v1/pedidos?id=eq.${pedidoId}&select=id,numero,line_user_id,pedido_itens(nome)`,
-    {
-      headers: {
-        apikey: serviceRoleKey,
-        Authorization: `Bearer ${serviceRoleKey}`,
-      },
-    }
+    `${supabaseUrl}/rest/v1/pedidos?id=eq.${pedidoId}&select=id,numero,line_user_id`,
+    { headers: { apikey: serviceRoleKey, Authorization: `Bearer ${serviceRoleKey}` } }
   );
-
-  if (!resGet.ok) {
-    return jsonResponse({ error: "Failed to get order" }, 500);
-  }
+  if (!resGet.ok) return jsonResponse({ error: "Failed to get order" }, 500);
 
   const rows = await resGet.json();
   const pedido = rows[0];
-  if (!pedido) {
-    return jsonResponse({ error: "Order not found" }, 404);
-  }
-  console.log("mark-order-ready pedido", {
-    pedidoId,
-    numero: pedido.numero,
-    hasLineUserId: !!pedido.line_user_id,
-  });
+  if (!pedido) return jsonResponse({ error: "Order not found" }, 404);
 
+  // Busca primeiro item separadamente para garantir o prefixo correto
+  const resItens = await fetch(
+    `${supabaseUrl}/rest/v1/pedido_itens?pedido_id=eq.${pedidoId}&select=nome&order=id.asc&limit=1`,
+    { headers: { apikey: serviceRoleKey, Authorization: `Bearer ${serviceRoleKey}` } }
+  );
+  const itens = resItens.ok ? await resItens.json() : [];
+
+  console.log("mark-order-ready pedido", { pedidoId, numero: pedido.numero, itens, hasLineUserId: !!pedido.line_user_id });
+
+  // Atualiza status
   const prontoEm = new Date().toISOString();
   const resUpdate = await fetch(
     `${supabaseUrl}/rest/v1/pedidos?id=eq.${pedidoId}`,
@@ -110,36 +99,27 @@ Deno.serve(async (req) => {
       body: JSON.stringify({ status: "pronto", pronto_em: prontoEm }),
     }
   );
+  if (!resUpdate.ok) return jsonResponse({ error: "Failed to update order" }, 500);
 
-  if (!resUpdate.ok) {
-    return jsonResponse({ error: "Failed to update order" }, 500);
-  }
-
+  // Envia notificação LINE
   let lineSent = false;
   let lineReason: string | undefined;
+
   if (!channelToken) {
-    lineReason = "CHANNEL_ACCESS_TOKEN não configurado no Supabase (Edge Functions → Secrets).";
+    lineReason = "CHANNEL_ACCESS_TOKEN não configurado.";
     console.warn("mark-order-ready: " + lineReason);
   } else if (!pedido.line_user_id) {
-    lineReason = "Pedido sem line_user_id (cliente pode ter aberto fora do LIFF ou página do carrinho não obteve o perfil LINE).";
+    lineReason = "Pedido sem line_user_id.";
     console.warn("mark-order-ready: pedido_id=" + pedidoId + " " + lineReason);
   } else {
-    const lineBody = {
-      to: pedido.line_user_id,
-      messages: [
-        {
-          type: "text",
-          text: `Seu pedido ${formatNumeroPedido(pedido.numero, pedido.pedido_itens)} está pronto! Venha buscar.`,
-        },
-      ],
-    };
+    const codigoPedido = formatNumeroPedido(pedido.numero, itens);
     const lineRes = await fetch("https://api.line.me/v2/bot/message/push", {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${channelToken}`,
-      },
-      body: JSON.stringify(lineBody),
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${channelToken}` },
+      body: JSON.stringify({
+        to: pedido.line_user_id,
+        messages: [{ type: "text", text: `Seu pedido ${codigoPedido} está pronto! Venha buscar. 🥟` }],
+      }),
     });
     lineSent = lineRes.ok;
     const lineResText = await lineRes.text();
@@ -147,7 +127,7 @@ Deno.serve(async (req) => {
       lineReason = "LINE API retornou " + lineRes.status + ": " + lineResText;
       console.error("LINE push failed:", lineRes.status, lineResText);
     } else {
-      console.log("LINE push ok para", pedido.line_user_id);
+      console.log("LINE push ok para", pedido.line_user_id, "pedido", codigoPedido);
     }
   }
 

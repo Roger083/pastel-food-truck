@@ -160,6 +160,24 @@ body {
   border-bottom: 1px solid rgba(0, 0, 0, 0.08);
 }
 
+.order-card .order-header-left {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+
+.order-total-header {
+  font-size: 1.2rem;
+  font-weight: 900;
+  color: #155724;
+  letter-spacing: 0.5px;
+}
+
+.order-card.pronto .order-total-header {
+  color: #555;
+  font-size: 1rem;
+}
+
 .order-card .order-header-right {
   display: flex;
   align-items: center;
@@ -886,11 +904,6 @@ body {
   color: #888;
 }
 
-.order-total {
-  padding: 0.4rem 0.85rem 0.65rem;
-  font-size: 1rem;
-  color: #1a3d0a;
-}
 
 .lang-tabs {
   display: flex;
