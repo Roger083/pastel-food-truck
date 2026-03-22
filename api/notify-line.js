@@ -7,9 +7,27 @@
  * Variáveis: CHANNEL_ACCESS_TOKEN, WEBHOOK_SECRET
  */
 
-function formatNumero(num) {
+function formatNumero(num, prefixo) {
   const n = num == null ? 0 : Number(num);
-  return "A-" + String(n).padStart(3, "0");
+  const p = prefixo || "A";
+  return p + "-" + String(n).padStart(3, "0");
+}
+
+async function getPrefixo(pedidoId) {
+  const supabaseUrl = process.env.SUPABASE_URL;
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!supabaseUrl || !serviceRoleKey) return "A";
+  try {
+    const res = await fetch(
+      `${supabaseUrl}/rest/v1/pedido_itens?pedido_id=eq.${pedidoId}&select=nome&order=id.asc&limit=1`,
+      { headers: { apikey: serviceRoleKey, Authorization: `Bearer ${serviceRoleKey}` } }
+    );
+    if (!res.ok) return "A";
+    const itens = await res.json();
+    return itens.length > 0 && itens[0].nome ? itens[0].nome[0].toUpperCase() : "A";
+  } catch {
+    return "A";
+  }
 }
 
 export default async function handler(req, res) {
@@ -54,9 +72,10 @@ export default async function handler(req, res) {
     return res.status(200).json({ ok: true, line_sent: false, reason: "no line_user_id" });
   }
 
+  const prefixo = await getPrefixo(record?.id);
   const text = idioma === 'pt'
-    ? `Seu pedido ${formatNumero(numero)} está pronto! Venha buscar.`
-    : `ご注文 ${formatNumero(numero)} の準備ができました！お受け取りください。`;
+    ? `Seu pedido ${formatNumero(numero, prefixo)} está pronto! Venha buscar.`
+    : `ご注文 ${formatNumero(numero, prefixo)} の準備ができました！お受け取りください。`;
   const lineRes = await fetch("https://api.line.me/v2/bot/message/push", {
     method: "POST",
     headers: {
