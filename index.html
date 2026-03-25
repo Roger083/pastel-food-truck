@@ -159,7 +159,9 @@
         pt: { logo: '🥟 PASTEL', heroTitle: 'PASTEL', heroSubtitle: 'Comida Tradicional Brasileira', btnPrincipal: '🛒 FAZER PEDIDO', btn1: 'O que é Pastel?', btn2: 'Promoções', btn3: 'Galeria', btn4: 'Perguntas Frequentes', footerTexto: 'Após o pedido, você receberá notificação no LINE!', footerDestaque: 'Coma quentinho! 🔥' },
         en: { logo: '🥟 PASTEL', heroTitle: 'PASTEL', heroSubtitle: 'Traditional Brazilian Food', btnPrincipal: '🛒 ORDER NOW', btn1: 'What is Pastel?', btn2: 'Promotions', btn3: 'Gallery', btn4: 'FAQ', footerTexto: 'After ordering, you\'ll get a LINE notification!', footerDestaque: 'Enjoy while hot! 🔥' }
       };
-      var idioma = localStorage.getItem('idioma') || 'ja';
+      var urlLang = new URLSearchParams(window.location.search).get('lang');
+      var idioma = (urlLang && textos[urlLang]) ? urlLang : (localStorage.getItem('idioma') || 'ja');
+      localStorage.setItem('idioma', idioma);
       function atualizar() {
         var t = textos[idioma];
         var el;
