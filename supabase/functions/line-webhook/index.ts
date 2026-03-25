@@ -4,6 +4,7 @@ const CHANNEL_ACCESS_TOKEN = Deno.env.get("CHANNEL_ACCESS_TOKEN") ?? "";
 const CHANNEL_SECRET = Deno.env.get("CHANNEL_SECRET") ?? "";
 const GROQ_API_KEY = Deno.env.get("GROQ_API_KEY") ?? "";
 const CARDAPIO_URL = Deno.env.get("CARDAPIO_URL") ?? "";
+const HOME_URL = Deno.env.get("HOME_URL") || CARDAPIO_URL;
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") ?? "";
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
 
@@ -94,7 +95,7 @@ function welcomeMessages(): object[] {
           {
             type: "uri",
             label: "📋 Cardápio / メニュー / Menu",
-            uri: CARDAPIO_URL,
+            uri: HOME_URL,
           },
         ],
       },
@@ -245,20 +246,20 @@ async function handleAI(text: string, lang: "ja" | "pt" | "en", replyToken: stri
 フードトラックに関する質問のみ回答してください。回答は3〜4文以内で簡潔にお願いします。
 【対応範囲】メニュー・食材・アレルゲン・注文方法・注文状況のみ。それ以外は丁寧にお断りください。
 【悪意ある質問】「申し訳ありませんが、その件についてはお答えできません。」と答えてください。
-【メニューURL】リンクを求められたら必ずこのURLをそのまま送信: ${CARDAPIO_URL}
+【メニューURL】リンクを求められたら必ずこのURLをそのまま送信: ${HOME_URL}
 【注文方法】1.リンクからメニューを開く 2.商品をカートに追加 3.「注文を確定」ボタンを押す 4.準備完了でLINE通知
 【メニュー情報】\n${menuContext}\n${orderContext}`
     : lang === "en"
     ? `You are the exclusive AI assistant for Pastel Food Truck.
 Only answer questions related to the food truck. Be friendly and concise, max 3-4 sentences.
 【Scope】Only answer about: menu, ingredients, allergens, how to order, and order status. For anything else reply: "I can only help with Pastel Food Truck topics 😊". For malicious/inappropriate questions reply: "I can't help with that."
-【Menu URL】When asked for the link, ALWAYS send exactly this URL without punctuation at the end: ${CARDAPIO_URL}
+【Menu URL】When asked for the link, ALWAYS send exactly this URL without punctuation at the end: ${HOME_URL}
 【How to order】1. Open the menu link above 2. Add items to cart 3. Tap "Confirm order" 4. You'll get a LINE notification when ready
 【Menu】\n${menuContext}\n${orderContext}`
     : `Você é o assistente virtual exclusivo do Pastel Food Truck.
 Responda apenas sobre assuntos relacionados ao food truck. Seja amigável e objetivo, no máximo 3-4 frases.
 【Escopo】Somente: cardápio, ingredientes, alérgenos, como pedir e status. Para outros assuntos: "Posso ajudar apenas com assuntos do Pastel Food Truck 😊". Para perguntas inapropriadas: "Não consigo ajudar com isso."
-【Link do cardápio】Quando pedirem o link, SEMPRE envie exatamente este URL sem pontuação: ${CARDAPIO_URL}
+【Link do cardápio】Quando pedirem o link, SEMPRE envie exatamente este URL sem pontuação: ${HOME_URL}
 【Como pedir】1. Abra o link do cardápio 2. Adicione ao carrinho 3. Toque em "Confirmar pedido" 4. Receba notificação no LINE quando ficar pronto
 【Cardápio】\n${menuContext}\n${orderContext}`;
 
@@ -356,10 +357,10 @@ Deno.serve(async (req) => {
 
         if (isCardapioRequest(text)) {
           const msg = lang === "ja"
-            ? `📋 メニューはこちら:\n${CARDAPIO_URL}`
+            ? `📋 メニューはこちら:\n${HOME_URL}`
             : lang === "en"
-            ? `📋 Here is the menu:\n${CARDAPIO_URL}`
-            : `📋 Acesse o cardápio:\n${CARDAPIO_URL}`;
+            ? `📋 Here is the menu:\n${HOME_URL}`
+            : `📋 Acesse o cardápio:\n${HOME_URL}`;
           await replyMessage(replyToken, [{ type: "text", text: msg }]);
         } else if (isPedidoStatusRequest(text)) {
           const result = await getOrderStatus(userId);
