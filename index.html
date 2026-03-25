@@ -24,12 +24,26 @@
     .landing .header-content .logo-wrap { flex: 1; text-align: center; }
     .landing .logo { font-size: 24px; font-weight: 800; color: white; display: inline-block; }
     .landing .header-content .btn-idioma-wrap { flex: 1; text-align: right; }
-    .landing .btn-idioma {
-      background: rgba(255,255,255,0.2); border: 2px solid rgba(255,255,255,0.5);
-      color: white; padding: 8px 16px; border-radius: 20px; font-size: 13px; font-weight: 600;
-      cursor: pointer; transition: all 0.3s;
+    .idioma-flags { display: flex; gap: 4px; }
+    .flag-btn {
+      background: rgba(255,255,255,0.1);
+      border: 2px solid rgba(255,255,255,0.25);
+      border-radius: 50%;
+      width: 34px; height: 34px;
+      font-size: 17px;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      padding: 0;
+      transition: all 0.2s;
+      line-height: 1;
     }
-    .landing .btn-idioma:hover { background: rgba(255,255,255,0.3); }
+    .flag-btn:hover { background: rgba(255,255,255,0.25); border-color: rgba(255,255,255,0.6); }
+    .flag-btn.ativo {
+      background: rgba(255,255,255,0.35);
+      border-color: white;
+      transform: scale(1.12);
+      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+    }
     .landing .hero-image {
       width: 100%; height: 280px; border-radius: 20px; overflow: hidden; margin-bottom: 24px;
       position: relative; box-shadow: 0 8px 24px rgba(13,117,65,0.2);
@@ -74,9 +88,13 @@
         <div class="header-content">
           <div class="header-spacer"></div>
           <div class="logo-wrap"><span class="logo" id="logo">🥟 PASTEL</span></div>
-          <div class="btn-idioma-wrap" style="display:flex;align-items:center;gap:8px;">
-            <a href="cardapio-carrinho.html" id="btnCarrinho" style="display:none;background:rgba(255,255,255,0.2);border:2px solid rgba(255,255,255,0.5);color:white;padding:8px 12px;border-radius:20px;font-size:13px;font-weight:600;text-decoration:none;">🛒 <span id="header-cart-count">0</span></a>
-            <button type="button" class="btn-idioma" id="btnIdioma">🇧🇷 PT</button>
+          <div class="btn-idioma-wrap" style="display:flex;align-items:center;gap:6px;">
+            <a href="cardapio-carrinho.html" id="btnCarrinho" style="display:none;background:rgba(255,255,255,0.2);border:2px solid rgba(255,255,255,0.5);color:white;padding:6px 10px;border-radius:20px;font-size:13px;font-weight:600;text-decoration:none;">🛒 <span id="header-cart-count">0</span></a>
+            <div class="idioma-flags">
+              <button type="button" class="flag-btn" data-lang="ja" title="日本語">🇯🇵</button>
+              <button type="button" class="flag-btn" data-lang="pt" title="Português">🇧🇷</button>
+              <button type="button" class="flag-btn" data-lang="en" title="English">🇬🇧</button>
+            </div>
           </div>
         </div>
       </div>
@@ -150,15 +168,15 @@
   <script>
     (function() {
       var textos = {
-        ja: { logo: '🥟 パステル', btnIdioma: '🇧🇷 PT', heroTitle: 'パステル', heroSubtitle: 'ブラジルの伝統料理', btnPrincipal: '🛒 注文する', btn1: 'パステルとは？', btn2: 'お得なセット', btn3: '写真ギャラリー', btn4: 'よくある質問', footerTexto: 'ご注文後、LINEで通知が届きます！', footerDestaque: '出来立てをお召し上がりください 🔥' },
-        pt: { logo: '🥟 PASTEL', btnIdioma: '🇯🇵 日本語', heroTitle: 'PASTEL', heroSubtitle: 'Comida Tradicional Brasileira', btnPrincipal: '🛒 FAZER PEDIDO', btn1: 'O que é Pastel?', btn2: 'Promoções', btn3: 'Galeria', btn4: 'Perguntas Frequentes', footerTexto: 'Após o pedido, você receberá notificação no LINE!', footerDestaque: 'Coma quentinho! 🔥' }
+        ja: { logo: '🥟 パステル', heroTitle: 'パステル', heroSubtitle: 'ブラジルの伝統料理', btnPrincipal: '🛒 注文する', btn1: 'パステルとは？', btn2: 'お得なセット', btn3: '写真ギャラリー', btn4: 'よくある質問', footerTexto: 'ご注文後、LINEで通知が届きます！', footerDestaque: '出来立てをお召し上がりください 🔥' },
+        pt: { logo: '🥟 PASTEL', heroTitle: 'PASTEL', heroSubtitle: 'Comida Tradicional Brasileira', btnPrincipal: '🛒 FAZER PEDIDO', btn1: 'O que é Pastel?', btn2: 'Promoções', btn3: 'Galeria', btn4: 'Perguntas Frequentes', footerTexto: 'Após o pedido, você receberá notificação no LINE!', footerDestaque: 'Coma quentinho! 🔥' },
+        en: { logo: '🥟 PASTEL', heroTitle: 'PASTEL', heroSubtitle: 'Traditional Brazilian Food', btnPrincipal: '🛒 ORDER NOW', btn1: 'What is Pastel?', btn2: 'Promotions', btn3: 'Gallery', btn4: 'FAQ', footerTexto: 'After ordering, you\'ll get a LINE notification!', footerDestaque: 'Enjoy while hot! 🔥' }
       };
       var idioma = localStorage.getItem('idioma') || 'ja';
       function atualizar() {
         var t = textos[idioma];
         var el;
         if ((el = document.getElementById('logo'))) el.textContent = t.logo;
-        if ((el = document.getElementById('btnIdioma'))) el.textContent = t.btnIdioma;
         if ((el = document.getElementById('heroTitle'))) el.textContent = t.heroTitle;
         if ((el = document.getElementById('heroSubtitle'))) el.textContent = t.heroSubtitle;
         if ((el = document.getElementById('btnPrincipal'))) el.textContent = t.btnPrincipal;
@@ -167,6 +185,10 @@
         if ((el = document.getElementById('btn3'))) el.textContent = t.btn3;
         if ((el = document.getElementById('btn4'))) el.textContent = t.btn4;
         if ((el = document.getElementById('footerTexto'))) el.innerHTML = t.footerTexto + '<br><span class="footer-destaque">' + t.footerDestaque + '</span>';
+        // Destaca a bandeira ativa
+        document.querySelectorAll('.flag-btn').forEach(function(btn) {
+          btn.classList.toggle('ativo', btn.dataset.lang === idioma);
+        });
       }
       // Mostrar ícone do carrinho se tiver itens
       function updateCartIcon() {
@@ -195,11 +217,13 @@
         }
       }
 
-      document.getElementById('btnIdioma').onclick = function() {
-        idioma = idioma === 'ja' ? 'pt' : 'ja';
-        localStorage.setItem('idioma', idioma);
-        atualizar();
-      };
+      document.querySelectorAll('.flag-btn').forEach(function(btn) {
+        btn.onclick = function() {
+          idioma = btn.dataset.lang;
+          localStorage.setItem('idioma', idioma);
+          atualizar();
+        };
+      });
       document.getElementById('btnPrincipal').onclick = function() {
         window.location.href = 'cardapio-completo-verde.html';
       };
