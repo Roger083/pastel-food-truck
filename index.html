@@ -25,25 +25,12 @@
     .landing .logo { font-size: 24px; font-weight: 800; color: white; display: inline-block; }
     .landing .header-content .btn-idioma-wrap { flex: 1; text-align: right; }
     .idioma-flags { display: flex; gap: 4px; }
-    .flag-btn {
-      background: rgba(255,255,255,0.1);
-      border: 2px solid rgba(255,255,255,0.25);
-      border-radius: 50%;
-      width: 34px; height: 34px;
-      font-size: 17px;
-      cursor: pointer;
-      display: flex; align-items: center; justify-content: center;
-      padding: 0;
-      transition: all 0.2s;
-      line-height: 1;
+    .idioma-flags .btn-idioma-opt {
+      background: rgba(255,255,255,0.2); border: 2px solid rgba(255,255,255,0.4);
+      color: white; padding: 6px 10px; border-radius: 8px;
+      font-size: 12px; font-weight: 700; cursor: pointer;
     }
-    .flag-btn:hover { background: rgba(255,255,255,0.25); border-color: rgba(255,255,255,0.6); }
-    .flag-btn.ativo {
-      background: rgba(255,255,255,0.35);
-      border-color: white;
-      transform: scale(1.12);
-      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
-    }
+    .idioma-flags .btn-idioma-opt.ativo { background: white; color: #0d7541; border-color: white; }
     .landing .hero-image {
       width: 100%; height: 280px; border-radius: 20px; overflow: hidden; margin-bottom: 24px;
       position: relative; box-shadow: 0 8px 24px rgba(13,117,65,0.2);
@@ -91,9 +78,9 @@
           <div class="btn-idioma-wrap" style="display:flex;align-items:center;gap:6px;">
             <a href="cardapio-carrinho.html" id="btnCarrinho" style="display:none;background:rgba(255,255,255,0.2);border:2px solid rgba(255,255,255,0.5);color:white;padding:6px 10px;border-radius:20px;font-size:13px;font-weight:600;text-decoration:none;">🛒 <span id="header-cart-count">0</span></a>
             <div class="idioma-flags">
-              <button type="button" class="flag-btn" data-lang="ja" title="日本語">🇯🇵</button>
-              <button type="button" class="flag-btn" data-lang="pt" title="Português">🇧🇷</button>
-              <button type="button" class="flag-btn" data-lang="en" title="English">🇬🇧</button>
+              <button type="button" class="btn-idioma-opt" data-lang="ja">JP</button>
+              <button type="button" class="btn-idioma-opt" data-lang="pt">PT</button>
+              <button type="button" class="btn-idioma-opt" data-lang="en">EN</button>
             </div>
           </div>
         </div>
@@ -186,7 +173,7 @@
         if ((el = document.getElementById('btn4'))) el.textContent = t.btn4;
         if ((el = document.getElementById('footerTexto'))) el.innerHTML = t.footerTexto + '<br><span class="footer-destaque">' + t.footerDestaque + '</span>';
         // Destaca a bandeira ativa
-        document.querySelectorAll('.flag-btn').forEach(function(btn) {
+        document.querySelectorAll('.btn-idioma-opt').forEach(function(btn) {
           btn.classList.toggle('ativo', btn.dataset.lang === idioma);
         });
       }
@@ -217,7 +204,7 @@
         }
       }
 
-      document.querySelectorAll('.flag-btn').forEach(function(btn) {
+      document.querySelectorAll('.btn-idioma-opt').forEach(function(btn) {
         btn.onclick = function() {
           idioma = btn.dataset.lang;
           localStorage.setItem('idioma', idioma);
